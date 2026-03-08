@@ -56,12 +56,12 @@ export function SetupScreen({ onStart }: SetupScreenProps) {
 
   return (
     <div 
-      className="min-h-screen flex flex-col items-center justify-center p-4 md:p-8 border-16px border-amber-950/90 relative overflow-hidden bg-cover bg-center shadow-[inset_0_0_150px_rgba(0,0,0,0.8)]"
+      className="min-h-screen flex flex-col items-center justify-center p-4 md:p-8 border-16px border-amber-950/90 relative overflow-hidden bg-cover bg-center shadow-[inset_0_0_120px_rgba(0,0,0,0.7)]"
       style={{ backgroundImage: `url('${import.meta.env.BASE_URL}tabule.svg')` }}
     >
       <div className="absolute inset-0 bg-black/40 pointer-events-none" />
 
-      <div className="relative z-10 w-full max-w-5xl bg-black/40 backdrop-blur-md p-8 md:p-12 rounded-[3rem] border-4 border-white/10 shadow-2xl overflow-y-auto max-h-[90vh] scrollbar-hide">
+      <div className="relative z-10 w-full max-w-5xl bg-black/40 backdrop-blur-md p-8 md:p-12 rounded-[3rem] border-4 border-white/10 shadow-xl overflow-y-auto max-h-[90vh] scrollbar-hide">
         
         <div className="text-center mb-10">
           <h1 className="text-5xl md:text-7xl font-black italic text-white tracking-tighter drop-shadow-lg">
@@ -81,7 +81,7 @@ export function SetupScreen({ onStart }: SetupScreenProps) {
                 onClick={() => handleCountChange(num)}
                 className={`w-12 h-12 md:w-16 md:h-16 rounded-2xl text-xl md:text-2xl font-black transition-all duration-300 border-2 
                   ${playerCount === num 
-                    ? 'bg-emerald-600 border-emerald-400 text-white shadow-[0_0_25px_rgba(16,185,129,0.4)] scale-110' 
+                    ? 'bg-emerald-600 border-emerald-400 text-white shadow-[0_0_20px_rgba(16,185,129,0.3)] scale-105' 
                     : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10 hover:text-white'}`}
               >
                 {num}
@@ -122,7 +122,7 @@ export function SetupScreen({ onStart }: SetupScreenProps) {
                         disabled={isTakenByOther}
                         onClick={() => handleUpdatePlayer(index, 'theme', theme.id)}
                         className={`w-8 h-8 rounded-full ${theme.color} transition-all duration-300 
-                          ${isSelected ? 'ring-4 ring-white scale-125 shadow-[0_0_15px_rgba(255,255,255,0.5)]' : 'opacity-40'} 
+                          ${isSelected ? 'ring-2 ring-white scale-110 shadow-[0_0_12px_rgba(255,255,255,0.4)]' : 'opacity-40'} 
                           ${isTakenByOther ? 'hidden' : 'hover:scale-110 cursor-pointer hover:opacity-100'}`}
                         title={theme.label}
                       />
@@ -137,7 +137,7 @@ export function SetupScreen({ onStart }: SetupScreenProps) {
         <div className="flex justify-center pb-4">
           <Button 
             size="lg" 
-            className="bg-emerald-600 hover:bg-emerald-500 text-white font-black text-3xl px-16 py-10 rounded-2rem shadow-[0_0_50px_rgba(16,185,129,0.3)] transition-all hover:scale-105 active:scale-95 border-4 border-emerald-400/50" 
+            className="bg-emerald-600 hover:bg-emerald-500 text-white font-black text-3xl px-16 py-10 rounded-2rem shadow-[0_0_40px_rgba(16,185,129,0.25)] transition-all hover:scale-105 active:scale-95 border-4 border-emerald-400/50" 
             onClick={handleStart}
           >
             ZAHÁJIT EXPERIMENT

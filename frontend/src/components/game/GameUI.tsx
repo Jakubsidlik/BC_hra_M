@@ -23,7 +23,7 @@ export function VictoryScreen({ winner, onReset }: { winner: Player | null, onRe
   if (!winner) return null;
   return (
     <div className="fixed inset-0 bg-slate-900/98 z-100 flex flex-col items-center justify-center p-8 backdrop-blur-xl animate-in fade-in duration-700">
-      <div className="bg-slate-800 border-4 border-emerald-500 p-12 rounded-[3rem] shadow-[0_0_100px_rgba(16,185,129,0.4)] flex flex-col items-center text-center max-w-2xl transform animate-in zoom-in duration-500">
+      <div className="bg-slate-800 border-4 border-emerald-500 p-12 rounded-[3rem] shadow-[0_0_80px_rgba(16,185,129,0.3)] flex flex-col items-center text-center max-w-2xl transform animate-in zoom-in duration-500">
         <h1 className="text-9xl font-black text-emerald-400 mb-2 animate-bounce tracking-tighter font-chalk">Q.E.D.</h1>
         <p className="text-slate-400 font-mono uppercase tracking-[0.4em] mb-8 italic">Quod Erat Demonstrandum</p>
 
@@ -61,7 +61,7 @@ export function HandoffScreen({ isHandoff, players, nextIndex, onReveal }: { isH
       </h3>
       <Button 
         size="lg" 
-        className="bg-emerald-600 hover:bg-emerald-500 px-16 py-10 text-2xl font-black rounded-3xl shadow-[0_0_30px_rgba(16,185,129,0.3)] border-b-4 border-emerald-800" 
+        className="bg-emerald-600 hover:bg-emerald-500 px-16 py-10 text-2xl font-black rounded-3xl shadow-[0_0_25px_rgba(16,185,129,0.25)] border-b-4 border-emerald-800" 
         onClick={onReveal}
       >
         VSTOUPIT DO POSLUCHÁRNY
@@ -87,7 +87,7 @@ export function TargetingOverlay({ targetingMode, pendingEffect, players, handle
         </p>
       </div>
       
-      <div className="w-full max-w-6xl bg-black/40 p-12 rounded-[4rem] border-4 border-red-500/30 shadow-[0_0_100px_rgba(239,68,68,0.1)] relative">
+      <div className="w-full max-w-6xl bg-black/40 p-12 rounded-[4rem] border-4 border-red-500/30 shadow-[0_0_80px_rgba(239,68,68,0.08)] relative">
          <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-red-600 px-6 py-1 rounded-full text-xs font-bold tracking-widest text-white uppercase">Cílová oblast</div>
          <BoardArea 
             id="target-board" 
@@ -115,7 +115,7 @@ export function EffectDialog({
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) onClose(); }}>
-      <DialogContent className="sm:max-w-md bg-slate-900 border-2 border-slate-700 text-white shadow-[0_0_60px_rgba(0,0,0,0.9)] rounded-2rem">
+      <DialogContent className="sm:max-w-md bg-slate-900 border-2 border-slate-700 text-white shadow-[0_0_50px_rgba(0,0,0,0.8)] rounded-2rem">
         
         <DialogHeader>
           <DialogTitle className="text-4xl font-chalk text-center text-emerald-400 drop-shadow-md">
@@ -257,7 +257,7 @@ export function BracketOverlay({ bracketMode, players, currentPlayerId, handleBr
     <div className="fixed inset-0 bg-slate-950/98 z-150 flex flex-col items-center justify-center p-8 backdrop-blur-xl animate-in fade-in">
       <div className="text-center mb-16">
         <h2 className="text-6xl text-white font-black mb-6 tracking-tighter uppercase font-chalk drop-shadow-lg">Režim závorek</h2>
-        <div className="inline-block bg-emerald-500/10 py-4 px-10 rounded-full border-2 border-emerald-500/30 shadow-[0_0_30px_rgba(16,185,129,0.1)]">
+        <div className="inline-block bg-emerald-500/10 py-4 px-10 rounded-full border-2 border-emerald-500/30 shadow-[0_0_25px_rgba(16,185,129,0.08)]">
           <p className="text-2xl text-emerald-400 animate-pulse font-mono tracking-tight font-bold">
             {bracketMode.step === 'LEFT' 
               ? "① Vyber kartu, PŘED kterou položíš '('" 
@@ -266,7 +266,7 @@ export function BracketOverlay({ bracketMode, players, currentPlayerId, handleBr
         </div>
       </div>
       
-      <div className="w-full max-w-6xl bg-white/5 p-16 rounded-[4rem] border-4 border-emerald-500/20 shadow-[0_0_100px_rgba(16,185,129,0.05)]">
+      <div className="w-full max-w-6xl bg-white/5 p-16 rounded-[4rem] border-4 border-emerald-500/20 shadow-[0_0_80px_rgba(16,185,129,0.04)]">
          <BoardArea 
             id="bracket-board" 
             cards={currentPlayer?.board || []} 

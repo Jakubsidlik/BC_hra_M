@@ -50,7 +50,6 @@ export default function App() {
   return (
     // @ts-ignore
     <DndContext onDragEnd={actions.handleDragEnd} sensors={sensors}>
-      // @ts-ignore
       <Toaster position="top-center" richColors />
       
       {/* --- OVERLAY VRSTVY (Vítězství, Předání, Minihry) --- */}
@@ -116,29 +115,29 @@ export default function App() {
 />
 
       {/* --- HLAVNÍ UI HRY --- */}
-      <div className={`min-h-screen p-4 md:p-8 transition-colors duration-700 ${currentPlayer.theme} overflow-x-hidden relative`}>
+      <div className={`min-h-screen p-3 sm:p-4 md:p-6 lg:p-8 transition-colors duration-700 ${currentPlayer.theme} overflow-x-hidden relative`}>
         <div className="absolute inset-0 bg-black/20 pointer-events-none" />
         
-        <div className="max-w-6xl mx-auto relative z-10">
+        <div className="max-w-8xl mx-auto relative z-10">
           
           {/* HLAVIČKA */}
-          <div className="flex flex-col lg:flex-row justify-between items-center gap-6 mb-12">
+          <div className="flex flex-col lg:flex-row justify-between items-center gap-3 md:gap-4 lg:gap-6 mb-4 md:mb-8 lg:mb-12">
             <div className="text-center lg:text-left">
-              <h1 className="text-4xl lg:text-6xl font-black italic mix-blend-difference text-white tracking-tighter uppercase font-chalk drop-shadow-lg">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black italic mix-blend-difference text-white tracking-tighter uppercase font-chalk drop-shadow-lg">
                 Teorie křídy
               </h1>
-              <div className="flex gap-3 items-center mt-2 justify-center lg:justify-start">
-                <Badge variant="outline" className="text-emerald-400 border-emerald-400/50 uppercase text-[10px] tracking-widest">
+              <div className="flex gap-3 items-center mt-1 md:mt-2 justify-center lg:justify-start">
+                <Badge variant="outline" className="text-emerald-400 border-emerald-400/50 uppercase text-[8px] md:text-[10px] tracking-widest">
                   {state.difficulty}
                 </Badge>
-                <p className="text-white/70 font-mono italic text-sm">Matematik: {currentPlayer.name}</p>
+                <p className="text-white/70 font-mono italic text-xs md:text-sm">Matematik: {currentPlayer.name}</p>
               </div>
             </div>
             
-            <div className="flex gap-4 w-full lg:w-auto">
+            <div className="flex gap-2 md:gap-4 w-full lg:w-auto">
               <Button 
                 size="lg" 
-                className="flex-1 lg:flex-none bg-emerald-600 hover:bg-emerald-500 font-bold h-16 px-10 text-xl shadow-[0_0_20px_rgba(16,185,129,0.4)] border-b-4 border-emerald-800" 
+                className="flex-1 lg:flex-none bg-emerald-600 hover:bg-emerald-500 font-bold h-10 md:h-14 lg:h-16 px-4 md:px-8 lg:px-10 text-sm md:text-lg lg:text-xl shadow-[0_0_15px_rgba(16,185,129,0.3)] border-b-4 border-emerald-800" 
                 onClick={actions.checkMathEngine}
                 disabled={state.hasModifiedBoardThisTurn}
               >
@@ -147,7 +146,7 @@ export default function App() {
               <Button 
                 size="lg" 
                 variant="secondary" 
-                className="flex-1 lg:flex-none h-16 px-10 font-bold text-xl border-b-4 border-slate-400" 
+                className="flex-1 lg:flex-none h-10 md:h-14 lg:h-16 px-4 md:px-8 lg:px-10 font-bold text-sm md:text-lg lg:text-xl border-b-4 border-slate-400" 
                 onClick={actions.handleEndTurn}
               >
                 {state.isDiscarding ? "HOTOVO" : "UKONČIT TAH"}
@@ -156,12 +155,10 @@ export default function App() {
           </div>
 
           {/* HERNÍ PLOCHA A SYNTAX BAR */}
-          <div className="flex flex-col lg:flex-row gap-8 mb-48">
-            <div className="w-full lg:w-32 bg-black/40 backdrop-blur-md rounded-[2.5rem] p-5 flex flex-row lg:flex-col items-center gap-4 border-2 border-white/10 overflow-x-auto shadow-inner">
-              <span className="text-[10px] text-white/30 uppercase font-bold tracking-[0.2em] hidden lg:block">Syntax</span>
+          <div className="flex flex-col lg:flex-row gap-6 md:gap-8 lg:gap-10 mb-36 md:mb-44 lg:mb-52">
+            <div className="bg-black/40 backdrop-blur-md rounded-3xl lg:rounded-[2.5rem] p-4 md:p-6 lg:p-8 flex flex-row lg:flex-col items-center justify-center gap-3 md:gap-4 lg:gap-6 border-2 border-white/10 shadow-[inset_0_2px_20px_rgba(0,0,0,0.4)] min-h-[120px] md:min-h-[160px] lg:min-h-[200px]">
               {currentPlayer.syntax.map(c => (
-                <div key={c.id} className="relative w-12 h-16 lg:w-16 lg:h-24 shrink-0 scale-90">
-                  <HandCard card={c} index={0} total={1} />
+                <div key={c.id} className="relative shrink-0 w-20 h-28 sm:w-24 sm:h-32 md:w-28 md:h-36 lg:w-32 lg:h-40">
                 </div>
               ))}
             </div>
@@ -180,7 +177,7 @@ export default function App() {
           {/* RUKA HRÁČE A HŘBITOV */}
           <div 
             key={`hand-container-p-${state.currentPlayerIndex}`} 
-            className="fixed bottom-0 left-0 w-full lg:bottom-10 lg:left-1/2 lg:-translate-x-1/2 lg:w-auto flex items-end gap-2 lg:gap-4 bg-black/85 backdrop-blur-xl p-3 lg:p-8 lg:rounded-[3.5rem] border-t-2 lg:border-2 border-white/10 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] z-40 overflow-x-auto scrollbar-hide"
+            className="fixed bottom-0 left-0 w-full lg:bottom-6 xl:bottom-10 lg:left-1/2 lg:-translate-x-1/2 lg:w-auto flex items-end gap-2 md:gap-3 lg:gap-4 bg-black/85 backdrop-blur-xl p-2 sm:p-3 md:p-5 lg:p-8 lg:rounded-3xl xl:rounded-[3.5rem] border-t-2 lg:border-2 border-white/10 shadow-[0_-8px_30px_rgba(0,0,0,0.4)] z-40 overflow-x-auto scrollbar-hide"
           >
             <DiscardZone 
               discardCount={state.discardPile.length} 
@@ -188,8 +185,8 @@ export default function App() {
               isDiscarding={state.isDiscarding} 
             />
             
-            <div className="flex h-28 lg:h-44 items-center flex-1 px-2 min-w-280px">
-              <div className={`flex -space-x-8 lg:-space-x-12 hover:space-x-2 transition-all duration-500 items-end ${state.isDiscarding ? 'p-2 ring-2 ring-red-500/30 rounded-2xl' : ''}`}>
+            <div className="flex h-32 sm:h-36 md:h-42 lg:h-48 items-center flex-1 px-2 md:px-3 min-w-[320px]">
+              <div className={`flex -space-x-6 sm:-space-x-8 md:-space-x-10 lg:-space-x-12 hover:space-x-2 md:hover:space-x-3 transition-all duration-500 items-end ${state.isDiscarding ? 'p-2 ring-1 ring-red-500/20 rounded-xl' : ''}`}>
                 {currentPlayer.hand.map((c, i) => (
                   <HandCard 
                     key={c.id} 

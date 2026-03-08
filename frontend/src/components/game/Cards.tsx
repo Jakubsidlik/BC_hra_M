@@ -68,14 +68,15 @@ export function HandCard({ card, index, total, isDiscarding, onDiscard }: HandCa
   return (
     <div
       ref={setNodeRef}
-      style={style}
       {...listeners} 
       {...attributes}
       onClick={() => isDiscarding && onDiscard && onDiscard(card.id)}
-      className={`relative w-20 h-32 md:w-24 md:h-36 rounded-xl border-4 transition-all duration-200 origin-bottom bg-slate-800 shadow-2xl
+      style={style}
+      className={`relative w-20 h-28 sm:w-24 sm:h-32 md:w-28 md:h-36 lg:w-32 lg:h-40 rounded-xl border-3 md:border-4 transition-all duration-200 origin-bottom bg-slate-800 shadow-xl
+        ${isDragging ? 'scale-110 shadow-[0_0_25px_rgba(16,185,129,0.6)] ring-2 ring-emerald-400/50 z-[200] rotate-0' : ''}
         ${isDiscarding 
-          ? 'cursor-pointer border-red-500 hover:scale-110 hover:shadow-[0_0_20px_rgba(239,68,68,0.6)] ring-4 ring-red-600/20 animate-pulse' 
-          : 'cursor-grab active:cursor-grabbing hover:-translate-y-12 hover:z-50 hover:scale-110'}
+          ? 'cursor-pointer border-red-500 hover:scale-105 hover:shadow-[0_0_15px_rgba(239,68,68,0.4)] ring-2 ring-red-600/15 animate-pulse' 
+          : 'cursor-grab active:cursor-grabbing hover:-translate-y-8 hover:z-50 hover:scale-105'}
         ${borderColor}
       `}
     >
@@ -131,23 +132,23 @@ export function BoardCard({ card, isTargeting, onCardClick, absoluteValue }: Boa
 
   return (
     <div 
-      className={`relative flex flex-col items-center justify-end h-32 md:h-40 group ${isTargeting ? 'cursor-pointer' : ''}`}
+      className={`relative flex flex-col items-center justify-end h-36 md:h-44 lg:h-48 group ${isTargeting ? 'cursor-pointer' : ''}`}
+      style={style}
       onClick={handleClick}
       ref={setDragRef}
-      style={style}
       {...listeners}
       {...attributes}
     >
       {/* Zóna pro Exponent - Skrytá, dokud nad ni nenajedeš */}
       <div
         ref={setDropRef}
-        className={`absolute -top-4 -right-6 w-12 h-16 md:w-16 md:h-20 rounded-lg transition-all duration-200 z-10 flex items-center justify-center
+        className={`absolute -top-4 -right-6 w-12 h-16 md:w-14 md:h-20 lg:w-16 lg:h-22 rounded-lg transition-all duration-200 z-10 flex items-center justify-center
           ${card.exponent ? 'opacity-100' : (isOver ? 'opacity-100 border-2 border-dashed border-yellow-400 bg-yellow-400/20 scale-110' : 'opacity-0')}
           ${isTargeting ? 'pointer-events-none' : ''} 
         `}
       >
         {card.exponent && (
-          <div className="w-10 h-14 md:w-14 md:h-18 scale-90 pointer-events-none">
+          <div className="w-full h-full scale-90 pointer-events-none">
             <div className={`w-full h-full bg-slate-800 rounded-lg border-2 ${getBorderColor(card.exponent.symbol)} flex items-center justify-center p-1`}>
               {cardsDatabase[card.exponent.symbol]?.image ? (
                 <img src={`${BASE}${cardsDatabase[card.exponent.symbol].image.replace(/^\//, '')}`} className="w-full h-full object-contain" alt="exp" />
@@ -160,11 +161,13 @@ export function BoardCard({ card, isTargeting, onCardClick, absoluteValue }: Boa
       </div>
 
       {/* Hlavní karta na stole */}
-      <div className={`w-20 h-28 md:w-24 md:h-36 rounded-xl border-4 flex items-center justify-center bg-slate-800 shadow-2xl transition-all
+      <div 
+        className={`w-20 h-28 sm:w-24 sm:h-32 md:w-28 md:h-36 lg:w-32 lg:h-40 rounded-xl border-3 md:border-4 flex items-center justify-center bg-slate-800 shadow-xl
         ${borderColor}
-        ${cardData?.hasEffect ? 'shadow-[0_0_20px_rgba(16,185,129,0.2)]' : ''}
-        ${isTargeting ? 'hover:scale-110 hover:border-red-500 hover:shadow-[0_0_30px_rgba(239,68,68,0.4)]' : ''}
-        ${absoluteValue ? 'border-x-8 border-x-blue-500' : ''}
+        ${cardData?.hasEffect ? 'shadow-[0_0_15px_rgba(16,185,129,0.15)]' : ''}
+        ${isDragging ? 'scale-110 shadow-[0_0_25px_rgba(16,185,129,0.6)] ring-2 ring-emerald-400/50 z-[200]' : ''}
+        ${isTargeting ? 'hover:scale-105 hover:border-red-500 hover:shadow-[0_0_20px_rgba(239,68,68,0.3)]' : ''}
+        ${absoluteValue ? 'border-x-6 border-x-blue-500' : ''}
       `}>
         <div className="w-full h-full flex items-center justify-center p-3">
           {cardData?.image ? (
@@ -196,10 +199,10 @@ export function BoardArea({ id, cards, targetR, playerTheme, isTargeting, onCard
       {/* NALEVO: Konstrukce L */}
       <div
         ref={setNodeRef}
-        className={`relative flex-1 min-h-250px md:min-h-350px w-full rounded-[3.5rem] border-4 border-dashed transition-all duration-500 flex items-center justify-center p-8
-          ${isOver ? 'border-white scale-[1.01] shadow-[0_0_40px_rgba(255,255,255,0.15)]' : 'border-white/10'}
+        className={`relative flex-1 w-full min-h-[250px] md:min-h-[350px] rounded-3xl lg:rounded-[3.5rem] border-4 border-dashed transition-all duration-500 flex items-center justify-center p-4 md:p-6 lg:p-8
+          ${isOver ? 'border-emerald-400 scale-[1.02] shadow-[0_0_40px_rgba(16,185,129,0.2)] bg-emerald-900/10' : 'border-white/10'}
           ${playerTheme || 'bg-slate-900/60'}
-          shadow-[inset_0_4px_40px_rgba(0,0,0,0.7)]
+          shadow-[inset_0_2px_30px_rgba(0,0,0,0.6)]
         `}
       >
         {/* VIZUALIZACE ABSOLUTNÍ HODNOTY |L| */}
@@ -227,16 +230,16 @@ export function BoardArea({ id, cards, targetR, playerTheme, isTargeting, onCard
       </div>
 
       {/* UPROSTŘED: Rovnítko */}
-      <div className="text-7xl md:text-9xl font-chalk text-white/40 select-none drop-shadow-[0_10px_10px_rgba(0,0,0,0.5)]">
+      <div className="text-5xl md:text-7xl lg:text-9xl font-chalk text-white/40 select-none drop-shadow-[0_10px_10px_rgba(0,0,0,0.5)]">
         =
       </div>
 
       {/* NAPRAVO: Cíl R */}
-      <div className="flex flex-col items-center justify-center bg-black/50 backdrop-blur-xl p-8 md:p-12 rounded-[3rem] border-2 border-white/10 min-w-160px md:min-w-220px shadow-2xl transition-transform hover:scale-105">
-        <div className="text-7xl md:text-9xl font-chalk text-yellow-400 drop-shadow-[0_0_25px_rgba(250,204,21,0.7)] text-center">
+      <div className="flex flex-col items-center justify-center bg-black/50 backdrop-blur-xl p-6 md:p-8 lg:p-12 rounded-3xl lg:rounded-[3rem] border-2 border-white/10 min-w-[8rem] md:min-w-[10rem] lg:min-w-[14rem] shadow-xl transition-transform hover:scale-105">
+        <div className="text-5xl md:text-7xl lg:text-9xl font-chalk text-yellow-400 drop-shadow-[0_0_25px_rgba(250,204,21,0.7)] text-center">
           {targetR}
         </div>
-        <div className="text-[10px] md:text-xs font-mono text-white/40 uppercase tracking-[0.4em] mt-6 font-black text-center">
+        <div className="text-[8px] md:text-[10px] lg:text-xs font-mono text-white/40 uppercase tracking-[0.4em] mt-3 md:mt-4 lg:mt-6 font-black text-center">
           Cílový<br/>parametr R
         </div>
       </div>

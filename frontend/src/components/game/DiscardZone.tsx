@@ -13,7 +13,7 @@ export function DiscardZone({ discardCount, deckCount, isDiscarding }: DiscardZo
     <div 
       ref={setNodeRef}
       className={`w-20 h-28 lg:w-32 lg:h-44 shrink-0 rounded-2rem border-2 flex flex-col items-center justify-center text-white font-bold p-2 shadow-lg transition-all duration-300 relative z-50
-        ${isOver && isDiscarding ? 'border-red-500 bg-red-950/80 scale-110 shadow-[0_0_30px_rgba(239,68,68,0.5)]' : 'border-white/10 bg-slate-900/80'}
+        ${isOver && isDiscarding ? 'border-red-500 bg-red-950/80 scale-105 shadow-[0_0_25px_rgba(239,68,68,0.4)]' : 'border-white/10 bg-slate-900/80'}
         ${isDiscarding && !isOver ? 'animate-pulse ring-4 ring-red-500/50' : ''}
       `}
     >

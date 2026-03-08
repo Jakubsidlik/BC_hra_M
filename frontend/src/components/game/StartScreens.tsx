@@ -6,7 +6,7 @@ const BASE = import.meta.env.BASE_URL;
 export function MainMenu({ onPlay, onRules }: { onPlay: () => void, onRules: () => void }) {
   return (
     <div 
-      className="min-h-screen flex flex-col items-center justify-center p-8 border-16px border-amber-950/90 relative overflow-hidden bg-cover bg-center shadow-[inset_0_0_150px_rgba(0,0,0,0.8)]"
+      className="min-h-screen flex flex-col items-center justify-center p-8 border-16px border-amber-950/90 relative overflow-hidden bg-cover bg-center shadow-[inset_0_0_120px_rgba(0,0,0,0.7)]"
       style={{ backgroundImage: `url('${BASE}tabule.svg')` }}
     >
       <div className="absolute inset-0 bg-black/30 pointer-events-none" />
@@ -30,7 +30,7 @@ export function MainMenu({ onPlay, onRules }: { onPlay: () => void, onRules: () 
         <div className="flex flex-col gap-6 w-full max-w-sm">
           <Button 
             size="lg" 
-            className="bg-emerald-600/20 hover:bg-emerald-600/40 text-emerald-100 font-black text-3xl px-12 py-10 rounded-2xl border-4 border-emerald-400/50 hover:border-emerald-400 transition-all shadow-[0_0_30px_rgba(16,185,129,0.2)] hover:shadow-[0_0_50px_rgba(16,185,129,0.4)]" 
+            className="bg-emerald-600/20 hover:bg-emerald-600/40 text-emerald-100 font-black text-3xl px-12 py-10 rounded-2xl border-4 border-emerald-400/50 hover:border-emerald-400 transition-all shadow-[0_0_25px_rgba(16,185,129,0.15)] hover:shadow-[0_0_40px_rgba(16,185,129,0.3)]" 
             onClick={onPlay}
           >
             HRÁT
@@ -53,7 +53,7 @@ export function MainMenu({ onPlay, onRules }: { onPlay: () => void, onRules: () 
 export function DifficultySelection({ onSelect, onBack }: { onSelect: (mode: 'ZŠ' | 'SŠ' | 'VŠ') => void, onBack: () => void }) {
   return (
     <div 
-      className="min-h-screen flex flex-col items-center justify-center p-8 border-16px border-amber-950/90 relative overflow-hidden bg-cover bg-center shadow-[inset_0_0_150px_rgba(0,0,0,0.8)]"
+      className="min-h-screen flex flex-col items-center justify-center p-8 border-16px border-amber-950/90 relative overflow-hidden bg-cover bg-center shadow-[inset_0_0_120px_rgba(0,0,0,0.7)]"
       style={{ backgroundImage: `url('${BASE}tabule.svg')` }}
     >
       <div className="absolute inset-0 bg-black/30 pointer-events-none" />
@@ -92,7 +92,7 @@ export function DifficultySelection({ onSelect, onBack }: { onSelect: (mode: 'Z�
 export function RulesScreen({ onBack }: { onBack: () => void }) {
   return (
     <div 
-      className="min-h-screen flex flex-col items-center p-4 md:p-12 border-16px border-amber-950/90 relative bg-cover bg-center shadow-[inset_0_0_150px_rgba(0,0,0,0.8)]"
+      className="min-h-screen flex flex-col items-center p-4 md:p-12 border-16px border-amber-950/90 relative bg-cover bg-center shadow-[inset_0_0_120px_rgba(0,0,0,0.7)]"
       style={{ backgroundImage: `url('${BASE}tabule.svg')` }}
     >
       <div className="absolute inset-0 bg-black/40 pointer-events-none" />

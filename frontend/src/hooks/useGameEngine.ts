@@ -219,24 +219,26 @@ export function useGameEngine() {
   // ==========================================
 
   const addCardToGameState = useCallback((card: GameCard, targetId: string | null) => {
+    // Odebrat kartu z ruky a přidat na tabuli okamžitě
     setPlayers(prev => {
       const next = JSON.parse(JSON.stringify(prev));
       const p = next[currentPlayerIndex];
       p.hand = p.hand.filter((c: GameCard) => c.id !== card.id);
       p.syntax = p.syntax.filter((c: GameCard) => c.id !== card.id);
       if (targetId) {
-        const update = (cs: GameCard[]): GameCard[] => cs.map(c => 
+        const update = (cs: GameCard[]): GameCard[] => cs.map(c =>
           c.id === targetId ? { ...c, exponent: card } : (c.exponent ? { ...c, exponent: update([c.exponent])[0] } : c)
         );
         p.board = update(p.board);
       } else p.board.push(card);
       return next;
     });
+
     setHasModifiedBoardThisTurn(true);
     setPendingEffect(null);
   }, [currentPlayerIndex]);
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  const handleDragEnd = useCallback((event: DragEndEvent) => {
     const { active, over } = event;
     if (!over) return;
 
@@ -274,7 +276,7 @@ export function useGameEngine() {
     } else {
       addCardToGameState(card, targetId);
     }
-  };
+  }, [currentPlayerIndex, players, isDiscarding, hasModifiedBoardThisTurn, addCardToGameState]);
 
   // ==========================================
   // 5. EFEKTY A CÍLENÍ
@@ -385,10 +387,19 @@ export function useGameEngine() {
       syntax: [{ id: `p${i}-l1`, symbol: '(' }, { id: `p${i}-r1`, symbol: ')' }, { id: `p${i}-l2`, symbol: '(' }, { id: `p${i}-r2`, symbol: ')' }],
       status: { mathModifiers: [], extraTurn: false, frozen: false, extraDraw: 0, drawReduction: 0, notifications: [] }
     }));
-    setDeck(initialDeck);
+
+    // Deal 5 cards to the first player directly from the deck
+    const deckCopy = [...initialDeck];
+    for (let i = 0; i < 5; i++) {
+      const drawn = deckCopy.pop();
+      if (drawn) {
+        newPlayers[0].hand.push({ ...drawn, id: `h-${drawn.symbol}-${Date.now()}-${Math.random().toString(36).substring(2,5)}` });
+      }
+    }
+
+    setDeck(deckCopy);
     setPlayers(newPlayers);
     setGamePhase('PLAYING');
-    performDraw(5, 0);
   };
 
   return {
