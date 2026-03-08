@@ -4,6 +4,8 @@ import { cardsDatabase } from '@/data/cardsDB';
 import { getBorderColor } from '@/lib/gameHelpers';
 import type { GameCard } from '@/lib/effects';
 
+const BASE = import.meta.env.BASE_URL;
+
 export interface DropData {
   parentId: string;
 }
@@ -86,7 +88,7 @@ export function HandCard({ card, index, total, isDiscarding, onDiscard }: HandCa
       <div className="w-full h-full flex items-center justify-center p-2 pointer-events-none">
         {cardData?.image ? (
           <img 
-            src={cardData.image} 
+            src={`${BASE}${cardData.image.replace(/^\//, '')}`} 
             alt={card.symbol} 
             className="w-full h-full object-contain drop-shadow-[0_0_5px_rgba(255,255,255,0.4)]"
           />
@@ -148,7 +150,7 @@ export function BoardCard({ card, isTargeting, onCardClick, absoluteValue }: Boa
           <div className="w-10 h-14 md:w-14 md:h-18 scale-90 pointer-events-none">
             <div className={`w-full h-full bg-slate-800 rounded-lg border-2 ${getBorderColor(card.exponent.symbol)} flex items-center justify-center p-1`}>
               {cardsDatabase[card.exponent.symbol]?.image ? (
-                <img src={cardsDatabase[card.exponent.symbol].image} className="w-full h-full object-contain" alt="exp" />
+                <img src={`${BASE}${cardsDatabase[card.exponent.symbol].image.replace(/^\//, '')}`} className="w-full h-full object-contain" alt="exp" />
               ) : (
                 <span className="text-xl font-chalk text-slate-200">{card.exponent.symbol}</span>
               )}
@@ -167,7 +169,7 @@ export function BoardCard({ card, isTargeting, onCardClick, absoluteValue }: Boa
         <div className="w-full h-full flex items-center justify-center p-3">
           {cardData?.image ? (
             <img 
-              src={cardData.image} 
+              src={`${BASE}${cardData.image.replace(/^\//, '')}`} 
               alt={cardData.symbol} 
               className="w-full h-full object-contain pointer-events-none drop-shadow-[0_0_4px_rgba(255,255,255,0.6)]"
             />

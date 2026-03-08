@@ -1,11 +1,13 @@
 import { Button } from "@/components/ui/button";
 
+const BASE = import.meta.env.BASE_URL;
+
 // --- HLAVNÍ MENU ---
 export function MainMenu({ onPlay, onRules }: { onPlay: () => void, onRules: () => void }) {
   return (
     <div 
       className="min-h-screen flex flex-col items-center justify-center p-8 border-16px border-amber-950/90 relative overflow-hidden bg-cover bg-center shadow-[inset_0_0_150px_rgba(0,0,0,0.8)]"
-      style={{ backgroundImage: "url('/tabule.svg')" }}
+      style={{ backgroundImage: `url('${BASE}tabule.svg')` }}
     >
       <div className="absolute inset-0 bg-black/30 pointer-events-none" />
 
@@ -19,7 +21,7 @@ export function MainMenu({ onPlay, onRules }: { onPlay: () => void, onRules: () 
         
         <div className="mb-16 w-full max-w-lg transform hover:rotate-1 transition-transform duration-700">
           <img 
-            src="/sumace_kridou.png" 
+            src={`${BASE}sumace_kridou.png`} 
             alt="Matematický zápis křídou na tabuli" 
             className="w-full h-auto drop-shadow-[0_0_20px_rgba(255,255,255,0.4)] pointer-events-none"
           />
@@ -52,7 +54,7 @@ export function DifficultySelection({ onSelect, onBack }: { onSelect: (mode: 'Z�
   return (
     <div 
       className="min-h-screen flex flex-col items-center justify-center p-8 border-16px border-amber-950/90 relative overflow-hidden bg-cover bg-center shadow-[inset_0_0_150px_rgba(0,0,0,0.8)]"
-      style={{ backgroundImage: "url('/tabule.svg')" }}
+      style={{ backgroundImage: `url('${BASE}tabule.svg')` }}
     >
       <div className="absolute inset-0 bg-black/30 pointer-events-none" />
 
@@ -91,7 +93,7 @@ export function RulesScreen({ onBack }: { onBack: () => void }) {
   return (
     <div 
       className="min-h-screen flex flex-col items-center p-4 md:p-12 border-16px border-amber-950/90 relative bg-cover bg-center shadow-[inset_0_0_150px_rgba(0,0,0,0.8)]"
-      style={{ backgroundImage: "url('/tabule.svg')" }}
+      style={{ backgroundImage: `url('${BASE}tabule.svg')` }}
     >
       <div className="absolute inset-0 bg-black/40 pointer-events-none" />
 
@@ -243,7 +245,7 @@ export function MobileWarningScreen() {
   return (
     <div 
       className="min-h-screen flex items-center justify-center p-8 bg-cover bg-center text-center relative"
-      style={{ backgroundImage: "url('/tabule.svg')" }}
+      style={{ backgroundImage: `url('${BASE}tabule.svg')` }}
     >
       <div className="absolute inset-0 bg-black/60 pointer-events-none" />
       <div className="relative z-10 bg-black/40 backdrop-blur-md p-8 rounded-3xl border-4 border-slate-500/50 shadow-2xl max-w-sm">

@@ -57,7 +57,7 @@ export function SetupScreen({ onStart }: SetupScreenProps) {
   return (
     <div 
       className="min-h-screen flex flex-col items-center justify-center p-4 md:p-8 border-16px border-amber-950/90 relative overflow-hidden bg-cover bg-center shadow-[inset_0_0_150px_rgba(0,0,0,0.8)]"
-      style={{ backgroundImage: "url('/tabule.svg')" }}
+      style={{ backgroundImage: `url('${import.meta.env.BASE_URL}tabule.svg')` }}
     >
       <div className="absolute inset-0 bg-black/40 pointer-events-none" />
 
