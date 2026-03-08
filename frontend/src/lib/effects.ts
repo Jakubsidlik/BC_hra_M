@@ -65,6 +65,15 @@ const ensureStatus = (player: Player) => {
 
 // --- HERNÍ ENGINE EFEKTŮ ---
 
+export interface EffectResult {
+  players: Player[];
+  metadata?: {
+    turnOrderReversed?: boolean;
+    deckPreviewTriggered?: boolean;
+    moduloOperationTriggered?: boolean;
+  };
+}
+
 export const applyEffectLogic = (
   effectId: string,
   currentState: Player[],
@@ -73,7 +82,7 @@ export const applyEffectLogic = (
   targetCardId?: string,
   playedCard?: GameCard,
   currentDifficulty: DifficultyMode = 'ZŠ' // PŘIDÁNO: Potřebujeme vědět obtížnost pro efekty měnící R
-): Player[] => {
+): EffectResult | Player[] => {
 
   // Hluboká kopie stavu
   const newPlayers: Player[] = JSON.parse(JSON.stringify(currentState));
@@ -97,240 +106,265 @@ export const applyEffectLogic = (
   }
 
   switch (effectId) {
-    case "EFF_001": // +: Bonus k lízání
+    // --- EFEKTY EFF_001 až EFF_025 (Podle karty.csv) ---
+
+    case "EFF_001": // Dobrání 1 karty navíc (0-9, π)
       activePlayer.status.extraDraw = (activePlayer.status.extraDraw || 0) + 1;
       break;
 
-    case "EFF_002": // Karta pi: Moje R se stává pi
-      activePlayer.targetR = "π";
-      activePlayer.status.mathModifiers.push("PI_TARGET");
-      break;
-
-    case "EFF_003": // Odstranění operátoru všem oponentům
-      newPlayers.forEach((p: Player) => {
-        if (p.id !== activePlayer.id) {
-          const opIndex = p.hand.findIndex((c: GameCard) => cardsDatabase[c.symbol]?.type === 'operator');
-          if (opIndex !== -1) {
-            p.hand.splice(opIndex, 1);
-            p.status.notifications.push(`Hráč ${activePlayer.name} ti zničil operátor v ruce!`);
-          }
-        }
-      });
-      break;
-
-    case "EFF_004": // Absolutní imunita
-      activePlayer.status.immune = true;
-      break;
-
-    case "EFF_006": // X: Výměna karty na stole za kartu z ruky
+    case "EFF_002": // π: Výměna 1 karty z vlastního L za kartu z L oponenta
       if (targetPlayer && targetCardId && playedCard) {
-        let stolenCard: GameCard | null = null;
+        let swappedCard: GameCard | null = null;
         
-        const swapInBoard = (cards: GameCard[]): GameCard[] => {
+        const findAndSwap = (cards: GameCard[]): GameCard[] => {
           return cards.map(c => {
             if (c.id === targetCardId) {
-              stolenCard = { ...c, exponent: null }; // Ukradneme základ bez exponentu
-              return { ...playedCard, exponent: c.exponent }; // Nahradíme základ, exponent zůstává
+              swappedCard = { ...c };
+              return { ...playedCard, exponent: c.exponent };
             }
             if (c.exponent) {
-                const result = swapInBoard([c.exponent]);
-                c.exponent = result.length > 0 ? result[0] : null;
+              const result = findAndSwap([c.exponent]);
+              c.exponent = result.length > 0 ? result[0] : null;
             }
             return c;
           });
         };
         
-        targetPlayer.board = swapInBoard(targetPlayer.board);
-        if (stolenCard) {
-          activePlayer.hand.push(stolenCard);
-          targetPlayer.status.notifications.push(`Hráč ${activePlayer.name} ti vyměnil kartu na tabuli za jinou!`);
+        targetPlayer.board = findAndSwap(targetPlayer.board);
+        if (swappedCard) {
+          activePlayer.hand.push(swappedCard);
+          targetPlayer.status.notifications.push(`🔄 Hráč ${activePlayer.name} si vyměnil kartu z tvé plochy!`);
         }
       }
       break;
 
-    case "EFF_007": // Smazání čísel a operátorů z ruky oponenta
+    case "EFF_003": // e: Imunita proti efektům int a d/dx
+      activePlayer.status.immune = true;
+      break;
+
+    case "EFF_004": // y: Následující hráč musí odhodit všechny číslice
       if (targetPlayer) {
         const originalLength = targetPlayer.hand.length;
         targetPlayer.hand = targetPlayer.hand.filter((c: GameCard) => {
           const type = cardsDatabase[c.symbol]?.type;
-          return type !== 'number' && type !== 'operator';
+          return type !== 'number';
         });
         if (targetPlayer.hand.length < originalLength) {
-           targetPlayer.status.notifications.push(`Hráč ${activePlayer.name} ti spálil čísla a operátory v ruce!`);
+          targetPlayer.status.notifications.push(`🔥 Hráč ${activePlayer.name} ti spálil všechny číslice z ruky!`);
         }
       }
       break;
 
-    case "EFF_008": // *: Velký bonus k lízání
+    case "EFF_005": // x: Následující hráč musí odhodit všechny operace
+      if (targetPlayer) {
+        const originalLength = targetPlayer.hand.length;
+        targetPlayer.hand = targetPlayer.hand.filter((c: GameCard) => {
+          const type = cardsDatabase[c.symbol]?.type;
+          return type !== 'operator';
+        });
+        if (targetPlayer.hand.length < originalLength) {
+          targetPlayer.status.notifications.push(`🔥 Hráč ${activePlayer.name} ti spálil všechny operace z ruky!`);
+        }
+      }
+      break;
+
+    case "EFF_006": // +: Následující hráč MUSÍ v příštím tahu použít operaci
+      if (targetPlayer) {
+        targetPlayer.status.mustPlayOperation = true;
+        targetPlayer.status.notifications.push(`⚠️ Hráč ${activePlayer.name} ti nařídil: Musíš hrát operaci!`);
+      }
+      break;
+
+    case "EFF_007": // -: Odstranění 1 libovolné karty z ruky zvoleného oponenta
+      if (targetPlayer && targetPlayer.hand.length > 0) {
+        const randomIndex = Math.floor(Math.random() * targetPlayer.hand.length);
+        const [removed] = targetPlayer.hand.splice(randomIndex, 1);
+        targetPlayer.status.notifications.push(`💥 Hráč ${activePlayer.name} ti spálil kartu z ruky: ${removed.symbol}`);
+      }
+      break;
+
+    case "EFF_008": // *: Zdvojnásobení počtu dobíraných karet
       activePlayer.status.extraDraw = (activePlayer.status.extraDraw || 0) + 2;
       break;
 
-    case "EFF_010": // Krádež náhodné karty z ruky
-      if (targetPlayer && targetPlayer.hand.length > 0) {
-        const randomIndex = Math.floor(Math.random() * targetPlayer.hand.length);
-        const [stolen] = targetPlayer.hand.splice(randomIndex, 1);
-        activePlayer.hand.push(stolen);
-        
-        // PŘIDÁNO: Notifikace
-        targetPlayer.status.notifications.push(`🥷 Hráč ${activePlayer.name} ti ukradl kartu z ruky!`);
-      }
-      break;
+    case "EFF_009": // /: Náhled na 3 vrchní karty balíčku a jejich přerovnání
+      // Signalizace, že je potřeba UI dialog v App.tsx
+      return {
+        players: newPlayers,
+        metadata: { deckPreviewTriggered: true }
+      };
 
-    case "EFF_011": // Zmrazení
+    case "EFF_010": // a^b: Následující hráč přeskakuje svůj tah
       if (targetPlayer) {
         targetPlayer.status.frozen = true;
-        targetPlayer.status.notifications.push(`❄️ Hráč ${activePlayer.name} tě zmrazil! Vynecháváš tah.`);
+        targetPlayer.status.notifications.push(`⏭️ Hráč ${activePlayer.name} ti zakazuje další tah!`);
       }
       break;
 
-    case "EFF_013": // Zablokování operací
+    case "EFF_011": // sqrt: Odhození celého obsahu ruky a dobrání nových karet
       if (targetPlayer) {
-        targetPlayer.status.operationLock = true;
-        targetPlayer.status.notifications.push(`🔒 Hráč ${activePlayer.name} ti zablokoval používání operátorů!`);
+        const count = targetPlayer.hand.length;
+        targetPlayer.hand = [];
+        targetPlayer.status.extraDraw = (targetPlayer.status.extraDraw || 0) + count;
+        targetPlayer.status.notifications.push(`🔄 Hráč ${activePlayer.name} ti nutí obnovit celou ruku!`);
       }
       break;
 
-    case "EFF_014": // /: Krádež karty ze stolu oponenta do ruky
-      if (targetPlayer && targetCardId) {
-        const stealFromBoard = (cards: GameCard[]): GameCard[] => {
+    case "EFF_012": // mod: Hodnota R = R mod (lib. číslo z ruky)
+      // Signalizace, že je potřeba UI dialog pro výběr čísla z ruky
+      return {
+        players: newPlayers,
+        metadata: { moduloOperationTriggered: true }
+      };
+
+    case "EFF_013": // n!: Následující hráč nesmí vyložit více než 1 kartu v příštím tahu
+      if (targetPlayer) {
+        targetPlayer.status.playLimit = 1;
+        targetPlayer.status.notifications.push(`🚫 Hráč ${activePlayer.name} ti omezil hraní na 1 kartu!`);
+      }
+      break;
+
+    case "EFF_014": // d/dx: Odstranění všech konstant a proměnných z L oponenta
+      if (targetPlayer) {
+        const constantSymbols = ['π', 'e', 'x', 'y'];
+        let removed = false;
+        
+        const removeConstants = (cards: GameCard[]): GameCard[] => {
           return cards.filter(c => {
-            if (c.id === targetCardId) {
-              activePlayer.hand.push({ ...c, exponent: null });
+            if (constantSymbols.includes(c.symbol)) {
+              removed = true;
               return false;
             }
             if (c.exponent) {
-                const result = stealFromBoard([c.exponent]);
-                c.exponent = result.length > 0 ? result[0] : null;
+              const result = removeConstants([c.exponent]);
+              c.exponent = result.length > 0 ? result[0] : null;
             }
             return true;
           });
         };
-        targetPlayer.board = stealFromBoard(targetPlayer.board);
-        targetPlayer.status.notifications.push(`🥷 Hráč ${activePlayer.name} ti ukradl kartu přímo z tabule!`);
-      }
-      break;
-
-    case "EFF_020": // mod: Moje R se změní na zbytek po dělení (příklad)
-      if (typeof activePlayer.targetR === 'number') {
-        activePlayer.targetR = activePlayer.targetR % 10;
-      }
-      break;
-
-    case "EFF_025": // Derivace: Odstranění exponentů u X na stole soupeřů
-      newPlayers.forEach((p: Player) => {
-        if (p.id !== activePlayer.id) {
-          let destroyed = false;
-          const destroyXExponents = (cards: GameCard[]): GameCard[] => {
-            return cards.map(c => {
-              if (c.symbol === 'x' && c.exponent) {
-                 destroyed = true;
-                 return { ...c, exponent: null };
-              }
-              if (c.exponent) {
-                const result = destroyXExponents([c.exponent]);
-                c.exponent = result.length > 0 ? result[0] : null;
-              }
-              return c;
-            });
-          };
-          p.board = destroyXExponents(p.board);
-          if (destroyed) {
-             p.status.notifications.push(`📉 Hráč ${activePlayer.name} ti zderivoval X a zničil jeho exponent!`);
-          }
+        
+        targetPlayer.board = removeConstants(targetPlayer.board);
+        if (removed) {
+          targetPlayer.status.notifications.push(`📉 Hráč ${activePlayer.name} ti derivoval - všechny konstanty zmizely!`);
         }
-      });
+      }
       break;
-    
-    case "EFF_026": // int: Úplně nové náhodné R pro oponenta (nebo sebe)
+
+    case "EFF_015": // int: Okamžité nahrazení cíle R libovolného hráče novým losem
       if (targetPlayer) {
         targetPlayer.targetR = generatePersonalTargetR(currentDifficulty);
-        targetPlayer.status.notifications.push(`⚠️ Hráč ${activePlayer.name} ti kompletně změnil cíl R! Nový cíl je: ${targetPlayer.targetR}`);
+        targetPlayer.status.notifications.push(`⚠️ Hráč ${activePlayer.name} ti kompletně změnil cíl R na: ${targetPlayer.targetR}`);
       }
       break;
 
-    case "EFF_027": // Sumace: Dvojitý tah
-      activePlayer.status.extraTurn = true;
+    case "EFF_016": // ∑: Žádný hráč nemůže celé kolo hrát operace
+      newPlayers.forEach((p: Player) => {
+        if (p.id !== activePlayer.id) {
+          p.status.operationLock = true;
+        }
+      });
+      newPlayers[currentPlayerIndex].status.notifications.push(`🔐 Zákaz operací pro všechny na příští kolo!`);
       break;
 
-    case "EFF_028": // Prohození stolu (Board swap)
-      if (targetPlayer) {
-        const tempBoard = activePlayer.board;
-        activePlayer.board = targetPlayer.board;
-        targetPlayer.board = tempBoard;
-        targetPlayer.status.notifications.push(`🔄 Hráč ${activePlayer.name} si s tebou prohodil celou tabuli!`);
-      }
-      break;
-
-    case "EFF_031": // Očištění (Clear all negative status)
-      activePlayer.status.frozen = false;
-      activePlayer.status.operationLock = false;
-      activePlayer.status.mustPlayOperation = false;
-      activePlayer.status.noDrawNextTurn = false;
-      activePlayer.status.drawReduction = 0;
-      activePlayer.status.playLimit = null;
-      break;
-
-    case "EFF_033": // Odstranění poslední karty ze stolu oponenta
-      if (targetPlayer && targetPlayer.board.length > 0) {
-        targetPlayer.board.pop();
-        targetPlayer.status.notifications.push(`Hráč ${activePlayer.name} ti smazal poslední kartu z tabule!`);
-      }
-      break;
-
-    case "EFF_035": // Nekonečné tahy (Limit off)
+    case "EFF_017": // log: Můžeš hrát libovolný počet karet
       activePlayer.status.infinitePlays = true;
       break;
 
-    case "EFF_036": // cotg: Inverze symbolu (např. x -> -x)
-      if (targetPlayer && targetCardId) {
-        const invertCard = (cards: GameCard[]): GameCard[] => {
-          return cards.map(c => {
-            if (c.id === targetCardId) {
-              if (c.symbol.startsWith('-')) c.symbol = c.symbol.substring(1);
-              else c.symbol = '-' + c.symbol;
-            }
-            if (c.exponent) {
-                const result = invertCard([c.exponent]);
-                c.exponent = result.length > 0 ? result[0] : null;
-            }
-            return c;
-          });
-        };
-        targetPlayer.board = invertCard(targetPlayer.board);
-        targetPlayer.status.notifications.push(`Hráč ${activePlayer.name} ti invertoval znaménko na tabuli!`);
+    case "EFF_018": // sin: Všichni si předají karty po směru (clockwise)
+      const tempHands1 = newPlayers.map(p => [...p.hand]);
+      for (let i = 0; i < newPlayers.length; i++) {
+        const nextIndex = (i + 1) % newPlayers.length;
+        newPlayers[nextIndex].hand = tempHands1[i];
       }
-      break;
-
-    case "EFF_042": // Globální zmrazení všech oponentů
-      newPlayers.forEach((p: Player) => {
+      newPlayers.forEach(p => {
         if (p.id !== activePlayer.id) {
-           p.status.frozen = true;
-           p.status.notifications.push(`❄️ Hráč ${activePlayer.name} plošně zmrazil všechny soupeře! Vynecháváš tah.`);
+          p.status.notifications.push(`🔄 Všichni si vyměnili karty po směru!`);
         }
       });
       break;
 
-    case "EFF_045": // det: Totální vymazání karty ze všech ploch (Board)
-      if (targetCardId) {
-        newPlayers.forEach((p: Player) => {
-          const destroyCard = (cards: GameCard[]): GameCard[] => {
-            return cards.filter(c => {
-              if (c.id === targetCardId) return false;
-              if (c.exponent) {
-                const result = destroyCard([c.exponent]);
-                c.exponent = result.length > 0 ? result[0] : null;
-              }
-              return true;
-            });
-          };
-          const oldLength = JSON.stringify(p.board).length;
-          p.board = destroyCard(p.board);
-          if (JSON.stringify(p.board).length < oldLength && p.id !== activePlayer.id) {
-             p.status.notifications.push(`Hráč ${activePlayer.name} použil Determinant a kompletně ti vymazal cíl z tabule!`);
-          }
-        });
+    case "EFF_019": // cos: Všichni si předají karty proti směru (counter-clockwise)
+      const tempHands2 = newPlayers.map(p => [...p.hand]);
+      for (let i = 0; i < newPlayers.length; i++) {
+        const prevIndex = (i - 1 + newPlayers.length) % newPlayers.length;
+        newPlayers[prevIndex].hand = tempHands2[i];
+      }
+      newPlayers.forEach(p => {
+        if (p.id !== activePlayer.id) {
+          p.status.notifications.push(`🔄 Všichni si vyměnili karty proti směru!`);
+        }
+      });
+      break;
+
+    case "EFF_020": // tg: Všichni si předají karty po směru
+      const tempHands3 = newPlayers.map(p => [...p.hand]);
+      for (let i = 0; i < newPlayers.length; i++) {
+        const nextIndex = (i + 1) % newPlayers.length;
+        newPlayers[nextIndex].hand = tempHands3[i];
+      }
+      newPlayers.forEach(p => {
+        if (p.id !== activePlayer.id) {
+          p.status.notifications.push(`🔄 Všichni si vyměnili karty po směru!`);
+        }
+      });
+      break;
+
+    case "EFF_021": // cotg: Všichni si předají karty proti směru
+      const tempHands4 = newPlayers.map(p => [...p.hand]);
+      for (let i = 0; i < newPlayers.length; i++) {
+        const prevIndex = (i - 1 + newPlayers.length) % newPlayers.length;
+        newPlayers[prevIndex].hand = tempHands4[i];
+      }
+      newPlayers.forEach(p => {
+        if (p.id !== activePlayer.id) {
+          p.status.notifications.push(`🔄 Všichni si vyměnili karty proti směru!`);
+        }
+      });
+      break;
+
+    case "EFF_022": // nCk: Prohození cifer v R cílového oponenta
+      if (targetPlayer && typeof targetPlayer.targetR === 'number') {
+        const digits = targetPlayer.targetR.toString().split('');
+        digits.reverse();
+        targetPlayer.targetR = parseInt(digits.join(''), 10);
+        targetPlayer.status.notifications.push(`🔀 Hráč ${activePlayer.name} ti prohodil cifry cíle R!`);
       }
       break;
+
+    case "EFF_023": // ∏: Žádný hráč nemůže celé kolo hrát čísla
+      newPlayers.forEach((p: Player) => {
+        if (p.id !== activePlayer.id) {
+          p.status.mathModifiers.push("NO_NUMBERS");
+        }
+      });
+      newPlayers[currentPlayerIndex].status.notifications.push(`🔐 Zákaz čísel pro všechny na příští kolo!`);
+      break;
+
+    case "EFF_024": // lim: Zrušení všech aktivních efektů u všech hráčů
+      newPlayers.forEach((p: Player) => {
+        p.status.frozen = false;
+        p.status.operationLock = false;
+        p.status.mustPlayOperation = false;
+        p.status.playLimit = null;
+      });
+      newPlayers.forEach(p => {
+        if (p.id !== activePlayer.id) {
+          p.status.notifications.push(`💥 Hráč ${activePlayer.name} zrušil všechny efekty!`);
+        }
+      });
+      break;
+
+    case "EFF_025": // det: Změní pořadí tahů na opačné
+      newPlayers.reverse();
+      newPlayers.forEach(p => {
+        if (p.id !== activePlayer.id) {
+          p.status.notifications.push(`🔄 Hráč ${activePlayer.name} otočil pořadí tahů!`);
+        }
+      });
+      return {
+        players: newPlayers,
+        metadata: { turnOrderReversed: true }
+      };
 
     default:
       console.log(`Logika pro efekt '${effectId}' je spravována v App.tsx nebo není definována.`);

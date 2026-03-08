@@ -21,7 +21,9 @@ import {
   HandoffScreen, 
   MinigameDialog, 
   VictoryScreen, 
-  BracketOverlay 
+  BracketOverlay,
+  DeckPreviewDialog,
+  ModuloDialog
 } from '@/components/game/GameUI';
 import { SetupScreen } from '@/components/game/SetupScreen';
 import { MainMenu, RulesScreen, DifficultySelection } from '@/components/game/StartScreens';
@@ -99,6 +101,20 @@ export default function App() {
         onCancel={() => actions.setBracketMode(null)} 
       />
       
+      <DeckPreviewDialog
+        open={!!state.deckPreviewMode}
+        deck={state.deck}
+        onConfirm={actions.handleDeckPreviewConfirm}
+        onCancel={() => actions.setDeckPreviewMode(null)}
+      />
+
+      <ModuloDialog
+        open={!!state.moduloMode}
+        hand={currentPlayer.hand}
+        onSelect={actions.handleModuloSelect}
+        onCancel={() => actions.setModuloMode(null)}
+      />
+      
       <TargetingOverlay 
   targetingMode={state.targetingMode} 
   pendingEffect={state.pendingEffect} 
@@ -165,7 +181,7 @@ export default function App() {
 
           {/* HERNÍ PLOCHA A SYNTAX BAR */}
           <div className="flex flex-col lg:flex-row gap-6 md:gap-8 lg:gap-10 mb-36 md:mb-44 lg:mb-52">
-            <div className="bg-black/40 backdrop-blur-md rounded-3xl lg:rounded-[2.5rem] p-4 md:p-6 lg:p-8 flex flex-row lg:flex-col items-center justify-center gap-3 md:gap-4 lg:gap-6 border-2 border-white/10 shadow-[inset_0_2px_20px_rgba(0,0,0,0.4)] min-h-[120px] md:min-h-[160px] lg:min-h-[200px]">
+            <div className="bg-black/40 backdrop-blur-md rounded-3xl lg:rounded-[2.5rem] p-4 md:p-6 lg:p-8 flex flex-row lg:flex-col items-center justify-center gap-3 md:gap-4 lg:gap-6 border-2 border-white/10 shadow-[inset_0_2px_20px_rgba(0,0,0,0.4)] min-h-120px md:min-h-160px lg:min-h-200px">
               {currentPlayer.syntax.map(c => (
                 <div key={c.id} className="relative shrink-0 w-20 h-28 sm:w-24 sm:h-32 md:w-28 md:h-36 lg:w-32 lg:h-40">
                 </div>

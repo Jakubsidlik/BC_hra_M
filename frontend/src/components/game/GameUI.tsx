@@ -1,3 +1,4 @@
+import * as React from 'react';
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
@@ -279,5 +280,150 @@ export function BracketOverlay({ bracketMode, players, currentPlayerId, handleBr
         PŘERUŠIT MANIPULACI
       </Button>
     </div>
+  );
+}
+
+// --- 6. DIALOG PRO NÁHLED BALÍČKU (EFF_009) ---
+export function DeckPreviewDialog({ 
+  open, 
+  deck, 
+  onConfirm, 
+  onCancel 
+}: { 
+  open: boolean; 
+  deck: GameCard[]; 
+  onConfirm: (reorderedDeck: GameCard[]) => void; 
+  onCancel: () => void; 
+}) {
+  const [reordered, setReordered] = React.useState<GameCard[]>([...deck.slice(0, 3)]);
+  const rest = [...deck.slice(3)];
+
+  const moveCard = (index: number, direction: 'up' | 'down') => {
+    const newOrder = [...reordered];
+    if (direction === 'up' && index > 0) {
+      [newOrder[index], newOrder[index - 1]] = [newOrder[index - 1], newOrder[index]];
+    } else if (direction === 'down' && index < newOrder.length - 1) {
+      [newOrder[index], newOrder[index + 1]] = [newOrder[index + 1], newOrder[index]];
+    }
+    setReordered(newOrder);
+  };
+
+  const handleConfirm = () => {
+    onConfirm([...reordered, ...rest]);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) onCancel(); }}>
+      <DialogContent className="sm:max-w-md bg-slate-900 border-2 border-emerald-600 text-white shadow-[0_0_50px_rgba(0,0,0,0.8)] rounded-2xl">
+        <DialogHeader>
+          <DialogTitle className="text-emerald-400 text-xl font-bold">Náhled Balíčku</DialogTitle>
+          <DialogDescription className="text-slate-300 text-sm">
+            Uspořádej si prvních 3 karty podle svého přání
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-3">
+          {reordered.map((card, idx) => (
+            <div key={`${card.id}-${idx}`} className="flex items-center justify-between p-3 bg-slate-800 rounded-lg border border-emerald-500/30">
+              <span className="font-bold text-emerald-300 text-lg">{card.symbol}</span>
+              <div className="flex gap-2">
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  onClick={() => moveCard(idx, 'up')}
+                  disabled={idx === 0}
+                  className="text-xs"
+                >
+                  ↑
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  onClick={() => moveCard(idx, 'down')}
+                  disabled={idx === reordered.length - 1}
+                  className="text-xs"
+                >
+                  ↓
+                </Button>
+              </div>
+            </div>
+          ))}
+          <p className="text-xs text-slate-400 text-center">+ {rest.length} dalších karet v balíčku</p>
+        </div>
+
+        <div className="flex gap-2 pt-4">
+          <Button 
+            onClick={handleConfirm}
+            className="flex-1 bg-emerald-600 hover:bg-emerald-500 font-bold"
+          >
+            Potvrdit
+          </Button>
+          <Button 
+            onClick={onCancel}
+            variant="destructive"
+            className="flex-1"
+          >
+            Zrušit
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// --- 7. DIALOG PRO VÝBĚR MODULA (EFF_012) ---
+export function ModuloDialog({ 
+  open, 
+  hand, 
+  onSelect, 
+  onCancel 
+}: { 
+  open: boolean; 
+  hand: GameCard[]; 
+  onSelect: (number: number) => void; 
+  onCancel: () => void; 
+}) {
+  const numberCards = hand.filter(card => cardsDatabase[card.symbol]?.type === 'number');
+
+  return (
+    <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) onCancel(); }}>
+      <DialogContent className="sm:max-w-md bg-slate-900 border-2 border-blue-600 text-white shadow-[0_0_50px_rgba(0,0,0,0.8)] rounded-2xl">
+        <DialogHeader>
+          <DialogTitle className="text-blue-400 text-xl font-bold">Modulo Operace</DialogTitle>
+          <DialogDescription className="text-slate-300 text-sm">
+            Vyber číslo z tvé ruky pro výpočet R mod (číslo)
+          </DialogDescription>
+        </DialogHeader>
+
+        {numberCards.length === 0 ? (
+          <p className="text-red-400 text-center py-4">Nemáš v ruce žádné číslice! Efekt se zrušuje.</p>
+        ) : (
+          <div className="grid grid-cols-3 gap-3">
+            {numberCards.map((card): any => {
+              const cardNum = parseInt(card.symbol, 10);
+              return (
+                <Button
+                  key={card.id}
+                  onClick={() => onSelect(cardNum)}
+                  className="bg-blue-600 hover:bg-blue-500 h-16 text-2xl font-bold"
+                >
+                  {card.symbol}
+                </Button>
+              );
+            })}
+          </div>
+        )}
+
+        {numberCards.length > 0 && (
+          <Button 
+            onClick={onCancel}
+            variant="destructive"
+            className="w-full mt-4"
+          >
+            Zrušit
+          </Button>
+        )}
+      </DialogContent>
+    </Dialog>
   );
 }

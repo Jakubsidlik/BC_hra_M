@@ -37,6 +37,8 @@ export function useGameEngine() {
   const [minigameMode, setMinigameMode] = useState<{effectId: string, cards: GameCard[], targetPlayerId?: number} | null>(null);
   const [bracketMode, setBracketMode] = useState<{ step: 'LEFT' | 'RIGHT', leftIndex: number | null } | null>(null);
   const [integralSetup, setIntegralSetup] = useState<{card: GameCard, targetId: string | null, insertPosition?: number} | null>(null);
+  const [deckPreviewMode, setDeckPreviewMode] = useState<{originalDeck: GameCard[], reorderedDeck?: GameCard[]} | null>(null);
+  const [moduloMode, setModuloMode] = useState<{activePlayerIndex: number, targetPlayerId?: number} | null>(null);
   
   // --- OMEZENÍ TAHU ---
   const [isDiscarding, setIsDiscarding] = useState(false);
@@ -331,6 +333,8 @@ export function useGameEngine() {
   const handleEffectChoice = (choice: 'ACTIVATE' | 'NONE', targetPlayerId?: number, targetCardId?: string) => {
   if (!pendingEffect) return;
   
+  let metadata: any = undefined;
+
   if (choice === 'ACTIVATE') {
     const effect = cardsDatabase[pendingEffect.card.symbol]?.effects?.optionA;
     if (effect) {
@@ -361,9 +365,51 @@ export function useGameEngine() {
       if (activeId === 'EFF_032') setPlayDirection(d => d === 1 ? -1 : 1);
 
       // --- 4. APLIKACE LOGIKY EFEKTU ---
-      setPlayers(prev => applyEffectLogic(
-        activeId, prev, currentPlayerIndex, targetPlayerId, targetCardId, pendingEffect.card, difficulty
-      ));
+      const effectResult = applyEffectLogic(
+        activeId, players, currentPlayerIndex, targetPlayerId, targetCardId, pendingEffect.card, difficulty
+      );
+
+      // Zpracování EffectResult s metadaty
+      const resultPlayers = Array.isArray(effectResult) ? effectResult : effectResult.players;
+      metadata = !Array.isArray(effectResult) ? effectResult.metadata : undefined;
+
+      setPlayers(resultPlayers);
+
+      // --- SPECIÁLNÍ EFEKTY S UI DIALOGY ---
+      if (metadata?.deckPreviewTriggered) {
+        // EFF_009: Náhled a přerovnání balíčku
+        setDeckPreviewMode({ originalDeck: deck });
+        // Zdrž úklidu, až se dialog uzavře
+        setDiscardPile(old => [...old, { ...pendingEffect.card, exponent: null }]);
+        setPlayers(prev => {
+          const next = JSON.parse(JSON.stringify(prev));
+          const p = next[currentPlayerIndex];
+          p.hand = p.hand.filter((c: GameCard) => c.id !== pendingEffect.card.id);
+          return next;
+        });
+        // Úklid se provede až v handleDeckPreviewConfirm
+        return;
+      }
+
+      if (metadata?.moduloOperationTriggered) {
+        // EFF_012: Výběr čísla z ruky
+        setModuloMode({ activePlayerIndex: currentPlayerIndex, targetPlayerId });
+        // Stejně jako výše, úklid prodloužíme
+        setDiscardPile(old => [...old, { ...pendingEffect.card, exponent: null }]);
+        setPlayers(prev => {
+          const next = JSON.parse(JSON.stringify(prev));
+          const p = next[currentPlayerIndex];
+          p.hand = p.hand.filter((c: GameCard) => c.id !== pendingEffect.card.id);
+          return next;
+        });
+        return;
+      }
+
+      if (metadata?.turnOrderReversed) {
+        // EFF_025: Pořadí tahů se otočilo - aktivní hráč zůstane na pozici 0
+        const newActivePlayerIndex = 0;
+        setCurrentPlayerIndex(newActivePlayerIndex);
+      }
 
       // --- 5. ZAHOZENÍ KARTY NA HŘBITOV ---
       // Karta se nepokládá na stůl, ale "spálí" se pro efekt
@@ -383,12 +429,64 @@ export function useGameEngine() {
     addCardToGameState(pendingEffect.card, pendingEffect.targetId, pendingEffect.insertPosition);
   }
 
-  // Úklid po akci
-  setPendingEffect(null);
-  setTargetingMode(null);
-  setEffectStep('CHOOSE_EFFECT');
-  setChosenEffectChoice(null);
+  // Úklid po akci (pokud nebyly speciální efekty)
+  if (!metadata?.deckPreviewTriggered && !metadata?.moduloOperationTriggered) {
+    setPendingEffect(null);
+    setTargetingMode(null);
+    setEffectStep('CHOOSE_EFFECT');
+    setChosenEffectChoice(null);
+  }
 };
+
+  // ==========================================
+  // 6. SPECIÁLNÍ EFEKTY - DECK PREVIEW (EFF_009)
+  // ==========================================
+
+  const handleDeckPreviewConfirm = useCallback((reorderedCards: GameCard[]) => {
+    // Aktualizuj deck s přeřazenými kartami
+    setDeck(reorderedCards);
+    
+    // Úklid UI stavů
+    setDeckPreviewMode(null);
+    setPendingEffect(null);
+    setTargetingMode(null);
+    setEffectStep('CHOOSE_EFFECT');
+    setChosenEffectChoice(null);
+    
+    toast.success("Balíček byl přerovnán!");
+  }, []);
+
+  // ==========================================
+  // 7. SPECIÁLNÍ EFEKTY - MODULO OPERATION (EFF_012)
+  // ==========================================
+
+  const handleModuloSelect = useCallback((selectedNumber: number) => {
+    // Aplikuj modulo operaci na cílového hráče
+    if (!moduloMode) return;
+
+    setPlayers(prev => {
+      const next = JSON.parse(JSON.stringify(prev));
+      const targetIdx = next.findIndex((p: Player) => p.id === (moduloMode.targetPlayerId || moduloMode.activePlayerIndex));
+      
+      if (targetIdx !== -1) {
+        const target = next[targetIdx];
+        if (typeof target.targetR === 'number') {
+          target.targetR = target.targetR % selectedNumber;
+          target.status.notifications.push(`🔢 Tvůj cíl R byl změněn dělením modulo(${selectedNumber}) na: ${target.targetR}`);
+        }
+      }
+      return next;
+    });
+
+    // Úklid UI stavů
+    setModuloMode(null);
+    setPendingEffect(null);
+    setTargetingMode(null);
+    setEffectStep('CHOOSE_EFFECT');
+    setChosenEffectChoice(null);
+    
+    toast.success("Modulo operace aplikována!");
+  }, [moduloMode]);
 
   const handleBracketClick = (cardId: string) => {
     if (!bracketMode || hasModifiedBoardThisTurn) return;
@@ -466,14 +564,16 @@ export function useGameEngine() {
       gamePhase, difficulty, players, currentPlayerIndex, deck, discardPile,
       isHandoff, winner, pendingEffect, effectStep, chosenEffectChoice,
       targetingMode, minigameMode, bracketMode, integralSetup,
-      isDiscarding, hasModifiedBoardThisTurn, playDirection, lastPlayedEffect
+      isDiscarding, hasModifiedBoardThisTurn, playDirection, lastPlayedEffect,
+      deckPreviewMode, moduloMode
     },
     actions: {
       setGamePhase, setDifficulty, handleStartGame, handleEndTurn, handleDiscard,
       nextTurn, checkMathEngine, handleEffectChoice, handleIntegralSubmit,
       handleDragEnd, handleBracketClick, setMinigameMode, setBracketMode,
       setTargetingMode, setIntegralSetup, setPendingEffect, setEffectStep,
-      setChosenEffectChoice, setPlayers, addCardToGameState, handleDiscardExpression
+      setChosenEffectChoice, setPlayers, addCardToGameState, handleDiscardExpression,
+      handleDeckPreviewConfirm, handleModuloSelect, setDeckPreviewMode, setModuloMode
     }
   };
 }
