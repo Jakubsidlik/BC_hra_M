@@ -6,6 +6,9 @@ import { VitePWA } from "vite-plugin-pwa" // <--- TADY JE NOVÝ IMPORT
 
 // https://vite.dev/config/
 export default defineConfig({
+  // Pro GitHub Pages: base se nastaví podle názvu repozitáře
+  // Lokálně "/" , na GitHub Pages "/NAZEV-REPO/"
+  base: process.env.GITHUB_ACTIONS ? "/BC_hra_M/" : "/",
   plugins: [
     react(), 
     tailwindcss(),
