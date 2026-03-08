@@ -1,0 +1,37 @@
+﻿symbol;name;type;count;hasEffect;effectA_id;effectA_name;effectA_desc;effectA_target;effectB_id;effectB_name;effectB_desc;effectB_target
+0;Nula;number;12;ANO;EFF_001;Trvalý příjem;Dobrání 1 karty navíc na začátku každého kola.;SELF;;;;
+1;Jednička;number;12;ANO;EFF_001;Trvalý příjem;Dobrání 1 karty navíc na začátku každého kola.;SELF;;;;
+2;Dvojka;number;12;ANO;EFF_001;Trvalý příjem;Dobrání 1 karty navíc na začátku každého kola.;SELF;;;;
+3;Trojka;number;12;ANO;EFF_001;Trvalý příjem;Dobrání 1 karty navíc na začátku každého kola.;SELF;;;;
+4;Čtyřka;number;12;ANO;EFF_001;Trvalý příjem;Dobrání 1 karty navíc na začátku každého kola.;SELF;;;;
+5;Pětka;number;12;ANO;EFF_001;Trvalý příjem;Dobrání 1 karty navíc na začátku každého kola.;SELF;;;;
+6;Šestka;number;12;ANO;EFF_001;Trvalý příjem;Dobrání 1 karty navíc na začátku každého kola.;SELF;;;;
+7;Sedmička;number;12;ANO;EFF_001;Trvalý příjem;Dobrání 1 karty navíc na začátku každého kola.;SELF;;;;
+8;Osmička;number;12;ANO;EFF_001;Trvalý příjem;Dobrání 1 karty navíc na začátku každého kola.;SELF;;;;
+9;Devítka;number;12;ANO;EFF_001;Trvalý příjem;Dobrání 1 karty navíc na začátku každého kola.;SELF;;;;
+pi;Ludolfovo číslo;number;5;ANO;EFF_002;Náhrada R;Nahrazení jedné číslice v cíli R touto konstantou.;SELF;EFF_003;Odhození operátoru;Všichni oponenti odhodí 1 libovolnou kartu operátoru.;ALL_OTHERS
+e;Eulerovo číslo;number;5;ANO;EFF_004;Absolutní imunita;Imunita proti efektům karet Integrál a Derivace.;SELF;EFF_005;Dvojitá operace;Možnost vyložit jednu dodatečnou operaci.;SELF
+x;Proměnná X;variable;10;ANO;EFF_006;Výměna z L;Možnost výměny 1 karty z vlastního řetězce L za kartu z L oponenta.;OPPONENT;EFF_007;Odhození;Následující hráč musí z ruky odhodit všechny číslice nebo operace.;NEXT
++;Součet;operator;15;ANO;EFF_008;Akcelerace;Okamžité dobrání 2 karet z hlavního balíčku.;SELF;EFF_009;Inhibice;Následující hráč musí v příštím tahu použít libovolnou operaci.;NEXT
+-;Rozdíl;operator;15;ANO;EFF_010;Krádež;Odstranění 1 libovolné karty z ruky zvoleného oponenta.;OPPONENT;EFF_011;Zmrazení;Následující hráč přeskakuje svůj tah.;NEXT
+*;Součin;operator;15;ANO;EFF_012;Hojnost;Zdvojnásobení počtu dobíraných karet v příštím tahu.;SELF;EFF_013;Zámek operací;Následující hráč nesmí v příštím tahu použít karty operace.;NEXT
+/;Podíl;operator;15;ANO;EFF_014;Krádež ze stolu;Přesun 1 libovolné vyložené karty oponenta do vlastní ruky.;OPPONENT;EFF_015;Vize budoucnosti;Náhled na 3 vrchní karty balíčku a jejich libovolné přerovnání.;SELF
+a^b;Mocnina;operator;4;ANO;EFF_016;HUH;Všichni oponenti odhodí 2 náhodné karty.;ALL_OTHERS;EFF_017;Rekurze;Navrácení 1 karty z odhazovacího balíčku do ruky.;SELF
+sqrt;Odmocnina;operator;4;ANO;EFF_018;Částečný Šok;Všichni oponenti odhodí 2 náhodné karty z ruky.;ALL_OTHERS;EFF_019;Očištění ruky;Odhození celého obsahu ruky a dobrání nových karet.;SELF
+mod;Modulo;operator;4;ANO;EFF_020;Změna R;Hodnota R zvoleného hráče se mění na R (mod lib. číslo z ruky).;OPPONENT;EFF_021;Sudá čistka;Všichni oponenti musí odhodit všechny karty se sudou hodnotou.;ALL_OTHERS
+n!;Faktoriál;operator;2;ANO;EFF_022;Omezení;Následující hráč nesmí v příštím tahu vyložit více než 1 kartu.;NEXT;EFF_023;Vyčerpání;Každé kolo si dobírat o 1 kartu méně, dokud si hráč nevezme nulu.;SELF
+d/dx;Derivace;operator;3;ANO;EFF_024;Vymazání konstant;Odstranění všech konstant a proměnných z L zvoleného hráče.;OPPONENT;EFF_025;Zjednodušení L;Oponenti odstraní karty v přímé mocninné vazbě s X.;ALL_OTHERS
+int;Integrál;operator;3;ANO;EFF_026;Změna osudu;Okamžité nahrazení celého cíle R libovolného hráče novým losem.;ANY;;;;
+sum;Sumace;operator;4;ANO;EFF_027;Dvojitý tah;Hráč hraje 2x za sebou.;SELF;;;;
+log;Logaritmus;operator;2;ANO;EFF_028;Výměna L;Možnost prohození aktuálního řetězce L s řetězcem lib. oponenta.;OPPONENT;EFF_029;Odkrytí;Zvolený hráč musí po dobu 1 kola hrát s odkrytými kartami.;ANY
+sin;Sinus;operator;3;ANO;EFF_030;Rotace rukou;Všichni hráči si předají karty v ruce po směru.;ALL;EFF_031;Harmonická vlna;Zruší aktuálně působící negativní efekt.;SELF
+cos;Kosinus;operator;3;ANO;EFF_032;Fázový posun;Změní pořadí tahů hráčů na opačné.;ALL;EFF_033;Útlum;Odstraní poslední zahranou kartu z oponentova L.;OPPONENT
+tg;Tangens;operator;2;ANO;EFF_034;Asymptota;Oponent si v dalším tahu nesmí dobrat kartu.;OPPONENT;EFF_035;Skok;Hráč může okamžitě vyložit až 3 karty naráz.;SELF
+cotg;Kotangens;operator;2;ANO;EFF_036;Inverze;Hodnota jedné vyložené číslice oponenta se stane zápornou.;OPPONENT;EFF_037;Zrcadlení;Zkopíruje efekt poslední zahrané karty.;SELF
+nCk;Kombinační číslo;operator;4;ANO;EFF_038;Volba osudu;Dober si 3 karty, 1 si nech a 2 zahoď.;SELF;EFF_039;Množina;Vynutí na oponentovi ukázat karty v ruce.;OPPONENT
+prod;Sekvenční součin;operator;2;ANO;EFF_040;Lavina;Oponent ztratí 1 kartu za každý operátor na svém stole.;OPPONENT;EFF_041;Násobič;Dober si 1 kartu za každé číslo na tvém stole.;SELF
+lim;Limita;operator;2;ANO;EFF_042;Konečnost;Okamžitě ukončí tah všech oponentů.;ALL_OTHERS;EFF_043;Nekonečno;Můžeš tento tah hrát libovolný počet karet.;SELF
+det;Determinant;operator;2;ANO;EFF_044;Absolutní hodnota;Změní všechny operátory minus v oponentově L na plus.;OPPONENT;EFF_045;Vyškrtnutí;Zničí 1 libovolnou kartu na stole.;ANY
+(;Levá závorka;syntax;0;NE;;;;;;;;
+);Pravá závorka;syntax;0;NE;;;;;;;;
+=;Rovná se;syntax;0;NE;;;;;;;;

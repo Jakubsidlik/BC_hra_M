@@ -1,0 +1,244 @@
+import { useDraggable, useDroppable } from '@dnd-kit/core';
+import { CSS } from '@dnd-kit/utilities';
+import { cardsDatabase } from '@/data/cardsDB';
+import { getBorderColor } from '@/lib/gameHelpers';
+import type { GameCard } from '@/lib/effects';
+
+export interface DropData {
+  parentId: string;
+}
+
+// --- INTERFACY PRO PROPS ---
+interface BoardAreaProps {
+  id: string;
+  cards: GameCard[];
+  targetR?: number | string;
+  playerTheme?: string; 
+  isTargeting?: boolean;     
+  onCardClick?: (id: string) => void; 
+  absoluteValue?: boolean; // Pro zobrazení |L|
+}
+
+interface BoardCardProps {
+  card: GameCard;
+  isTargeting?: boolean;
+  onCardClick?: (id: string) => void;
+  absoluteValue?: boolean; // Pro vizuální zobrazení | | kolem karet
+}
+
+interface HandCardProps {
+  card: GameCard;
+  index: number;
+  total: number;
+  isDiscarding?: boolean;    // Režim vyhazování karet
+  onDiscard?: (id: string) => void; // Callback pro vyhození kliknutím (volitelné)
+}
+
+// ==========================================
+// 1. KARTA V RUCE (S PODPOROU OBRÁZKŮ A ODHOZOVÁNÍ)
+// ==========================================
+export function HandCard({ card, index, total, isDiscarding, onDiscard }: HandCardProps) {
+  const cardData = cardsDatabase[card.symbol];
+  
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+    id: card.id,
+    data: card,
+    // disabled zde NESMÍ být, aby karta šla přetáhnout do hřbitova!
+  });
+
+  // VÝPOČET VĚJÍŘE
+  const midpoint = (total - 1) / 2;
+  const distanceFromCenter = index - midpoint;
+  
+  const rotation = isDragging ? 0 : distanceFromCenter * 6;
+  const translateY = isDragging ? 0 : Math.abs(distanceFromCenter) * 4;
+  const translateX = isDragging ? 0 : distanceFromCenter * 2;
+
+  const style = {
+    transform: transform 
+      ? CSS.Translate.toString(transform) 
+      : `rotate(${rotation}deg) translateY(${translateY}px) translateX(${translateX}px)`,
+    zIndex: isDragging ? 100 : 10 + index,
+  };
+
+  const borderColor = getBorderColor(card.symbol);
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...listeners} 
+      {...attributes}
+      onClick={() => isDiscarding && onDiscard && onDiscard(card.id)}
+      className={`relative w-20 h-32 md:w-24 md:h-36 rounded-xl border-4 transition-all duration-200 origin-bottom bg-slate-800 shadow-2xl
+        ${isDiscarding 
+          ? 'cursor-pointer border-red-500 hover:scale-110 hover:shadow-[0_0_20px_rgba(239,68,68,0.6)] ring-4 ring-red-600/20 animate-pulse' 
+          : 'cursor-grab active:cursor-grabbing hover:-translate-y-12 hover:z-50 hover:scale-110'}
+        ${borderColor}
+      `}
+    >
+      {isDiscarding && (
+        <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-red-600 text-white text-[10px] px-2 py-0.5 rounded-full font-bold z-30 shadow-lg uppercase whitespace-nowrap">
+          Táhni na hřbitov
+        </div>
+      )}
+
+      <div className="w-full h-full flex items-center justify-center p-2 pointer-events-none">
+        {cardData?.image ? (
+          <img 
+            src={cardData.image} 
+            alt={card.symbol} 
+            className="w-full h-full object-contain drop-shadow-[0_0_5px_rgba(255,255,255,0.4)]"
+          />
+        ) : (
+          <span className="text-3xl font-chalk text-white drop-shadow-md">{card.symbol}</span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ==========================================
+// 2. KARTA POLOŽENÁ NA STOLE (L)
+// ==========================================
+export function BoardCard({ card, isTargeting, onCardClick, absoluteValue }: BoardCardProps) {
+  const cardData = cardsDatabase[card.symbol];
+  const borderColor = getBorderColor(card.symbol);
+  
+  // Zóna pro vhození exponentu
+  const { setNodeRef: setDropRef, isOver } = useDroppable({
+    id: `drop-exponent-${card.id}`,
+    data: { parentId: card.id } as DropData,
+  });
+
+  // NOVÉ: Možnost kartu chytit z plochy a odhodit na hřbitov (kaskádové mazání)
+  const { attributes, listeners, setNodeRef: setDragRef, transform, isDragging } = useDraggable({
+    id: card.id,
+    disabled: isTargeting // Nelze tahat, pokud zrovna na něco cílíš efektem
+  });
+
+  const style = {
+    transform: CSS.Translate.toString(transform),
+    zIndex: isDragging ? 50 : 1,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  const handleClick = () => {
+    if (isTargeting && onCardClick) onCardClick(card.id);
+  };
+
+  return (
+    <div 
+      className={`relative flex flex-col items-center justify-end h-32 md:h-40 group ${isTargeting ? 'cursor-pointer' : ''}`}
+      onClick={handleClick}
+      ref={setDragRef}
+      style={style}
+      {...listeners}
+      {...attributes}
+    >
+      {/* Zóna pro Exponent - Skrytá, dokud nad ni nenajedeš */}
+      <div
+        ref={setDropRef}
+        className={`absolute -top-4 -right-6 w-12 h-16 md:w-16 md:h-20 rounded-lg transition-all duration-200 z-10 flex items-center justify-center
+          ${card.exponent ? 'opacity-100' : (isOver ? 'opacity-100 border-2 border-dashed border-yellow-400 bg-yellow-400/20 scale-110' : 'opacity-0')}
+          ${isTargeting ? 'pointer-events-none' : ''} 
+        `}
+      >
+        {card.exponent && (
+          <div className="w-10 h-14 md:w-14 md:h-18 scale-90 pointer-events-none">
+            <div className={`w-full h-full bg-slate-800 rounded-lg border-2 ${getBorderColor(card.exponent.symbol)} flex items-center justify-center p-1`}>
+              {cardsDatabase[card.exponent.symbol]?.image ? (
+                <img src={cardsDatabase[card.exponent.symbol].image} className="w-full h-full object-contain" alt="exp" />
+              ) : (
+                <span className="text-xl font-chalk text-slate-200">{card.exponent.symbol}</span>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Hlavní karta na stole */}
+      <div className={`w-20 h-28 md:w-24 md:h-36 rounded-xl border-4 flex items-center justify-center bg-slate-800 shadow-2xl transition-all
+        ${borderColor}
+        ${cardData?.hasEffect ? 'shadow-[0_0_20px_rgba(16,185,129,0.2)]' : ''}
+        ${isTargeting ? 'hover:scale-110 hover:border-red-500 hover:shadow-[0_0_30px_rgba(239,68,68,0.4)]' : ''}
+        ${absoluteValue ? 'border-x-8 border-x-blue-500' : ''}
+      `}>
+        <div className="w-full h-full flex items-center justify-center p-3">
+          {cardData?.image ? (
+            <img 
+              src={cardData.image} 
+              alt={cardData.symbol} 
+              className="w-full h-full object-contain pointer-events-none drop-shadow-[0_0_4px_rgba(255,255,255,0.6)]"
+            />
+          ) : (
+            <span className="text-4xl md:text-5xl font-chalk text-white pointer-events-none">
+              {cardData?.symbol || card.symbol}
+            </span>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ==========================================
+// 3. CELÁ HRACÍ PLOCHA (STŮL)
+// ==========================================
+export function BoardArea({ id, cards, targetR, playerTheme, isTargeting, onCardClick, absoluteValue }: BoardAreaProps) {
+  const { setNodeRef, isOver } = useDroppable({ id });
+
+  return (
+    <div className="flex flex-col lg:flex-row items-center w-full gap-6 lg:gap-10">
+      
+      {/* NALEVO: Konstrukce L */}
+      <div
+        ref={setNodeRef}
+        className={`relative flex-1 min-h-250px md:min-h-350px w-full rounded-[3.5rem] border-4 border-dashed transition-all duration-500 flex items-center justify-center p-8
+          ${isOver ? 'border-white scale-[1.01] shadow-[0_0_40px_rgba(255,255,255,0.15)]' : 'border-white/10'}
+          ${playerTheme || 'bg-slate-900/60'}
+          shadow-[inset_0_4px_40px_rgba(0,0,0,0.7)]
+        `}
+      >
+        {/* VIZUALIZACE ABSOLUTNÍ HODNOTY |L| */}
+        <div className="flex items-center gap-4">
+          {absoluteValue && (
+            <div className="w-2.5 h-48 bg-white/40 rounded-full shadow-[0_0_20px_rgba(255,255,255,0.3)] animate-pulse" />
+          )}
+
+          <div className="flex items-end gap-3 flex-wrap justify-center min-h-144px">
+            {cards.map((c) => (
+              <BoardCard key={c.id} card={c} isTargeting={isTargeting} onCardClick={onCardClick} absoluteValue={absoluteValue} />
+            ))}
+            
+            {cards.length === 0 && (
+              <div className="font-chalk text-white/10 text-2xl md:text-5xl uppercase tracking-[0.25em] pointer-events-none select-none italic self-center">
+                Tabule L
+              </div>
+            )}
+          </div>
+
+          {absoluteValue && (
+            <div className="w-2.5 h-48 bg-white/40 rounded-full shadow-[0_0_20px_rgba(255,255,255,0.3)] animate-pulse" />
+          )}
+        </div>
+      </div>
+
+      {/* UPROSTŘED: Rovnítko */}
+      <div className="text-7xl md:text-9xl font-chalk text-white/40 select-none drop-shadow-[0_10px_10px_rgba(0,0,0,0.5)]">
+        =
+      </div>
+
+      {/* NAPRAVO: Cíl R */}
+      <div className="flex flex-col items-center justify-center bg-black/50 backdrop-blur-xl p-8 md:p-12 rounded-[3rem] border-2 border-white/10 min-w-160px md:min-w-220px shadow-2xl transition-transform hover:scale-105">
+        <div className="text-7xl md:text-9xl font-chalk text-yellow-400 drop-shadow-[0_0_25px_rgba(250,204,21,0.7)] text-center">
+          {targetR}
+        </div>
+        <div className="text-[10px] md:text-xs font-mono text-white/40 uppercase tracking-[0.4em] mt-6 font-black text-center">
+          Cílový<br/>parametr R
+        </div>
+      </div>
+
+    </div>
+  );
+}
