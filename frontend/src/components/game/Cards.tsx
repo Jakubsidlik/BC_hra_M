@@ -1,5 +1,7 @@
 import { useDraggable, useDroppable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
+import { useState, useEffect } from 'react';
+import React from 'react';
 import { cardsDatabase } from '@/data/cardsDB';
 import { getBorderColor } from '@/lib/gameHelpers';
 import type { GameCard } from '@/lib/effects';
@@ -26,6 +28,35 @@ interface BoardCardProps {
   isTargeting?: boolean;
   onCardClick?: (id: string) => void;
   absoluteValue?: boolean; // Pro vizuální zobrazení | | kolem karet
+}
+
+interface BoardDropZoneProps {
+  id: string;
+  isVisible: boolean;
+}
+
+// ==========================================
+// NOVÁ: DROP ZÓNA MEZI KARTAMI
+// ==========================================
+export function BoardDropZone({ id, isVisible }: BoardDropZoneProps) {
+  const { setNodeRef, isOver } = useDroppable({ id });
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={`transition-all duration-300 ease-out ${
+        isVisible 
+          ? 'w-8 md:w-12 lg:w-16 opacity-100' 
+          : 'w-2 opacity-0'
+      } h-36 md:h-44 lg:h-48 flex items-center justify-center`}
+    >
+      <div className={`w-full h-8 md:h-12 lg:h-16 rounded-lg border-2 border-dashed transition-all duration-300 ${
+        isOver 
+          ? 'border-emerald-400 bg-emerald-400/20 scale-110 shadow-[0_0_20px_rgba(16,185,129,0.3)]' 
+          : 'border-white/20 bg-white/5'
+      }`} />
+    </div>
+  );
 }
 
 interface HandCardProps {
@@ -192,6 +223,21 @@ export function BoardCard({ card, isTargeting, onCardClick, absoluteValue }: Boa
 // ==========================================
 export function BoardArea({ id, cards, targetR, playerTheme, isTargeting, onCardClick, absoluteValue }: BoardAreaProps) {
   const { setNodeRef, isOver } = useDroppable({ id });
+  const [isDraggingOver, setIsDraggingOver] = useState(false);
+
+  // Sledování drag stavu pro vizuální feedback
+  useEffect(() => {
+    const handleDragStart = () => setIsDraggingOver(true);
+    const handleDragEnd = () => setIsDraggingOver(false);
+    
+    document.addEventListener('dnd-kit:drag:start', handleDragStart);
+    document.addEventListener('dnd-kit:drag:end', handleDragEnd);
+    
+    return () => {
+      document.removeEventListener('dnd-kit:drag:start', handleDragStart);
+      document.removeEventListener('dnd-kit:drag:end', handleDragEnd);
+    };
+  }, []);
 
   return (
     <div className="flex flex-col lg:flex-row items-center w-full gap-6 lg:gap-10">
@@ -211,15 +257,46 @@ export function BoardArea({ id, cards, targetR, playerTheme, isTargeting, onCard
             <div className="w-2.5 h-48 bg-white/40 rounded-full shadow-[0_0_20px_rgba(255,255,255,0.3)] animate-pulse" />
           )}
 
-          <div className="flex items-end gap-3 flex-wrap justify-center min-h-144px">
-            {cards.map((c) => (
-              <BoardCard key={c.id} card={c} isTargeting={isTargeting} onCardClick={onCardClick} absoluteValue={absoluteValue} />
-            ))}
-            
-            {cards.length === 0 && (
+          <div className={`flex items-end gap-3 flex-wrap justify-center min-h-144px transition-all duration-300 ${isDraggingOver ? 'gap-6' : 'gap-3'}`}>
+            {cards.length === 0 ? (
+              // Prázdná plocha - velká drop zóna
               <div className="font-chalk text-white/10 text-2xl md:text-5xl uppercase tracking-[0.25em] pointer-events-none select-none italic self-center">
                 Tabule L
               </div>
+            ) : (
+              // Karty s drop zónami mezi nimi
+              <>
+                {/* Drop zóna před první kartou */}
+                <BoardDropZone 
+                  id={`${id}-before-0`} 
+                  isVisible={isDraggingOver} 
+                />
+                
+                {cards.map((c, index) => (
+                  <React.Fragment key={c.id}>
+                    <BoardCard 
+                      card={c} 
+                      isTargeting={isTargeting} 
+                      onCardClick={onCardClick} 
+                      absoluteValue={absoluteValue} 
+                    />
+                    
+                    {/* Drop zóna za každou kartou (kromě poslední) */}
+                    {index < cards.length - 1 && (
+                      <BoardDropZone 
+                        id={`${id}-between-${index}-${index + 1}`} 
+                        isVisible={isDraggingOver} 
+                      />
+                    )}
+                  </React.Fragment>
+                ))}
+                
+                {/* Drop zóna za poslední kartou */}
+                <BoardDropZone 
+                  id={`${id}-after-${cards.length - 1}`} 
+                  isVisible={isDraggingOver} 
+                />
+              </>
             )}
           </div>
 

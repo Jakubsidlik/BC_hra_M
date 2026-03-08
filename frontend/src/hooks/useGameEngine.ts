@@ -8,6 +8,7 @@ import {
   generateFilteredDeck, 
   generatePersonalTargetR, 
   parseBoardToMathString,
+  hasOperation,
   type DifficultyMode 
 } from '@/lib/gameHelpers';
 import type { GameCard, Player } from '@/lib/effects';
@@ -28,14 +29,14 @@ export function useGameEngine() {
   const [winner, setWinner] = useState<Player | null>(null);
 
   // --- STAVY PRO UI A EFEKTY ---
-  const [pendingEffect, setPendingEffect] = useState<{card: GameCard, targetId: string | null} | null>(null);
+  const [pendingEffect, setPendingEffect] = useState<{card: GameCard, targetId: string | null, insertPosition?: number} | null>(null);
   const [effectStep, setEffectStep] = useState<'CHOOSE_EFFECT' | 'CHOOSE_TARGET'>('CHOOSE_EFFECT');
   const [chosenEffectChoice, setChosenEffectChoice] = useState<'ACTIVATE' | null>(null);
   const [lastPlayedEffect, setLastPlayedEffect] = useState<string | null>(null);
   const [targetingMode, setTargetingMode] = useState<{effectId: string, targetPlayerId?: number} | null>(null);
   const [minigameMode, setMinigameMode] = useState<{effectId: string, cards: GameCard[], targetPlayerId?: number} | null>(null);
   const [bracketMode, setBracketMode] = useState<{ step: 'LEFT' | 'RIGHT', leftIndex: number | null } | null>(null);
-  const [integralSetup, setIntegralSetup] = useState<{card: GameCard, targetId: string | null} | null>(null);
+  const [integralSetup, setIntegralSetup] = useState<{card: GameCard, targetId: string | null, insertPosition?: number} | null>(null);
   
   // --- OMEZENÍ TAHU ---
   const [isDiscarding, setIsDiscarding] = useState(false);
@@ -122,6 +123,22 @@ export function useGameEngine() {
     setIsHandoff(true);
   }, [players, currentPlayerIndex, performDraw]);
 
+  const handleDiscardExpression = () => {
+    if (hasModifiedBoardThisTurn) return toast.error("Již jsi provedl akci za tento tah!");
+    
+    setPlayers(prev => {
+      const next = JSON.parse(JSON.stringify(prev));
+      const p = next[currentPlayerIndex];
+      const allCards = p.board.flatMap((card: GameCard) => flattenCardTree(card));
+      setDiscardPile(old => [...old, ...allCards]);
+      p.board = [];
+      return next;
+    });
+    
+    setHasModifiedBoardThisTurn(true);
+    toast.info("Celý výraz byl vyhozen do odhazovacího balíčku.");
+  };
+
   const handleEndTurn = () => {
     const p = players[currentPlayerIndex];
     if (p.hand.length > 5) {
@@ -189,6 +206,7 @@ export function useGameEngine() {
     const curr = players[currentPlayerIndex];
     const expression = parseBoardToMathString(curr.board);
     if (!expression.trim()) return toast.error("Plocha L je prázdná!");
+    if (!hasOperation(curr.board)) return toast.error("Výraz L musí obsahovat alespoň jednu operaci!");
     
     const toastId = toast.loading("Ověřování...");
     try {
@@ -218,7 +236,7 @@ export function useGameEngine() {
   // 4. MANIPULACE S PLOCHOU
   // ==========================================
 
-  const addCardToGameState = useCallback((card: GameCard, targetId: string | null) => {
+  const addCardToGameState = useCallback((card: GameCard, targetId: string | null, insertPosition?: number) => {
     // Odebrat kartu z ruky a přidat na tabuli okamžitě
     setPlayers(prev => {
       const next = JSON.parse(JSON.stringify(prev));
@@ -230,7 +248,12 @@ export function useGameEngine() {
           c.id === targetId ? { ...c, exponent: card } : (c.exponent ? { ...c, exponent: update([c.exponent])[0] } : c)
         );
         p.board = update(p.board);
-      } else p.board.push(card);
+      } else if (insertPosition !== undefined) {
+        // Vložit kartu na specifickou pozici
+        p.board.splice(insertPosition, 0, card);
+      } else {
+        p.board.push(card);
+      }
       return next;
     });
 
@@ -267,14 +290,37 @@ export function useGameEngine() {
     const card = players[currentPlayerIndex].hand.find(c => c.id === active.id) || 
                  players[currentPlayerIndex].syntax.find(c => c.id === active.id);
     if (!card) return;
-    const targetId = String(over.id).startsWith('drop-exponent-') ? (over.data.current as DropData).parentId : null;
+    
+    // Rozpoznání typu drop zóny
+    const overId = String(over.id);
+    let targetId: string | null = null;
+    let insertPosition: number | undefined = undefined;
+    
+    if (overId.startsWith('drop-exponent-')) {
+      targetId = (over.data.current as DropData).parentId;
+    } else if (overId.includes('-before-')) {
+      // Drop před první kartou
+      insertPosition = 0;
+    } else if (overId.includes('-between-')) {
+      // Drop mezi kartami - najdeme pozici
+      const match = overId.match(/-between-(\d+)-(\d+)/);
+      if (match) {
+        insertPosition = parseInt(match[2]); // Pozice za první kartou
+      }
+    } else if (overId.includes('-after-')) {
+      // Drop za poslední kartou
+      insertPosition = players[currentPlayerIndex].board.length;
+    } else if (overId === 'main-board') {
+      // Drop na hlavní plochu - přidat na konec
+      insertPosition = players[currentPlayerIndex].board.length;
+    }
 
     if (card.symbol === '∫') {
-      setIntegralSetup({ card, targetId });
+      setIntegralSetup({ card, targetId, insertPosition });
     } else if (cardsDatabase[card.symbol]?.hasEffect) {
-      setPendingEffect({ card, targetId });
+      setPendingEffect({ card, targetId, insertPosition });
     } else {
-      addCardToGameState(card, targetId);
+      addCardToGameState(card, targetId, insertPosition);
     }
   }, [currentPlayerIndex, players, isDiscarding, hasModifiedBoardThisTurn, addCardToGameState]);
 
@@ -334,7 +380,7 @@ export function useGameEngine() {
     }
   } else {
     // --- VOLBA 'NONE': POLOŽENÍ NA PLOCHU L ---
-    addCardToGameState(pendingEffect.card, pendingEffect.targetId);
+    addCardToGameState(pendingEffect.card, pendingEffect.targetId, pendingEffect.insertPosition);
   }
 
   // Úklid po akci
@@ -375,7 +421,7 @@ export function useGameEngine() {
       next[currentPlayerIndex].hand = next[currentPlayerIndex].hand.filter((c: GameCard) => !usedCardIds.includes(c.id));
       return next;
     });
-    addCardToGameState(cardWithBounds, integralSetup.targetId);
+    addCardToGameState(cardWithBounds, integralSetup.targetId, integralSetup.insertPosition);
     setIntegralSetup(null);
   };
 
@@ -384,17 +430,30 @@ export function useGameEngine() {
     const newPlayers: Player[] = configuredPlayers.map((p, i) => ({
       id: i, name: p.name, theme: p.theme, hand: [], board: [],
       targetR: generatePersonalTargetR(difficulty),
-      syntax: [{ id: `p${i}-l1`, symbol: '(' }, { id: `p${i}-r1`, symbol: ')' }, { id: `p${i}-l2`, symbol: '(' }, { id: `p${i}-r2`, symbol: ')' }],
+      syntax: [
+        { id: `p${i}-l1`, symbol: '(' }, { id: `p${i}-r1`, symbol: ')' },
+        { id: `p${i}-l2`, symbol: '(' }, { id: `p${i}-r2`, symbol: ')' },
+        { id: `p${i}-l3`, symbol: '(' }, { id: `p${i}-r3`, symbol: ')' },
+        { id: `p${i}-eq`, symbol: '=' }
+      ],
       status: { mathModifiers: [], extraTurn: false, frozen: false, extraDraw: 0, drawReduction: 0, notifications: [] }
     }));
 
-    // Deal 5 cards to the first player directly from the deck
+    // Deal 5 cards to each player
     const deckCopy = [...initialDeck];
-    for (let i = 0; i < 5; i++) {
-      const drawn = deckCopy.pop();
-      if (drawn) {
-        newPlayers[0].hand.push({ ...drawn, id: `h-${drawn.symbol}-${Date.now()}-${Math.random().toString(36).substring(2,5)}` });
+    newPlayers.forEach(player => {
+      for (let i = 0; i < 5; i++) {
+        const drawn = deckCopy.pop();
+        if (drawn) {
+          player.hand.push({ ...drawn, id: `h-${drawn.symbol}-${Date.now()}-${Math.random().toString(36).substring(2,5)}` });
+        }
       }
+    });
+
+    // Starting player draws 6th card
+    const drawn = deckCopy.pop();
+    if (drawn) {
+      newPlayers[0].hand.push({ ...drawn, id: `h-${drawn.symbol}-${Date.now()}-${Math.random().toString(36).substring(2,5)}` });
     }
 
     setDeck(deckCopy);
@@ -414,7 +473,7 @@ export function useGameEngine() {
       nextTurn, checkMathEngine, handleEffectChoice, handleIntegralSubmit,
       handleDragEnd, handleBracketClick, setMinigameMode, setBracketMode,
       setTargetingMode, setIntegralSetup, setPendingEffect, setEffectStep,
-      setChosenEffectChoice, setPlayers, addCardToGameState
+      setChosenEffectChoice, setPlayers, addCardToGameState, handleDiscardExpression
     }
   };
 }

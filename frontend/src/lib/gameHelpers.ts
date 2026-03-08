@@ -108,6 +108,11 @@ export function parseBoardToMathString(board: GameCard[]): string {
 
 
 // 4. POMOCNÉ FUNKCE PRO UI
+export function hasOperation(board: GameCard[]): boolean {
+  const operations = ['+', '-', '*', '/', '^', '√', '∫', '∑', 'lim', 'sin', 'cos', 'tan', 'ln', 'log', 'mod'];
+  return board.some(card => operations.includes(card.symbol) || card.exponent);
+}
+
 export function getTargetName(targetCode?: string): string {
   switch (targetCode) {
     case 'SELF': return 'Na sebe';
@@ -133,15 +138,23 @@ import { cardsDatabase } from '../data/cardsDB';
 export function generateFilteredDeck(difficulty: DifficultyMode): GameCard[] {
   const deck: GameCard[] = [];
   
-  // Tady si projdeš cardsDatabase a přidáš karty do balíčku.
-  // Pro ukázku zjednodušená verze, která přidá z každé karty 2 kopie:
-  Object.keys(cardsDatabase).forEach(symbol => {
-    // Tady bys mohl filtrovat karty podle obtížnosti (ZŠ bez integrálů atd.)
-    const isAdvancedCard = ['∫', 'sin', 'cos', 'log', 'e', 'lim'].includes(symbol);
-    if (difficulty === 'ZŠ' && isAdvancedCard) return; // ZŠ tyhle karty nedostane
+  // Definice karet podle obtížností
+  const difficultyFilters: Record<DifficultyMode, string[]> = {
+    'ZŠ': ['∫', '∑', 'lim', 'd/dx', 'sin', 'cos', 'tan', 'cotg', 'ln', 'log', '√', '^', 'e', 'π', 'mod', 'n!', 'C', 'P'],
+    'SŠ': ['∫', '∑', 'lim', 'd/dx', 'mod', 'n!', 'C', 'P'],
+    'VŠ': []
+  };
 
-    deck.push({ id: `deck-${symbol}-1`, symbol });
-    deck.push({ id: `deck-${symbol}-2`, symbol });
+  const excludedCards = difficultyFilters[difficulty];
+  
+  Object.keys(cardsDatabase).forEach(symbol => {
+    if (excludedCards.includes(symbol)) return;
+    
+    const cardData = cardsDatabase[symbol];
+    // Přidáme počet kopií podle count v databázi
+    for (let i = 0; i < cardData.count; i++) {
+      deck.push({ id: `deck-${symbol}-${i + 1}`, symbol });
+    }
   });
 
   // Zamíchání balíčku (Fisher-Yates shuffle)

@@ -145,6 +145,15 @@ export default function App() {
               </Button>
               <Button 
                 size="lg" 
+                variant="destructive"
+                className="flex-1 lg:flex-none bg-red-600 hover:bg-red-500 font-bold h-10 md:h-14 lg:h-16 px-4 md:px-8 lg:px-10 text-sm md:text-lg lg:text-xl shadow-[0_0_15px_rgba(239,68,68,0.3)] border-b-4 border-red-800" 
+                onClick={actions.handleDiscardExpression}
+                disabled={state.hasModifiedBoardThisTurn}
+              >
+                VYMAZAT L
+              </Button>
+              <Button 
+                size="lg" 
                 variant="secondary" 
                 className="flex-1 lg:flex-none h-10 md:h-14 lg:h-16 px-4 md:px-8 lg:px-10 font-bold text-sm md:text-lg lg:text-xl border-b-4 border-slate-400" 
                 onClick={actions.handleEndTurn}
