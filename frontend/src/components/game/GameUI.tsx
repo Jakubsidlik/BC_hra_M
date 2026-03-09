@@ -120,7 +120,7 @@ export function EffectDialog({
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) onClose(); }}>
-      <DialogContent className="sm:max-w-md bg-slate-900 border-2 border-slate-700 text-white shadow-[0_0_50px_rgba(0,0,0,0.8)] rounded-2rem">
+      <DialogContent className="sm:max-w-lg bg-slate-900 border-2 border-slate-700 text-white shadow-[0_0_50px_rgba(0,0,0,0.8)] rounded-2rem">
         
         <DialogHeader>
           <DialogTitle className="text-4xl font-chalk text-center text-emerald-400 drop-shadow-md">

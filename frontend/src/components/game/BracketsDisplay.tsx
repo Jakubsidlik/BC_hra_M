@@ -134,7 +134,7 @@ export function BracketsDisplay({
   };
 
   return (
-    <div className="fixed left-0 top-1/2 -translate-y-1/2 z-40 flex flex-col items-center gap-4 p-4 bg-slate-950/80 backdrop-blur-sm rounded-r-2xl border-r border-emerald-500/30 shadow-[0_0_30px_rgba(16,185,129,0.1)]">
+    <div className="flex flex-col items-center gap-6 p-4 md:p-6 lg:p-8">
       {/* NADPIS */}
       <div className="text-emerald-400 font-bold uppercase text-xs tracking-widest font-mono">
         Závorky

@@ -5,51 +5,98 @@ export type DifficultyMode = 'ZŠ' | 'SŠ' | 'VŠ';
 
 // 2. GENEROVÁNÍ CÍLE (R)
 export function generatePersonalTargetR(difficulty: DifficultyMode): string {
-  // Pomocné funkce pro náhodný výběr
   const randInt = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min;
   const pick = (arr: string[]) => arr[Math.floor(Math.random() * arr.length)];
+  const pickVar = () => pick(['x', 'y']);
+  const pickConstant = () => pick(['π', 'e']);
 
   if (difficulty === 'ZŠ') {
-    const category = randInt(1, 4); // 4 kategorie pro ZŠ
+    const category = randInt(1, 4);
     switch (category) {
-      case 1: return `${randInt(1, 9)}`;                   // 1. jednociferné celé číslo
-      case 2: return `${randInt(10, 99)}`;                 // 2. dvouciferné celé číslo
-      case 3: return `${randInt(100, 999)}`;               // 3. trojciferné celé číslo
-      case 4: return `${randInt(1, 9)}x`;                  // 4. jednociferné celé číslo a X
+      case 1: return `${randInt(1, 9)}`;                           // jednociferné číslo
+      case 2: return `${randInt(10, 99)}`;                         // dvouciferné číslo
+      case 3: return `${randInt(100, 999)}`;                       // trojciferné číslo
+      case 4: return `${randInt(1, 9)}${pickVar()}`;               // jednociferné číslo a X/Y
     }
   }
 
   if (difficulty === 'SŠ') {
-    const category = randInt(1, 7); // 7 kategorií pro SŠ
+    const category = randInt(1, 6);
     switch (category) {
-      case 1: return `${randInt(10, 99)}`;                 // 1. dvouciferné celé číslo
-      case 2: return `${randInt(100, 999)}`;               // 2. trojciferné celé číslo
-      case 3: return `${randInt(1, 9)}x`;                  // 3. jednociferné celé číslo a X
-      case 4: return `${randInt(10, 99)}x`;                // 4. dvouciferné celé číslo a X
-      case 5: // 5. lib. kombinace čísel a symbolu
-        return pick(['2π', 'e^2', 'sqrt(2)', 'ln(10)', 'π/2', '10π']); 
-      case 6: // 6. lib. kombinace čísel, symbolu a X
-        return pick(['πx', 'e^x', 'sin(x)', 'cos(x)', 'tg(x)', 'sqrt(x)', '2sin(x)']);
-      case 7: // 7. Zkoušejte cokoliv (matematické standardy)
-        return pick(['x^2-1', 'sin(x)^2+cos(x)^2', '2^x', '(x+1)^2', 'x/2 + π']);
+      case 1: return `${randInt(10, 99)}`;                         // dvouciferné číslo
+      case 2: return `${randInt(100, 999)}`;                       // trojciferné číslo
+      case 3: return `${randInt(1, 9)}${pickVar()}`;               // jednociferné číslo a X/Y
+      case 4: return `${randInt(10, 99)}${pickVar()}`;             // dvouciferné číslo a X/Y
+      case 5: {
+        // kombinace čísla a konstanty
+        const num = randInt(1, 20);
+        const constant = pickConstant();
+        return `${num}${constant}`;
+      }
+      case 6: {
+        // kombinace čísla, konstanty a X/Y
+        const num = randInt(1, 10);
+        const constant = pickConstant();
+        const variable = pickVar();
+        return `${num}${constant}${variable}`;
+      }
     }
   }
 
   if (difficulty === 'VŠ') {
-    const category = randInt(1, 5); // 5 kategorií pro VŠ
+    const category = randInt(1, 5);
     switch (category) {
-      case 1: return `${randInt(10, 99)}`;                 // 1. dvouciferné celé číslo
-      case 2: return `${randInt(10, 99)}x`;                // 2. dvouciferné celé číslo a X
-      case 3: // 3. lib. kombinace čísel a symbolu
-        return pick(['ln(2)', 'sqrt(π)', 'e^π', 'sin(π/4)', 'ln(e^2)']); 
-      case 4: // 4. lib. kombinace čísel, symbolu a X
-        return pick(['x*e^x', 'sin(x)/x', 'ln(x^2)', 'x^x', 'sqrt(x^2+1)']);
-      case 5: // 5. lib. kombinace čísla a mocniny X
-        return `${randInt(2, 99)}x^${randInt(2, 5)}`;      // např. 15x^3, 42x^2
+      case 1: return `${randInt(10, 99)}`;                         // dvouciferné číslo
+      case 2: return `${randInt(10, 99)}${pickVar()}`;             // dvouciferné číslo a X/Y
+      case 3: {
+        // kombinace čísla a konstanty
+        const type = randInt(1, 3);
+        if (type === 1) {
+          // číslo * konstanta (např 8e, 2π)
+          return `${randInt(1, 20)}${pickConstant()}`;
+        } else if (type === 2) {
+          // jen konstanta
+          return pickConstant();
+        } else {
+          // konstanta * konstanta (π*e)
+          const c1 = pickConstant();
+          let c2 = pickConstant();
+          while (c2 === c1) c2 = pickConstant();
+          return `${c1}${c2}`;
+        }
+      }
+      case 4: {
+        // kombinace čísla, konstanty a X/Y
+        const type = randInt(1, 4);
+        const variable = pickVar();
+        if (type === 1) {
+          // číslo * konstanta * X
+          return `${randInt(1, 10)}${pickConstant()}${variable}`;
+        } else if (type === 2) {
+          // konstanta * X
+          return `${pickConstant()}${variable}`;
+        } else if (type === 3) {
+          // číslo * X
+          return `${randInt(1, 20)}${variable}`;
+        } else {
+          // konstanta * konstanta * X
+          const c1 = pickConstant();
+          let c2 = pickConstant();
+          while (c2 === c1) c2 = pickConstant();
+          return `${c1}${c2}${variable}`;
+        }
+      }
+      case 5: {
+        // kombinace čísla a mocniny X
+        const num = randInt(1, 20);
+        const variable = pickVar();
+        const power = randInt(2, 5);
+        return `${num}${variable}^${power}`;
+      }
     }
   }
 
-  return "0"; // Fallback
+  return "0";
 }
 
 // 3. PŘEVOD PLOCHY NA MATEMATICKÝ STRING PRO BACKEND

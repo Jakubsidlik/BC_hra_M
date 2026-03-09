@@ -101,15 +101,6 @@ export default function App() {
         handleBracketClick={actions.handleBracketClick} 
         onCancel={() => actions.setBracketMode(null)} 
       />
-
-      {/* PANEL ZÁVOREK */}
-      {state.gamePhase === 'PLAYING' && (
-        <BracketsDisplay
-          syntax={currentPlayer.syntax}
-          onBracketDragStart={actions.onBracketDragStart}
-          currentPlayer={currentPlayer}
-        />
-      )}
       
       <DeckPreviewDialog
         open={!!state.deckPreviewMode}
@@ -189,14 +180,16 @@ export default function App() {
             </div>
           </div>
 
-          {/* HERNÍ PLOCHA A SYNTAX BAR */}
+          {/* HERNÍ PLOCHA A ZÁVORKY */}
           <div className="flex flex-col lg:flex-row gap-6 md:gap-8 lg:gap-10 mb-36 md:mb-44 lg:mb-52">
-            <div className="bg-black/40 backdrop-blur-md rounded-3xl lg:rounded-[2.5rem] p-4 md:p-6 lg:p-8 flex flex-row lg:flex-col items-center justify-center gap-3 md:gap-4 lg:gap-6 border-2 border-white/10 shadow-[inset_0_2px_20px_rgba(0,0,0,0.4)] min-h-62.5 md:min-h-87.5">
-              {currentPlayer.syntax.map(c => (
-                <div key={c.id} className="relative shrink-0 w-20 h-28 sm:w-24 sm:h-32 md:w-28 md:h-36 lg:w-32 lg:h-40 flex items-center justify-center bg-slate-800 border-3 md:border-4 rounded-xl border-white/30">
-                  <span className="text-3xl font-chalk text-white drop-shadow-md">{c.symbol}</span>
-                </div>
-              ))}
+            <div className="bg-black/40 backdrop-blur-md rounded-3xl lg:rounded-[2.5rem] p-4 md:p-6 lg:p-8 flex items-center justify-center border-2 border-white/10 shadow-[inset_0_2px_20px_rgba(0,0,0,0.4)] h-auto">
+              {state.gamePhase === 'PLAYING' && (
+                <BracketsDisplay
+                  syntax={currentPlayer.syntax}
+                  onBracketDragStart={actions.onBracketDragStart}
+                  currentPlayer={currentPlayer}
+                />
+              )}
             </div>
             
             <div className="flex-1">
