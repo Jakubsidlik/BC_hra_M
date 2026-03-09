@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 
+// Použití BASE_URL pro správné načítání na GitHub Pages
 const BASE = import.meta.env.BASE_URL;
 
 // --- HLAVNÍ MENU ---

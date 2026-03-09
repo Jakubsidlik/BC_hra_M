@@ -358,7 +358,7 @@ export function useGameEngine() {
                  players[currentPlayerIndex].syntax.find(c => c.id === active.id);
                  
     // DŮLEŽITÉ: Pokud se karta nenajde, zkusíme ji z active.data
-    const cardToPlace = card || (active.data as GameCard | undefined);
+    const cardToPlace = card || (active.data.current as GameCard | undefined);
     if (!cardToPlace) {
       toast.error("Chyba: Karta se nenašla. Zkus to znova.");
       return;
