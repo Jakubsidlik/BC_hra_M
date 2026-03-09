@@ -15,6 +15,7 @@ import { cardsDatabase } from '@/data/cardsDB';
 
 // Importy Komponent
 import { HandCard, BoardArea } from '@/components/game/Cards';
+import { BracketsDisplay } from '@/components/game/BracketsDisplay';
 import { 
   EffectDialog, 
   TargetingOverlay, 
@@ -100,6 +101,15 @@ export default function App() {
         handleBracketClick={actions.handleBracketClick} 
         onCancel={() => actions.setBracketMode(null)} 
       />
+
+      {/* PANEL ZÁVOREK */}
+      {state.gamePhase === 'PLAYING' && (
+        <BracketsDisplay
+          syntax={currentPlayer.syntax}
+          onBracketDragStart={actions.onBracketDragStart}
+          currentPlayer={currentPlayer}
+        />
+      )}
       
       <DeckPreviewDialog
         open={!!state.deckPreviewMode}
@@ -194,7 +204,8 @@ export default function App() {
                  cards={currentPlayer.board} 
                  targetR={currentPlayer.targetR} 
                  playerTheme={currentPlayer.theme} 
-                 absoluteValue={currentPlayer.status?.absoluteValue} 
+                 absoluteValue={currentPlayer.status?.absoluteValue}
+                 bracketMode={state.bracketMode}
                />
             </div>
           </div>

@@ -136,19 +136,19 @@ export function EffectDialog({
             {effect && (
               <Button 
                 variant="outline" 
-                className="h-auto p-6 flex flex-col items-start gap-3 border-emerald-500/30 bg-emerald-950/20 hover:bg-emerald-900/40 hover:border-emerald-400 transition-all text-left group" 
+                className="h-auto p-6 flex flex-col items-start gap-3 border-emerald-500/30 bg-emerald-950/20 hover:bg-emerald-900/40 hover:border-emerald-400 transition-all text-left group min-w-0" 
                 onClick={handleEffectClick}
               >
-                <div className="w-full flex justify-between items-center">
-                  <span className="font-black text-emerald-400 uppercase tracking-widest text-base group-hover:scale-105 transition-transform">
+                <div className="w-full flex justify-between items-center gap-2 min-w-0">
+                  <span className="font-black text-emerald-400 uppercase tracking-widest text-base group-hover:scale-105 transition-transform shrink-0">
                     {effect.name}
                   </span>
-                  <Badge className="bg-emerald-500 text-slate-900 font-bold border-none shadow-lg">EFEKT</Badge>
+                  <Badge className="bg-emerald-500 text-slate-900 font-bold border-none shadow-lg shrink-0">EFEKT</Badge>
                 </div>
-                <span className="text-sm text-slate-300 leading-relaxed font-medium">
+                <span className="text-sm text-slate-300 leading-relaxed font-medium overflow-wrap w-full">
                   {effect.description}
                 </span>
-                <span className="text-[10px] text-emerald-500/50 uppercase font-bold tracking-tighter">
+                <span className="text-[10px] text-emerald-500/50 uppercase font-bold tracking-tighter overflow-wrap w-full">
                   Karta bude po použití zahozena
                 </span>
               </Button>
@@ -206,7 +206,6 @@ export function MinigameDialog({ minigameMode, onPick }: { minigameMode: any, on
   if (!minigameMode) return null;
 
   const config: Record<string, { title: string; desc: string; color: string }> = {
-    'EFF_038': { title: "Volba osudu", desc: "Vyber si jednu kartu. Ostatní shoří v propasti hřbitova.", color: "text-amber-400" },
     'EFF_015': { title: "Vize budoucnosti", desc: "Získej jednu kartu. Zbytek určí příští tahy v balíčku.", color: "text-blue-400" },
     'EFF_017': { title: "Rekurze hřbitova", desc: "Vytáhni zapomenutou vědomost zpět do své ruky.", color: "text-purple-400" }
   };

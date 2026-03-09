@@ -227,9 +227,8 @@ export function RulesScreen({ onBack }: { onBack: () => void }) {
 
         <div className="mt-4 flex justify-center pt-4 border-t-4 border-slate-500/30 bg-black/20 backdrop-blur-sm rounded-t-3xl pb-2">
           <Button 
-            size="lg" 
-            variant="outline" 
-            className="bg-black/50 backdrop-blur-md border-2 border-slate-400 text-slate-200 hover:bg-slate-700 hover:text-white px-10 md:px-16 py-6 md:py-8 text-xl md:text-2xl font-bold rounded-2xl transition-all shadow-lg" 
+            variant="ghost" 
+            className="text-slate-400 hover:text-white text-xl font-bold"
             onClick={onBack}
           >
             ← ZPĚT DO MENU

@@ -32,13 +32,17 @@ export function useGameEngine() {
   const [pendingEffect, setPendingEffect] = useState<{card: GameCard, targetId: string | null, insertPosition?: number} | null>(null);
   const [effectStep, setEffectStep] = useState<'CHOOSE_EFFECT' | 'CHOOSE_TARGET'>('CHOOSE_EFFECT');
   const [chosenEffectChoice, setChosenEffectChoice] = useState<'ACTIVATE' | null>(null);
-  const [lastPlayedEffect, setLastPlayedEffect] = useState<string | null>(null);
   const [targetingMode, setTargetingMode] = useState<{effectId: string, targetPlayerId?: number} | null>(null);
   const [minigameMode, setMinigameMode] = useState<{effectId: string, cards: GameCard[], targetPlayerId?: number} | null>(null);
-  const [bracketMode, setBracketMode] = useState<{ step: 'LEFT' | 'RIGHT', leftIndex: number | null } | null>(null);
+  const [bracketMode, setBracketMode] = useState<{ step: 'LEFT' | 'RIGHT', leftIndex: number | null, pairIndex?: number } | null>(null);
   const [integralSetup, setIntegralSetup] = useState<{card: GameCard, targetId: string | null, insertPosition?: number} | null>(null);
   const [deckPreviewMode, setDeckPreviewMode] = useState<{originalDeck: GameCard[], reorderedDeck?: GameCard[]} | null>(null);
   const [moduloMode, setModuloMode] = useState<{activePlayerIndex: number, targetPlayerId?: number} | null>(null);
+  
+  // --- BRACKET DRAG-DROP ---
+  const [isDraggingBracket, setIsDraggingBracket] = useState(false);
+  const [currentDraggingBracket, setCurrentDraggingBracket] = useState<GameCard | null>(null);
+  const [bracketPairIndex, setBracketPairIndex] = useState<number | null>(null);
   
   // --- OMEZENÍ TAHU ---
   const [isDiscarding, setIsDiscarding] = useState(false);
@@ -263,9 +267,33 @@ export function useGameEngine() {
     setPendingEffect(null);
   }, [currentPlayerIndex]);
 
+  const onBracketDragStart = useCallback((bracket: GameCard, pairIndex: number) => {
+    setIsDraggingBracket(true);
+    setCurrentDraggingBracket(bracket);
+    setBracketPairIndex(pairIndex);
+  }, []);
+
   const handleDragEnd = useCallback((event: DragEndEvent) => {
     const { active, over } = event;
     if (!over) return;
+
+    // Kontrola zda je taženým prvkem závor ka
+    const isDraggingBracketCard = currentDraggingBracket?.id === active.id;
+    
+    if (isDraggingBracketCard) {
+      setIsDraggingBracket(false);
+      setCurrentDraggingBracket(null);
+      
+      // Pokud je to levá závor ka, zapneme režim dla levé zavorky
+      if (currentDraggingBracket?.symbol === '(' && over.id?.toString().includes('main-board')) {
+        if (bracketMode) return toast.error("Zá značit můžeš jenom jednu závor ku");
+        setBracketMode({ step: 'LEFT', leftIndex: null, pairIndex: bracketPairIndex || 0 });
+        setHasModifiedBoardThisTurn(true); // Hned se nastaví, že jsi provedl akci
+        toast.info("Vyber pozici pro levou závor ku", { icon: '(' });
+        return;
+      }
+      return;
+    }
 
     if (over.id === 'drop-discard') {
       const cardInHand = players[currentPlayerIndex].hand.find(c => c.id === active.id);
@@ -324,7 +352,7 @@ export function useGameEngine() {
     } else {
       addCardToGameState(card, targetId, insertPosition);
     }
-  }, [currentPlayerIndex, players, isDiscarding, hasModifiedBoardThisTurn, addCardToGameState]);
+  }, [currentPlayerIndex, players, isDiscarding, hasModifiedBoardThisTurn, addCardToGameState, currentDraggingBracket, bracketPairIndex, bracketMode]);
 
   // ==========================================
   // 5. EFEKTY A CÍLENÍ
@@ -340,31 +368,20 @@ export function useGameEngine() {
     if (effect) {
       let activeId = effect.id;
 
-      // --- 1. LOGIKA KOPÍROVÁNÍ (Copy Cat / EFF_037) ---
-      if (activeId === 'EFF_037' && lastPlayedEffect) {
-        activeId = lastPlayedEffect; // Přebereme ID předchozího efektu
-        toast.info("Kopíruji předchozí efekt!");
-      } else if (activeId !== 'EFF_037') {
-        // Uložíme ID pro budoucího Kopíráka (tím zmizí error 6133)
-        setLastPlayedEffect(activeId);
-      }
-
-      // --- 2. KONTROLA TARGETING REŽIMU ---
+      // --- 1. KONTROLA TARGETING REŽIMU ---
       // Pokud efekt vyžaduje kartu soupeře (např. EFF_006) a ID karty ještě nemáme, zapneme TargetingMode
-      const cardTargetingEffects = ['EFF_006', 'EFF_014', 'EFF_036', 'EFF_045'];
+      const cardTargetingEffects = ['EFF_006', 'EFF_014'];
       if (cardTargetingEffects.includes(activeId) && !targetCardId) {
         setTargetingMode({ effectId: activeId, targetPlayerId });
         setEffectStep('CHOOSE_EFFECT');
         return; // Zastavíme funkci, dokud hráč neklikne na kartu na stole soupeře
       }
 
-      // --- 3. OKAMŽITÉ AKCE ---
+      // --- 2. OKAMŽITÉ AKCE ---
       const immediateDraw: Record<string, number> = { "EFF_001": 1, "EFF_008": 2 };
       if (immediateDraw[activeId]) performDraw(immediateDraw[activeId], currentPlayerIndex);
 
-      if (activeId === 'EFF_032') setPlayDirection(d => d === 1 ? -1 : 1);
-
-      // --- 4. APLIKACE LOGIKY EFEKTU ---
+      // --- 3. APLIKACE LOGIKY EFEKTU ---
       const effectResult = applyEffectLogic(
         activeId, players, currentPlayerIndex, targetPlayerId, targetCardId, pendingEffect.card, difficulty
       );
@@ -492,20 +509,60 @@ export function useGameEngine() {
     if (!bracketMode || hasModifiedBoardThisTurn) return;
     const idx = players[currentPlayerIndex].board.findIndex(c => c.id === cardId);
     if (idx === -1) return;
+    
     if (bracketMode.step === 'LEFT') {
-      setBracketMode({ step: 'RIGHT', leftIndex: idx });
+      // Levá závor ka - uložit index
+      setBracketMode({ step: 'RIGHT', leftIndex: idx, pairIndex: bracketMode.pairIndex });
+      toast.info("Vyber pozici pro pravou závor ku", { icon: ')' });
     } else {
+      // Pravá závor ka - validovat a přidat
+      if (idx <= (bracketMode.leftIndex || 0)) {
+        return toast.error("Pravá závor ka musí být za levou!");
+      }
+      
+      // Validace: mezi závork ami musí být alespoň číslo nebo proměnná
+      const p = players[currentPlayerIndex];
+      const cardsInBrackets = p.board.slice((bracketMode.leftIndex || 0) + 1, idx);
+      const hasValidContent = cardsInBrackets.some(c => {
+        const cardData = cardsDatabase[c.symbol];
+        return cardData?.type === 'number' || cardData?.type === 'variable' || c.symbol === 'π';
+      });
+      
+      if (!hasValidContent) {
+        return toast.error("V závorkách musí být alespoň jedno číslo nebo proměnná!");
+      }
+      
+      // Kontrola zda už na L nejsou jenom závor ky (bez jiného obsahu)
+      const allBracketsOnBoard = p.board.every((c: any) => c.symbol === '(' || c.symbol === ')');
+      
       setPlayers(prev => {
         const next = JSON.parse(JSON.stringify(prev));
-        const p = next[currentPlayerIndex];
-        const lB = p.syntax.splice(p.syntax.findIndex((c: any) => c.symbol === '('), 1)[0];
-        const rB = p.syntax.splice(p.syntax.findIndex((c: any) => c.symbol === ')'), 1)[0];
-        p.board.splice(idx + 1, 0, rB);
-        p.board.splice(bracketMode.leftIndex!, 0, lB);
+        const player = next[currentPlayerIndex];
+        
+        // Najdi a odstraň přesné páry ze syntax
+        const syntaxCopy = [...player.syntax];
+        const pairIndex = bracketMode.pairIndex || 0;
+        const leftBracketIndex = pairIndex * 2;
+        const rightBracketIndex = pairIndex * 2 + 1;
+        
+        const lB = syntaxCopy[leftBracketIndex];
+        const rB = syntaxCopy[rightBracketIndex];
+        
+        // Odstraň ze syntax
+        syntaxCopy.splice(rightBracketIndex, 1);
+        syntaxCopy.splice(leftBracketIndex, 1);
+        player.syntax = syntaxCopy;
+        
+        // Přidej na board do správných pozic
+        player.board.splice((bracketMode.leftIndex || 0) + 1, 0, lB);
+        player.board.splice(idx + 2, 0, rB);
+        
         return next;
       });
+      
       setBracketMode(null);
       setHasModifiedBoardThisTurn(true);
+      toast.success("Závor ky umístěny!", { icon: '✓' });
     }
   };
 
@@ -564,13 +621,13 @@ export function useGameEngine() {
       gamePhase, difficulty, players, currentPlayerIndex, deck, discardPile,
       isHandoff, winner, pendingEffect, effectStep, chosenEffectChoice,
       targetingMode, minigameMode, bracketMode, integralSetup,
-      isDiscarding, hasModifiedBoardThisTurn, playDirection, lastPlayedEffect,
-      deckPreviewMode, moduloMode
+      isDiscarding, hasModifiedBoardThisTurn, playDirection,
+      deckPreviewMode, moduloMode, isDraggingBracket
     },
     actions: {
       setGamePhase, setDifficulty, handleStartGame, handleEndTurn, handleDiscard,
       nextTurn, checkMathEngine, handleEffectChoice, handleIntegralSubmit,
-      handleDragEnd, handleBracketClick, setMinigameMode, setBracketMode,
+      handleDragEnd, handleBracketClick, onBracketDragStart, setMinigameMode, setBracketMode,
       setTargetingMode, setIntegralSetup, setPendingEffect, setEffectStep,
       setChosenEffectChoice, setPlayers, addCardToGameState, handleDiscardExpression,
       handleDeckPreviewConfirm, handleModuloSelect, setDeckPreviewMode, setModuloMode

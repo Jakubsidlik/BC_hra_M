@@ -10,13 +10,12 @@ export function generatePersonalTargetR(difficulty: DifficultyMode): string {
   const pick = (arr: string[]) => arr[Math.floor(Math.random() * arr.length)];
 
   if (difficulty === 'ZŠ') {
-    const category = randInt(1, 5); // 5 kategorií pro ZŠ
+    const category = randInt(1, 4); // 4 kategorie pro ZŠ
     switch (category) {
       case 1: return `${randInt(1, 9)}`;                   // 1. jednociferné celé číslo
       case 2: return `${randInt(10, 99)}`;                 // 2. dvouciferné celé číslo
       case 3: return `${randInt(100, 999)}`;               // 3. trojciferné celé číslo
       case 4: return `${randInt(1, 9)}x`;                  // 4. jednociferné celé číslo a X
-      case 5: return `${randInt(10, 99)}x`;                // 5. dvouciferné celé číslo a X
     }
   }
 
@@ -138,10 +137,22 @@ import { cardsDatabase } from '../data/cardsDB';
 export function generateFilteredDeck(difficulty: DifficultyMode): GameCard[] {
   const deck: GameCard[] = [];
   
-  // Definice karet podle obtížností
+  // Definice vyloučených karet podle obtížností
+  // ZŠ: Jen základní operace (+, -, *, /), čísla, proměnné (x, y)
+  // SŠ: ZŠ + mocniny, odmocniny,log, gon. fce, faktoriál, kombinace
+  // VŠ: Všechny operace včetně derivací, integrálů, sum, produktů, limitů, determinantů
   const difficultyFilters: Record<DifficultyMode, string[]> = {
-    'ZŠ': ['∫', '∑', 'lim', 'd/dx', 'sin', 'cos', 'tan', 'cotg', 'ln', 'log', '√', '^', 'e', 'π', 'mod', 'n!', 'C', 'P'],
-    'SŠ': ['∫', '∑', 'lim', 'd/dx', 'mod', 'n!', 'C', 'P'],
+    // ZŠ vyloučí: vysokoškolský obsah + pokročilé SŠ operace
+    'ZŠ': [
+      'π', 'e', 'mod', 'n!', 
+      'd/dx', 'int', '∑', 'log', 'sin', 'cos', 'tg', 'cotg', 
+      'nCk', '∏', 'lim', 'det'
+    ],
+    // SŠ vyloučí: pouze vysokoškolský obsah
+    'SŠ': [
+      'd/dx', 'int', '∑', '∏', 'lim', 'det'
+    ],
+    // VŠ: bez vyloučení
     'VŠ': []
   };
 

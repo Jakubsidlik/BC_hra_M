@@ -1,0 +1,5 @@
+<svg viewBox="0 0 100 200" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Levá složená závor ka - Pár 3 -->
+  <path d="M 70 20 L 40 20 C 25 20, 15 35, 15 50 C 15 65, 25 75, 40 75 M 40 75 C 25 75, 15 85, 15 100 C 15 115, 25 125, 40 125 M 40 125 C 25 125, 15 135, 15 150 C 15 165, 25 180, 40 180 L 70 180" />
+  <circle cx="30" cy="100" r="6" fill="currentColor" opacity="0.5" />
+</svg>
