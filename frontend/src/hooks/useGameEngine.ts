@@ -24,7 +24,7 @@ export function useGameEngine() {
   const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
   const [deck, setDeck] = useState<GameCard[]>([]);
   const [discardPile, setDiscardPile] = useState<GameCard[]>([]);
-  const [playDirection, setPlayDirection] = useState<1 | -1>(1);
+  const [playDirection] = useState<1 | -1>(1);
   const [isHandoff, setIsHandoff] = useState(false);
   const [winner, setWinner] = useState<Player | null>(null);
 
@@ -531,9 +531,6 @@ export function useGameEngine() {
       if (!hasValidContent) {
         return toast.error("V závorkách musí být alespoň jedno číslo nebo proměnná!");
       }
-      
-      // Kontrola zda už na L nejsou jenom závor ky (bez jiného obsahu)
-      const allBracketsOnBoard = p.board.every((c: any) => c.symbol === '(' || c.symbol === ')');
       
       setPlayers(prev => {
         const next = JSON.parse(JSON.stringify(prev));
