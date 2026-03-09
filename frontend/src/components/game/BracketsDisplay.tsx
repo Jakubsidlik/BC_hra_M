@@ -57,7 +57,7 @@ function BracketPair({ pair, index, isVisible, onDragStart }: BracketPairProps) 
 
   return (
     <div
-      className={`transition-all duration-300 flex gap-4 items-center justify-center ${
+      className={`transition-all duration-300 flex gap-2 sm:gap-3 md:gap-4 items-center justify-center ${
         isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-75 pointer-events-none'
       }`}
       style={{
@@ -72,7 +72,7 @@ function BracketPair({ pair, index, isVisible, onDragStart }: BracketPairProps) 
         {...attrLeft}
         style={styleLeft}
         onMouseDown={() => onDragStart(pair.left, index)}
-        className={`relative w-12 h-16 rounded-lg border-2 border-emerald-500 
+        className={`relative w-8 h-12 sm:w-10 sm:h-14 md:w-12 md:h-16 rounded-lg border-2 border-emerald-500 
           bg-slate-800 shadow-xl flex items-center justify-center cursor-grab active:cursor-grabbing
           ${isDraggingLeft ? 'scale-110 shadow-[0_0_25px_rgba(16,185,129,0.6)] ring-2 ring-emerald-400/50' : 'hover:shadow-emerald-500/30 hover:-translate-y-2'}
           transition-all duration-200`}
@@ -91,7 +91,7 @@ function BracketPair({ pair, index, isVisible, onDragStart }: BracketPairProps) 
         {...attrRight}
         style={styleRight}
         onMouseDown={() => onDragStart(pair.right, index)}
-        className={`relative w-12 h-16 rounded-lg border-2 border-emerald-500
+        className={`relative w-8 h-12 sm:w-10 sm:h-14 md:w-12 md:h-16 rounded-lg border-2 border-emerald-500
           bg-slate-800 shadow-xl flex items-center justify-center cursor-grab active:cursor-grabbing
           ${isDraggingRight ? 'scale-110 shadow-[0_0_25px_rgba(16,185,129,0.6)] ring-2 ring-emerald-400/50' : 'hover:shadow-emerald-500/30 hover:-translate-y-2'}
           transition-all duration-200`}

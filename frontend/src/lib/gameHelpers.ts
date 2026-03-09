@@ -155,7 +155,12 @@ export function parseBoardToMathString(board: GameCard[]): string {
 
 // 4. POMOCNÉ FUNKCE PRO UI
 export function hasOperation(board: GameCard[]): boolean {
-  const operations = ['+', '-', '*', '/', '^', '√', '∫', '∑', 'lim', 'sin', 'cos', 'tan', 'ln', 'log', 'mod'];
+  // Všechny operace s efekty: +, -, *, /, a^b, sqrt, mod, n!, d/dx, int, ∑, log, sin, cos, tg, cotg, nCk, ∏, lim, det
+  const operations = [
+    '+', '-', '*', '/', 'a^b', 'sqrt', 'mod', 'n!', 'd/dx', 'int',
+    '∑', 'log', 'sin', 'cos', 'tg', 'cotg', 'nCk', '∏', 'lim', 'det',
+    '∫', // alternativní symbol pro integrál
+  ];
   return board.some(card => operations.includes(card.symbol) || card.exponent);
 }
 

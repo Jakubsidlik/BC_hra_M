@@ -158,16 +158,35 @@ export function useGameEngine() {
   const handleDiscard = (cardId: string) => {
     setPlayers(prev => {
       const next = JSON.parse(JSON.stringify(prev));
-      const p = next[currentPlayerIndex];
-      const idx = p.hand.findIndex((c: GameCard) => c.id === cardId);
-      if (idx > -1) {
-        const [removed] = p.hand.splice(idx, 1);
-        setDiscardPile(old => [...old, removed]);
-        if (p.hand.length <= 5) {
-          setIsDiscarding(false);
-          setTimeout(() => finalizeTurn(), 300);
+      
+      // DŮLEŽITÉ: Najít hráče podle cardId místo closure currentPlayerIndex
+      let discardedCard: GameCard | null = null;
+      let activePlayerIdx = -1;
+      
+      for (let i = 0; i < next.length; i++) {
+        const idx = next[i].hand.findIndex((c: GameCard) => c.id === cardId);
+        if (idx > -1) {
+          activePlayerIdx = i;
+          const [removed] = next[i].hand.splice(idx, 1);
+          discardedCard = removed;
+          break;
         }
       }
+      
+      if (discardedCard && activePlayerIdx > -1) {
+        setDiscardPile(old => [...old, discardedCard]);
+        const p = next[activePlayerIdx];
+        
+        // Kontrola nového počtu karet (po odebrání)
+        if (p.hand.length <= 5) {
+          setIsDiscarding(false);
+          // Přechod k dalšímu hráči
+          setTimeout(() => {
+            setIsHandoff(true);
+          }, 300);
+        }
+      }
+      
       return next;
     });
   };
@@ -334,9 +353,16 @@ export function useGameEngine() {
     }
 
     if (hasModifiedBoardThisTurn) return toast.error("Za kolo smíš provést 1 akci!");
+    
     const card = players[currentPlayerIndex].hand.find(c => c.id === active.id) || 
                  players[currentPlayerIndex].syntax.find(c => c.id === active.id);
-    if (!card) return;
+                 
+    // DŮLEŽITÉ: Pokud se karta nenajde, zkusíme ji z active.data
+    const cardToPlace = card || (active.data as GameCard | undefined);
+    if (!cardToPlace) {
+      toast.error("Chyba: Karta se nenašla. Zkus to znova.");
+      return;
+    }
     
     // Rozpoznání typu drop zóny
     const overId = String(over.id);
@@ -362,12 +388,12 @@ export function useGameEngine() {
       insertPosition = players[currentPlayerIndex].board.length;
     }
 
-    if (card.symbol === '∫') {
-      setIntegralSetup({ card, targetId, insertPosition });
-    } else if (cardsDatabase[card.symbol]?.hasEffect) {
-      setPendingEffect({ card, targetId, insertPosition });
+    if (cardToPlace.symbol === '∫') {
+      setIntegralSetup({ card: cardToPlace, targetId, insertPosition });
+    } else if (cardsDatabase[cardToPlace.symbol]?.hasEffect) {
+      setPendingEffect({ card: cardToPlace, targetId, insertPosition });
     } else {
-      addCardToGameState(card, targetId, insertPosition);
+      addCardToGameState(cardToPlace, targetId, insertPosition);
     }
   }, [currentPlayerIndex, players, isDiscarding, hasModifiedBoardThisTurn, addCardToGameState, currentDraggingBracket, bracketPairIndex, bracketMode]);
 

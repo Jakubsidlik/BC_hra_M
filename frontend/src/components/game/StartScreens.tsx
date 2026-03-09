@@ -45,6 +45,21 @@ export function MainMenu({ onPlay, onRules }: { onPlay: () => void, onRules: () 
           </Button>
         </div>
       </div>
+
+      {/* Tlačítko Zástupce vpravo dole */}
+      <div className="fixed bottom-6 right-6 z-20">
+        <Button
+          className="bg-slate-700 hover:bg-slate-600 text-white font-semibold text-sm px-4 py-2 rounded-lg border border-slate-500/50 flex items-center gap-3 shadow-lg transition-all hover:shadow-xl"
+          title="Zástupce"
+        >
+          <span>Zástupce</span>
+          <img 
+            src={`${BASE}icons/icon-192.png`}
+            alt="Zástupce"
+            className="w-6 h-6 object-contain"
+          />
+        </Button>
+      </div>
     </div>
   );
 }

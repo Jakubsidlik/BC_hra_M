@@ -120,10 +120,10 @@ export function EffectDialog({
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) onClose(); }}>
-      <DialogContent className="sm:max-w-lg bg-slate-900 border-2 border-slate-700 text-white shadow-[0_0_50px_rgba(0,0,0,0.8)] rounded-2rem">
+      <DialogContent className="w-[90vw] max-w-lg bg-slate-900 border-2 border-slate-700 text-white shadow-[0_0_50px_rgba(0,0,0,0.8)] rounded-2rem">
         
         <DialogHeader>
-          <DialogTitle className="text-4xl font-chalk text-center text-emerald-400 drop-shadow-md">
+          <DialogTitle className="text-3xl sm:text-4xl font-chalk text-center text-emerald-400 drop-shadow-md">
             {effectStep === 'CHOOSE_EFFECT' ? 'Využití karty' : 'Cíl útoku'}
           </DialogTitle>
           <DialogDescription className="text-center text-slate-400 mt-2 font-mono italic">
