@@ -18,8 +18,8 @@ export default defineConfig({
       // Říkáme aplikaci, jaké soubory si má uložit do paměti telefonu pro rychlé načítání
       includeAssets: ['tabule.svg', 'fonts/Chalkduster.ttf'], 
       manifest: {
-        name: 'Teorie křídy',
-        short_name: 'Teorie křídy',
+        name: 'Math4fun',
+        short_name: 'Math4fun',
         description: 'Matematická karetní duelovka z univerzitního prostředí.',
         theme_color: '#0f172a', // Barva horní lišty telefonu (odpovídá slate-900)
         background_color: '#0f172a', // Barva při zapínání appky
@@ -28,12 +28,14 @@ export default defineConfig({
           {
             src: '/icons/icon-192.png',
             sizes: '192x192',
-            type: 'image/png'
+            type: 'image/png',
+            purpose: 'any'
           },
           {
             src: '/icons/icon-512.png',
             sizes: '512x512',
-            type: 'image/png'
+            type: 'image/png',
+            purpose: 'any maskable'
           }
         ]
       }

@@ -23,6 +23,7 @@ export interface PlayerStatus {
   infinitePlays?: boolean;
   mustPlayOperation?: boolean;
   operationLock?: boolean;
+  numberLock?: boolean;
   exposedHand?: boolean;
   absoluteValue?: boolean;
   notifications: string[]; // PŘIDÁNO: Seznam zpráv od oponentů (krádeže, útoky)
@@ -48,6 +49,7 @@ const ensureStatus = (player: Player) => {
       immune: false,
       frozen: false,
       operationLock: false,
+      numberLock: false,
       mustPlayOperation: false,
       playLimit: null,
       infinitePlays: false,
@@ -96,9 +98,10 @@ export const applyEffectLogic = (
     ? newPlayers.find((p: Player) => p.id === selectedTargetId)
     : newPlayers[nextPlayerIndex];
 
-  // Kontrola imunity (Imunita neplatí, pokud hráč cílí sám na sebe)
-  if (targetPlayer && targetPlayer.id !== activePlayer.id && targetPlayer.status.immune) {
-    console.log(`Efekt ${effectId} zrušen: Hráč ${targetPlayer.name} má Absolutní imunitu!`);
+  // Kontrola imunity — platí jen pro EFF_014 (derivace) a EFF_015 (integrál)
+  const immuneEffects = ['EFF_014', 'EFF_015'];
+  if (targetPlayer && targetPlayer.id !== activePlayer.id && targetPlayer.status.immune && immuneEffects.includes(effectId)) {
+    console.log(`Efekt ${effectId} zrušen: Hráč ${targetPlayer.name} má imunitu!`);
     if (activePlayer.status.notifications) {
        activePlayer.status.notifications.push(`Tvůj útok na hráče ${targetPlayer.name} selhal kvůli imunitě!`);
     }
@@ -183,7 +186,7 @@ export const applyEffectLogic = (
       }
       break;
 
-    case "EFF_008": // *: Zdvojnásobení počtu dobíraných karet
+    case "EFF_008": // *: Zdvojnásobení počtu dobíraných karet v PŘÍŠTÍM tahu
       activePlayer.status.extraDraw = (activePlayer.status.extraDraw || 0) + 2;
       break;
 
@@ -257,11 +260,9 @@ export const applyEffectLogic = (
       }
       break;
 
-    case "EFF_016": // ∑: Žádný hráč nemůže celé kolo hrát operace
+    case "EFF_016": // ∑: Žádný hráč nemůže celé kolo hrát operace (včetně aktivního hráče)
       newPlayers.forEach((p: Player) => {
-        if (p.id !== activePlayer.id) {
-          p.status.operationLock = true;
-        }
+        p.status.operationLock = true;
       });
       newPlayers[currentPlayerIndex].status.notifications.push(`🔐 Zákaz operací pro všechny na příští kolo!`);
       break;
@@ -331,11 +332,9 @@ export const applyEffectLogic = (
       }
       break;
 
-    case "EFF_023": // ∏: Žádný hráč nemůže celé kolo hrát čísla
+    case "EFF_023": // ∏: Žádný hráč nemůže celé kolo hrát čísla (včetně aktivního hráče)
       newPlayers.forEach((p: Player) => {
-        if (p.id !== activePlayer.id) {
-          p.status.mathModifiers.push("NO_NUMBERS");
-        }
+        p.status.numberLock = true;
       });
       newPlayers[currentPlayerIndex].status.notifications.push(`🔐 Zákaz čísel pro všechny na příští kolo!`);
       break;

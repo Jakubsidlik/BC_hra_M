@@ -1,10 +1,13 @@
 import { Button } from "@/components/ui/button";
+import { usePWAInstall } from "@/hooks/usePWAInstall";
 
 // Použití BASE_URL pro správné načítání na GitHub Pages
 const BASE = import.meta.env.BASE_URL;
 
 // --- HLAVNÍ MENU ---
 export function MainMenu({ onPlay, onRules }: { onPlay: () => void, onRules: () => void }) {
+  const { isInstalled, triggerInstall } = usePWAInstall();
+
   return (
     <div 
       className="min-h-screen flex flex-col items-center justify-center p-8 border-16px border-amber-950/90 relative overflow-hidden bg-cover bg-center shadow-[inset_0_0_120px_rgba(0,0,0,0.7)]"
@@ -17,7 +20,7 @@ export function MainMenu({ onPlay, onRules }: { onPlay: () => void, onRules: () 
           className="text-7xl md:text-9xl font-black italic text-slate-100 tracking-tighter mb-4 opacity-95 text-center" 
           style={{ textShadow: '2px 2px 4px rgba(255,255,255,0.3), -1px -1px 2px rgba(255,255,255,0.2)' }}
         >
-          Teorie křídy
+          Math4fun
         </h1>
         
         <div className="mb-16 w-full max-w-lg transform hover:rotate-1 transition-transform duration-700">
@@ -50,14 +53,16 @@ export function MainMenu({ onPlay, onRules }: { onPlay: () => void, onRules: () 
       {/* Tlačítko Zástupce vpravo dole */}
       <div className="fixed bottom-6 right-6 z-20">
         <Button
-          className="bg-slate-700 hover:bg-slate-600 text-white font-semibold text-sm px-4 py-2 rounded-lg border border-slate-500/50 flex items-center gap-3 shadow-lg transition-all hover:shadow-xl"
-          title="Zástupce"
+          onClick={triggerInstall}
+          disabled={isInstalled}
+          className="bg-slate-700 hover:bg-slate-600 text-white font-semibold text-sm px-4 py-2 rounded-lg border border-slate-500/50 flex items-center gap-3 shadow-lg transition-all hover:shadow-xl disabled:opacity-70"
+          title={isInstalled ? 'Aplikace je nainstalována' : 'Přidat na plochu zařízení'}
         >
-          <span>Zástupce</span>
-          <img 
+          <span>{isInstalled ? 'Nainstalovno ✓' : 'Zástupce'}</span>
+          <img
             src={`${BASE}icons/icon-192.png`}
             alt="Zástupce"
-            className="w-6 h-6 object-contain"
+            className="w-6 h-6 object-contain rounded"
           />
         </Button>
       </div>
@@ -130,7 +135,7 @@ export function RulesScreen({ onBack }: { onBack: () => void }) {
               <section>
                 <h3 className="text-3xl font-bold text-emerald-400 border-b border-emerald-400/30 pb-2 mb-4 italic">1. Představení</h3>
                 <p className="leading-relaxed">
-                  Teorie křídy je karetní herní systém zaměřený na skladbu matematických výrazů pro 2–8 hráčů. Matematika je zde vyobrazena jako živý, nekonečně variabilní a otevřený systém.
+                  Math4fun je karetní herní systém zaměřený na skladbu matematických výrazů pro 2–8 hráčů. Matematika je zde vyobrazena jako živý, nekonečně variabilní a otevřený systém.
                 </p>
               </section>
 
@@ -267,7 +272,7 @@ export function MobileWarningScreen() {
         <div className="text-6xl mb-6">🖥️</div>
         <h1 className="text-4xl font-black italic text-emerald-400 mb-4">Příliš malá plocha!</h1>
         <p className="text-xl text-slate-200 leading-relaxed font-mono">
-          Teorie křídy vyžaduje velkou tabuli. 
+          Math4fun vyžaduje velkou tabuli. 
           <br /><br />
           Prosím, otevřete hru na PC, aby se vám na stůl vešly všechny rovnice.
         </p>

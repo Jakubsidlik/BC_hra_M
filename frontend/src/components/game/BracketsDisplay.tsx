@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useDraggable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 import type { GameCard } from '@/lib/effects';
@@ -9,173 +8,113 @@ interface BracketsDisplayProps {
   currentPlayer: any;
 }
 
-interface BracketPairProps {
-  pair: { left: GameCard; right: GameCard };
-  index: number;
-  isVisible: boolean;
-  onDragStart: (bracket: GameCard, pairIndex: number) => void;
-}
+// Mapování symbolu závorky na vizuální label
+const BRACKET_LABEL: Record<string, { left: string; right: string; label: string; color: string }> = {
+  '(': { left: '(', right: ')', label: 'Kulaté závorky',  color: 'text-emerald-300 border-emerald-500' },
+  '[': { left: '[', right: ']', label: 'Hranaté závorky', color: 'text-blue-300   border-blue-500'    },
+  '{': { left: '{', right: '}', label: 'Složené závorky', color: 'text-violet-300 border-violet-500'  },
+};
 
 // ==========================================
 // JEDNOTLIVÝ PÁR ZÁVOREK S DRAG-DROP
 // ==========================================
-function BracketPair({ pair, index, isVisible, onDragStart }: BracketPairProps) {
-  const { attributes: attrLeft, listeners: listLeft, setNodeRef: refLeft, transform: transformLeft, isDragging: isDraggingLeft } = useDraggable({
-    id: pair.left.id,
-    data: pair.left,
-  });
+function BracketPair({
+  pair,
+  pairIndex,
+  onDragStart,
+}: {
+  pair: { left: GameCard; right: GameCard };
+  pairIndex: number;
+  onDragStart: (bracket: GameCard, pairIndex: number) => void;
+}) {
+  const info = BRACKET_LABEL[pair.left.symbol] ?? BRACKET_LABEL['('];
 
-  const { attributes: attrRight, listeners: listRight, setNodeRef: refRight, transform: transformRight, isDragging: isDraggingRight } = useDraggable({
-    id: pair.right.id,
-    data: pair.right,
-  });
+  const {
+    attributes: attrL, listeners: listL, setNodeRef: refL,
+    transform: transL, isDragging: isDragL,
+  } = useDraggable({ id: pair.left.id, data: pair.left });
 
-  const styleLeft = {
-    transform: transformLeft ? CSS.Translate.toString(transformLeft) : undefined,
-    zIndex: isDraggingLeft ? 100 : 10,
-  };
+  const {
+    attributes: attrR, listeners: listR, setNodeRef: refR,
+    transform: transR, isDragging: isDragR,
+  } = useDraggable({ id: pair.right.id, data: pair.right });
 
-  const styleRight = {
-    transform: transformRight ? CSS.Translate.toString(transformRight) : undefined,
-    zIndex: isDraggingRight ? 100 : 10,
-  };
-
-  // Obrázky pro páry - dva a tři mají vlastní SVG
-  const getImageForPair = (pairIndex: number, isLeft: boolean) => {
-    if (pairIndex === 0) {
-      return null; // První pár používá text '('
-    } else if (pairIndex === 1) {
-      return isLeft ? '/icons/bracket-pair-2-left.svg' : '/icons/bracket-pair-2-right.svg';
-    } else if (pairIndex === 2) {
-      return isLeft ? '/icons/bracket-pair-3-left.svg' : '/icons/bracket-pair-3-right.svg';
-    }
-    return null;
-  };
-
-  const imageLeft = getImageForPair(index, true);
-  const imageRight = getImageForPair(index, false);
+  const baseCls = `relative w-10 h-14 md:w-12 md:h-16 rounded-lg border-2 bg-slate-800
+    shadow-xl flex items-center justify-center cursor-grab active:cursor-grabbing
+    transition-all duration-200 hover:-translate-y-2 select-none ${info.color}`;
 
   return (
-    <div
-      className={`transition-all duration-300 flex gap-2 sm:gap-3 md:gap-4 items-center justify-center ${
-        isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-75 pointer-events-none'
-      }`}
-      style={{
-        position: isVisible ? 'relative' : 'absolute',
-        visibility: isVisible ? 'visible' : 'hidden',
-      }}
-    >
-      {/* LEVÁ ZÁVORKA */}
-      <div
-        ref={refLeft}
-        {...listLeft}
-        {...attrLeft}
-        style={styleLeft}
-        onMouseDown={() => onDragStart(pair.left, index)}
-        className={`relative w-8 h-12 sm:w-10 sm:h-14 md:w-12 md:h-16 rounded-lg border-2 border-emerald-500 
-          bg-slate-800 shadow-xl flex items-center justify-center cursor-grab active:cursor-grabbing
-          ${isDraggingLeft ? 'scale-110 shadow-[0_0_25px_rgba(16,185,129,0.6)] ring-2 ring-emerald-400/50' : 'hover:shadow-emerald-500/30 hover:-translate-y-2'}
-          transition-all duration-200`}
-      >
-        {imageLeft ? (
-          <img src={imageLeft} alt="(" className="w-full h-full object-contain p-2" />
-        ) : (
-          <span className="text-4xl font-chalk text-emerald-300 font-bold">(</span>
-        )}
-      </div>
+    <div className="flex flex-col items-center gap-2">
+      <span className="text-[10px] uppercase tracking-widest text-slate-400 font-mono">{info.label}</span>
+      <div className="flex gap-3 items-center">
+        {/* LEVÁ ZÁVORKA */}
+        <div
+          ref={refL} {...listL} {...attrL}
+          onMouseDown={() => onDragStart(pair.left, pairIndex)}
+          style={{ transform: transL ? CSS.Translate.toString(transL) : undefined, zIndex: isDragL ? 100 : 10 }}
+          className={`${baseCls} ${isDragL ? 'scale-110 shadow-[0_0_25px_rgba(16,185,129,0.5)] ring-2 ring-white/20' : ''}`}
+        >
+          <span className="text-3xl md:text-4xl font-bold">{info.left}</span>
+        </div>
 
-      {/* PRAVÁ ZÁVORKA */}
-      <div
-        ref={refRight}
-        {...listRight}
-        {...attrRight}
-        style={styleRight}
-        onMouseDown={() => onDragStart(pair.right, index)}
-        className={`relative w-8 h-12 sm:w-10 sm:h-14 md:w-12 md:h-16 rounded-lg border-2 border-emerald-500
-          bg-slate-800 shadow-xl flex items-center justify-center cursor-grab active:cursor-grabbing
-          ${isDraggingRight ? 'scale-110 shadow-[0_0_25px_rgba(16,185,129,0.6)] ring-2 ring-emerald-400/50' : 'hover:shadow-emerald-500/30 hover:-translate-y-2'}
-          transition-all duration-200`}
-      >
-        {imageRight ? (
-          <img src={imageRight} alt=")" className="w-full h-full object-contain p-2" />
-        ) : (
-          <span className="text-4xl font-chalk text-emerald-300 font-bold">)</span>
-        )}
+        {/* PRAVÁ ZÁVORKA */}
+        <div
+          ref={refR} {...listR} {...attrR}
+          onMouseDown={() => onDragStart(pair.right, pairIndex)}
+          style={{ transform: transR ? CSS.Translate.toString(transR) : undefined, zIndex: isDragR ? 100 : 10 }}
+          className={`${baseCls} ${isDragR ? 'scale-110 shadow-[0_0_25px_rgba(16,185,129,0.5)] ring-2 ring-white/20' : ''}`}
+        >
+          <span className="text-3xl md:text-4xl font-bold">{info.right}</span>
+        </div>
       </div>
     </div>
   );
 }
 
 // ==========================================
-// PANEL S VŠEMI 3 PÁRY ZÁVOREK
+// PANEL SE ZÁVORKAMI
 // ==========================================
 export function BracketsDisplay({
   syntax,
   onBracketDragStart,
-  currentPlayer,
 }: BracketsDisplayProps) {
-  const [expandedIndices, setExpandedIndices] = useState<number[]>([]);
+  // Závorky (ne rovnítko) — vždy po 2 tvoří pár [levá, pravá]
+  const bracketCards = syntax.filter(c => c.symbol !== '=');
 
-  // Extrahuj páry z syntax pole
-  const pairs = [
-    { left: syntax[0], right: syntax[1] }, // Pár 1
-    { left: syntax[2], right: syntax[3] }, // Pár 2
-    { left: syntax[4], right: syntax[5] }, // Pár 3
-  ].filter((p) => p.left && p.right);
+  // První dostupný pár
+  const firstPair = bracketCards.length >= 2
+    ? { left: bracketCards[0], right: bracketCards[1] }
+    : null;
 
-  // Počítej kolik párů je již použitých (chybí v syntax)
-  const usedPairs = syntax.filter((card) => !currentPlayer?.board.some((bc: GameCard) => bc.id === card.id)).length / 2;
-  const availablePairs = Math.max(0, 3 - Math.floor(usedPairs));
-
-  const handleExpand = (index: number) => {
-    setExpandedIndices((prev) =>
-      prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index]
-    );
-  };
+  // Pairindex = vždy 0, protože první dostupný pár je vždy na syntax[0..1]
+  const pairIndex = 0;
 
   return (
-    <div className="flex flex-col items-center gap-6 p-4 md:p-6 lg:p-8">
+    <div className="flex flex-col items-center gap-4 p-4 md:p-6">
       {/* NADPIS */}
       <div className="text-emerald-400 font-bold uppercase text-xs tracking-widest font-mono">
         Závorky
       </div>
 
-      {/* KONTEJNER PRO PÁRY */}
-      <div className="flex flex-col gap-6 items-center">
-        {pairs.map((pair, index) => (
-          <div key={index} className="relative">
-            {/* Samotný pár - viditelný jen první */}
-            <BracketPair
-              pair={pair}
-              index={index}
-              isVisible={index === 0} // Pouze první pár je viditelný
-              onDragStart={onBracketDragStart}
-            />
+      {/* AKTUÁLNÍ PÁR nebo zpráva o vyčerpání */}
+      {firstPair ? (
+        <BracketPair
+          pair={firstPair}
+          pairIndex={pairIndex}
+          onDragStart={onBracketDragStart}
+        />
+      ) : (
+        <div className="text-center px-4 py-3 rounded-xl border border-slate-600 bg-slate-800/60 max-w-[160px]">
+          <span className="text-slate-400 text-xs font-mono leading-relaxed">
+            Další závorky<br />nejsou dostupné
+          </span>
+        </div>
+      )}
 
-            {/* Indikátor zbývajících párů - je-li rozpravený */}
-            {index > 0 && expandedIndices.includes(index) && (
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 text-emerald-400/60 text-xs font-bold">
-                Pár {index + 1}
-              </div>
-            )}
-
-            {/* Tlačítko pro rozbalení - viditelné pro páry 2-3 */}
-            {index > 0 && (
-              <button
-                onClick={() => handleExpand(index)}
-                className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-emerald-500 text-xs opacity-50 hover:opacity-100 transition-opacity"
-              >
-                {'▼'}
-              </button>
-            )}
-          </div>
-        ))}
-      </div>
-
-      {/* INDIKÁTOR DOSTUPNOSTI */}
-      <div className="text-center text-xs text-slate-500 font-mono mt-4 border-t border-slate-700 pt-4">
-        <div className="text-emerald-400 font-bold">{availablePairs}/3</div>
-        <div className="text-[10px]">párů</div>
+      {/* INDIKÁTOR ZBÝVAJÍCÍCH PÁRŮ */}
+      <div className="text-center text-xs text-slate-500 font-mono mt-1 border-t border-slate-700 pt-3 w-full">
+        <div className="text-emerald-400 font-bold">{Math.floor(bracketCards.length / 2)}/3</div>
+        <div className="text-[10px]">párů zbývá</div>
       </div>
     </div>
   );

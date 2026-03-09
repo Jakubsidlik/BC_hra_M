@@ -224,6 +224,12 @@ export function useGameEngine() {
         next[nextIdx].status.extraDraw = 0;
         next[nextIdx].status.drawReduction = 0;
         next[nextIdx].status.notifications = [];
+        // Jednokolová omezení — resetovat na začátku nového tahu hráče
+        next[nextIdx].status.operationLock = false;
+        next[nextIdx].status.numberLock = false;
+        next[nextIdx].status.mustPlayOperation = false;
+        next[nextIdx].status.playLimit = null;
+        next[nextIdx].status.infinitePlays = false;
       }
       return next;
     });
@@ -320,8 +326,9 @@ export function useGameEngine() {
       setIsDraggingBracket(false);
       setCurrentDraggingBracket(null);
       
-      // Pokud je to levá závor ka, zapneme režim dla levé zavorky
-      if (currentDraggingBracket?.symbol === '(' && over.id?.toString().includes('main-board')) {
+      // Levá závorka — detekce všech typů otevíracích závorek
+      const isOpenBracket = ['(', '[', '{'].includes(currentDraggingBracket?.symbol ?? '');
+      if (isOpenBracket && over.id?.toString().includes('main-board')) {
         if (bracketMode) return toast.error("Zá značit můžeš jenom jednu závor ku");
         setBracketMode({ step: 'LEFT', leftIndex: null, pairIndex: bracketPairIndex || 0 });
         setHasModifiedBoardThisTurn(true); // Hned se nastaví, že jsi provedl akci
@@ -393,6 +400,26 @@ export function useGameEngine() {
     } else if (cardsDatabase[cardToPlace.symbol]?.hasEffect) {
       setPendingEffect({ card: cardToPlace, targetId, insertPosition });
     } else {
+      // --- ENFORCE RESTRICTION FLAGS ---
+      const pStatus = players[currentPlayerIndex].status;
+      const cardData = cardsDatabase[cardToPlace.symbol];
+
+      // EFF_016: operationLock — nesmí hrát operace
+      if (pStatus?.operationLock && cardData?.type === 'operator') {
+        return toast.error("Tento tah nesmíš hrát kartu operace! (Zákaz operací ∑)");
+      }
+      // EFF_023: numberLock — nesmí hrát čísla
+      if (pStatus?.numberLock && cardData?.type === 'number') {
+        return toast.error("Tento tah nesmíš hrát číslo! (Zákaz čísel ∏)");
+      }
+      // EFF_006: mustPlayOperation — musí hrát operaci
+      if (pStatus?.mustPlayOperation && cardData?.type !== 'operator') {
+        return toast.error("Musíš hrát kartu operace! Tak ti nařídil soupeř (+).");
+      }
+      // EFF_013: playLimit — smí hrát jen N karet za tah (sledujeme kolik již zahrál)
+      // (playLimit resets each turn via nextTurn clearing; we track via hasModifiedBoardThisTurn for limit=1)
+      // The basic limit=1 case: hasModifiedBoardThisTurn already catches it (same error path above)
+
       addCardToGameState(cardToPlace, targetId, insertPosition);
     }
   }, [currentPlayerIndex, players, isDiscarding, hasModifiedBoardThisTurn, addCardToGameState, currentDraggingBracket, bracketPairIndex, bracketMode]);
@@ -413,7 +440,7 @@ export function useGameEngine() {
 
       // --- 1. KONTROLA TARGETING REŽIMU ---
       // Pokud efekt vyžaduje kartu soupeře (např. EFF_006) a ID karty ještě nemáme, zapneme TargetingMode
-      const cardTargetingEffects = ['EFF_006', 'EFF_014'];
+      const cardTargetingEffects = ['EFF_002', 'EFF_006', 'EFF_014'];
       if (cardTargetingEffects.includes(activeId) && !targetCardId) {
         setTargetingMode({ effectId: activeId, targetPlayerId });
         setEffectStep('CHOOSE_EFFECT');
@@ -421,7 +448,8 @@ export function useGameEngine() {
       }
 
       // --- 2. OKAMŽITÉ AKCE ---
-      const immediateDraw: Record<string, number> = { "EFF_001": 1, "EFF_008": 2 };
+      // EFF_001: draw 1 immediately; EFF_008 only gives extraDraw for NEXT turn (handled in applyEffectLogic)
+      const immediateDraw: Record<string, number> = { "EFF_001": 1 };
       if (immediateDraw[activeId]) performDraw(immediateDraw[activeId], currentPlayerIndex);
 
       // --- 3. APLIKACE LOGIKY EFEKTU ---
@@ -466,9 +494,11 @@ export function useGameEngine() {
       }
 
       if (metadata?.turnOrderReversed) {
-        // EFF_025: Pořadí tahů se otočilo - aktivní hráč zůstane na pozici 0
-        const newActivePlayerIndex = 0;
-        setCurrentPlayerIndex(newActivePlayerIndex);
+        // EFF_025: pořadí hráčů bylo obráceno — najdeme nový index aktivního hráče
+        const activePlayerId = players[currentPlayerIndex].id;
+        const resultPlayers = Array.isArray(effectResult) ? effectResult : effectResult.players;
+        const newActiveIndex = resultPlayers.findIndex((p: { id: number }) => p.id === activePlayerId);
+        setCurrentPlayerIndex(newActiveIndex >= 0 ? newActiveIndex : 0);
       }
 
       // --- 5. ZAHOZENÍ KARTY NA ODHAZOVACÍ POLE ---
@@ -626,9 +656,9 @@ export function useGameEngine() {
       id: i, name: p.name, theme: p.theme, hand: [], board: [],
       targetR: generatePersonalTargetR(difficulty),
       syntax: [
-        { id: `p${i}-l1`, symbol: '(' }, { id: `p${i}-r1`, symbol: ')' },
-        { id: `p${i}-l2`, symbol: '(' }, { id: `p${i}-r2`, symbol: ')' },
-        { id: `p${i}-l3`, symbol: '(' }, { id: `p${i}-r3`, symbol: ')' },
+        { id: `p${i}-l1`, symbol: '(' }, { id: `p${i}-r1`, symbol: ')' },  // Pár 1: kulaté
+        { id: `p${i}-l2`, symbol: '[' }, { id: `p${i}-r2`, symbol: ']' },  // Pár 2: hranaté
+        { id: `p${i}-l3`, symbol: '{' }, { id: `p${i}-r3`, symbol: '}' },  // Pár 3: složené
         { id: `p${i}-eq`, symbol: '=' }
       ],
       status: { mathModifiers: [], extraTurn: false, frozen: false, extraDraw: 0, drawReduction: 0, notifications: [] }
