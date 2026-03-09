@@ -191,9 +191,10 @@ export default function App() {
 
           {/* HERNÍ PLOCHA A SYNTAX BAR */}
           <div className="flex flex-col lg:flex-row gap-6 md:gap-8 lg:gap-10 mb-36 md:mb-44 lg:mb-52">
-            <div className="bg-black/40 backdrop-blur-md rounded-3xl lg:rounded-[2.5rem] p-4 md:p-6 lg:p-8 flex flex-row lg:flex-col items-center justify-center gap-3 md:gap-4 lg:gap-6 border-2 border-white/10 shadow-[inset_0_2px_20px_rgba(0,0,0,0.4)] min-h-120px md:min-h-160px lg:min-h-200px">
+            <div className="bg-black/40 backdrop-blur-md rounded-3xl lg:rounded-[2.5rem] p-4 md:p-6 lg:p-8 flex flex-row lg:flex-col items-center justify-center gap-3 md:gap-4 lg:gap-6 border-2 border-white/10 shadow-[inset_0_2px_20px_rgba(0,0,0,0.4)] min-h-62.5 md:min-h-87.5">
               {currentPlayer.syntax.map(c => (
-                <div key={c.id} className="relative shrink-0 w-20 h-28 sm:w-24 sm:h-32 md:w-28 md:h-36 lg:w-32 lg:h-40">
+                <div key={c.id} className="relative shrink-0 w-20 h-28 sm:w-24 sm:h-32 md:w-28 md:h-36 lg:w-32 lg:h-40 flex items-center justify-center bg-slate-800 border-3 md:border-4 rounded-xl border-white/30">
+                  <span className="text-3xl font-chalk text-white drop-shadow-md">{c.symbol}</span>
                 </div>
               ))}
             </div>
@@ -210,10 +211,10 @@ export default function App() {
             </div>
           </div>
 
-          {/* RUKA HRÁČE A HŘBITOV */}
+          {/* RUKA HRÁČE A ODHAZOVACÍ POLE */}
           <div 
             key={`hand-container-p-${state.currentPlayerIndex}`} 
-            className="fixed bottom-0 left-0 w-full lg:bottom-6 xl:bottom-10 lg:left-1/2 lg:-translate-x-1/2 lg:w-auto flex items-end gap-2 md:gap-3 lg:gap-4 bg-black/85 backdrop-blur-xl p-2 sm:p-3 md:p-5 lg:p-8 lg:rounded-3xl xl:rounded-[3.5rem] border-t-2 lg:border-2 border-white/10 shadow-[0_-8px_30px_rgba(0,0,0,0.4)] z-40 overflow-x-auto scrollbar-hide"
+            className="fixed bottom-0 left-0 w-full lg:bottom-6 xl:bottom-10 lg:left-1/2 lg:-translate-x-1/2 lg:w-auto flex items-end gap-2 md:gap-3 lg:gap-4 bg-black/85 backdrop-blur-xl p-2 sm:p-3 md:p-5 lg:p-8 lg:rounded-3xl xl:rounded-[3.5rem] border-t-2 lg:border-2 border-white/10 shadow-[0_-8px_30px_rgba(0,0,0,0.4)] z-40 overflow-visible scrollbar-hide"
           >
             <DiscardZone 
               discardCount={state.discardPile.length} 
@@ -221,7 +222,7 @@ export default function App() {
               isDiscarding={state.isDiscarding} 
             />
             
-            <div className="flex h-32 sm:h-36 md:h-42 lg:h-48 items-center flex-1 px-2 md:px-3 min-w-[320px]">
+            <div className="flex h-40 sm:h-48 md:h-56 lg:h-64 items-center flex-1 px-2 md:px-3 min-w-[320px]">
               <div className={`flex -space-x-6 sm:-space-x-8 md:-space-x-10 lg:-space-x-12 hover:space-x-2 md:hover:space-x-3 transition-all duration-500 items-end ${state.isDiscarding ? 'p-2 ring-1 ring-red-500/20 rounded-xl' : ''}`}>
                 {currentPlayer.hand.map((c, i) => (
                   <HandCard 

@@ -68,7 +68,7 @@ export function SetupScreen({ onStart }: SetupScreenProps) {
             PŘÍPRAVA TABULE
           </h1>
           <p className="text-emerald-400 font-mono tracking-[0.3em] uppercase text-sm mt-2">
-            Registrace vědeckého týmu
+             
           </p>
         </div>
         
@@ -97,7 +97,7 @@ export function SetupScreen({ onStart }: SetupScreenProps) {
               className={`p-6 rounded-2rem border-2 transition-colors duration-500 flex flex-col gap-4 bg-black/40 border-white/10`}
             >
               <div className="flex justify-between items-center">
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Kandidát č. {index + 1}</label>
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Žák č. {index + 1}</label>
                 <div className={`w-3 h-3 rounded-full animate-pulse ${player.theme.split('/')[0]}`} />
               </div>
 
@@ -140,7 +140,7 @@ export function SetupScreen({ onStart }: SetupScreenProps) {
             className="bg-emerald-600 hover:bg-emerald-500 text-white font-black text-3xl px-16 py-10 rounded-2rem shadow-[0_0_40px_rgba(16,185,129,0.25)] transition-all hover:scale-105 active:scale-95 border-4 border-emerald-400/50" 
             onClick={handleStart}
           >
-            ZAHÁJIT EXPERIMENT
+            ZAČÍT
           </Button>
         </div>
 

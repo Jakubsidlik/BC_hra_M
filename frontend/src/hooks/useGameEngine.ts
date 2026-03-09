@@ -190,6 +190,13 @@ export function useGameEngine() {
 
     const p = players[nextIdx];
     const totalToDraw = Math.max(0, 1 + (p.status?.extraDraw || 0) - (p.status?.drawReduction || 0));
+    
+    // Zobrazit počet dobratých karet (kromě prvního kola)
+    if (currentPlayerIndex !== 0 && totalToDraw > 0) {
+      const drawMessage = totalToDraw === 1 ? '1 karta' : `${totalToDraw} karty`;
+      toast.info(`${players[nextIdx].name} dobírá ${drawMessage}`, { icon: '🃏' });
+    }
+    
     if (totalToDraw > 0) performDraw(totalToDraw, nextIdx);
 
     setPlayers(prev => {
@@ -250,8 +257,18 @@ export function useGameEngine() {
       p.hand = p.hand.filter((c: GameCard) => c.id !== card.id);
       p.syntax = p.syntax.filter((c: GameCard) => c.id !== card.id);
       if (targetId) {
+        // Exponent se přidá jen pokud:
+        // 1) Cílová karta má canHaveExponent = true
+        // 2) Taženou kartou je číslo nebo proměnná (nikoliv operátor)
+        const canAddExponent = (targetCard: GameCard): boolean => {
+          const targetData = cardsDatabase[targetCard.symbol];
+          const cardData = cardsDatabase[card.symbol];
+          const isCardNumOrVar = cardData?.type === 'number' || cardData?.type === 'variable';
+          return (targetData?.canHaveExponent === true) && isCardNumOrVar;
+        };
+        
         const update = (cs: GameCard[]): GameCard[] => cs.map(c =>
-          c.id === targetId ? { ...c, exponent: card } : (c.exponent ? { ...c, exponent: update([c.exponent])[0] } : c)
+          c.id === targetId && canAddExponent(c) ? { ...c, exponent: card } : (c.exponent ? { ...c, exponent: update([c.exponent])[0] } : c)
         );
         p.board = update(p.board);
       } else if (insertPosition !== undefined) {
@@ -428,7 +445,7 @@ export function useGameEngine() {
         setCurrentPlayerIndex(newActivePlayerIndex);
       }
 
-      // --- 5. ZAHOZENÍ KARTY NA HŘBITOV ---
+      // --- 5. ZAHOZENÍ KARTY NA ODHAZOVACÍ POLE ---
       // Karta se nepokládá na stůl, ale "spálí" se pro efekt
       setDiscardPile(old => [...old, { ...pendingEffect.card, exponent: null }]);
       setPlayers(prev => {

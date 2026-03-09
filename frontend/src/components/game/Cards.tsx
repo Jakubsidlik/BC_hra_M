@@ -77,7 +77,7 @@ export function HandCard({ card, index, total, isDiscarding, onDiscard }: HandCa
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: card.id,
     data: card,
-    // disabled zde NESMÍ být, aby karta šla přetáhnout do hřbitova!
+    // disabled zde NESMÍ být, aby karta šla přetáhnout na odhazovací pole!
   });
 
   // VÝPOČET VĚJÍŘE
@@ -92,7 +92,7 @@ export function HandCard({ card, index, total, isDiscarding, onDiscard }: HandCa
     transform: transform 
       ? CSS.Translate.toString(transform) 
       : `rotate(${rotation}deg) translateY(${translateY}px) translateX(${translateX}px)`,
-    zIndex: isDragging ? 9999 : 10 + index,
+    zIndex: isDragging ? 99999 : 10 + index,
     opacity: 1,
   };
 
@@ -115,7 +115,7 @@ export function HandCard({ card, index, total, isDiscarding, onDiscard }: HandCa
     >
       {isDiscarding && (
         <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-red-600 text-white text-[10px] px-2 py-0.5 rounded-full font-bold z-30 shadow-lg uppercase whitespace-nowrap">
-          Táhni na hřbitov
+          Táhni na odhazovací pole
         </div>
       )}
 
@@ -147,7 +147,7 @@ export function BoardCard({ card, isTargeting, onCardClick, absoluteValue }: Boa
     data: { parentId: card.id } as DropData,
   });
 
-  // NOVÉ: Možnost kartu chytit z plochy a odhodit na hřbitov (kaskádové mazání)
+  // NOVÉ: Možnost kartu chytit z plochy a odhodit na odhazovací pole (kaskádové mazání)
   const { attributes, listeners, setNodeRef: setDragRef, transform, isDragging } = useDraggable({
     id: card.id,
     disabled: isTargeting // Nelze tahat, pokud zrovna na něco cílíš efektem
@@ -173,6 +173,7 @@ export function BoardCard({ card, isTargeting, onCardClick, absoluteValue }: Boa
       {...attributes}
     >
       {/* Zóna pro Exponent - Skrytá, dokud nad ni nenajedeš */}
+      {cardData?.canHaveExponent && (
       <div
         ref={setDropRef}
         className={`absolute -top-4 -right-6 w-12 h-16 md:w-14 md:h-20 lg:w-16 lg:h-22 rounded-lg transition-all duration-200 z-10 flex items-center justify-center
@@ -192,6 +193,7 @@ export function BoardCard({ card, isTargeting, onCardClick, absoluteValue }: Boa
           </div>
         )}
       </div>
+      )}
 
       {/* Hlavní karta na stole */}
       <div 
@@ -266,7 +268,7 @@ export function BoardArea({ id, cards, targetR, playerTheme, isTargeting, onCard
             {cards.length === 0 ? (
               // Prázdná plocha - velká drop zóna
               <div className="font-chalk text-white/10 text-2xl md:text-5xl uppercase tracking-[0.25em] pointer-events-none select-none italic self-center">
-                Tabule L
+                Tabule
               </div>
             ) : (
               // Karty s drop zónami mezi nimi
@@ -346,7 +348,7 @@ export function BoardArea({ id, cards, targetR, playerTheme, isTargeting, onCard
           {targetR}
         </div>
         <div className="text-[8px] md:text-[10px] lg:text-xs font-mono text-white/40 uppercase tracking-[0.4em] mt-3 md:mt-4 lg:mt-6 font-black text-center">
-          Cílový<br/>parametr R
+          Výsledek
         </div>
       </div>
 

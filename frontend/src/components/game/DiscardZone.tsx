@@ -21,7 +21,7 @@ export function DiscardZone({ discardCount, deckCount, isDiscarding }: DiscardZo
         Balíček: {deckCount}
       </span>
       <div className="flex flex-col items-center cursor-default pointer-events-none">
-        <span className="text-[9px] lg:text-[10px] text-slate-400 uppercase font-mono italic">Hřbitov</span>
+        <span className="text-[9px] lg:text-[10px] text-slate-400 uppercase font-mono italic">Odhazovací pole</span>
         <span className={`text-3xl lg:text-5xl font-chalk mt-1 ${isDiscarding ? 'text-red-500' : 'text-emerald-500 drop-shadow-[0_0_10px_rgba(16,185,129,0.5)]'}`}>
           {discardCount}
         </span>

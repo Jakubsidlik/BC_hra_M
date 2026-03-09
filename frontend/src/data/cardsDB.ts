@@ -14,6 +14,7 @@ export interface CardData {
   count: number;
   image: string; // <-- PŘIDÁNA VLASTNOST PRO OBRÁZEK
   hasEffect?: boolean;
+  canHaveExponent?: boolean; // <-- VLASTNOST PRO PODPORU EXPONENTŮ
   effects?: {
     optionA?: EffectDetails;
     optionB?: EffectDetails;
@@ -104,7 +105,7 @@ export const cardsDatabase: Record<string, CardData> = {
     image: '/cards/multiply.svg',
     hasEffect: true,
     effects: {
-      optionA: { id: 'EFF_008', name: 'Zdvojnásobení', description: 'Zdvojnásobení počtu dobíraných karet v příštím tahu.', target: 'OPPONENT' }
+      optionA: { id: 'EFF_008', name: 'Zdvojnásobení', description: 'Zdvojnásobení počtu dobíraných karet v příštím tahu.', target: 'SELF' }
     }
   },
   '/': { 
@@ -124,6 +125,7 @@ export const cardsDatabase: Record<string, CardData> = {
     type: 'operator',
     count: 4,
     image: '/cards/power.svg',
+    canHaveExponent: true,
     hasEffect: true,
     effects: {
       optionA: { id: 'EFF_010', name: 'Přeskočení tahu', description: 'Následující hráč přeskakuje svůj tah.', target: 'OPPONENT' }
@@ -134,6 +136,7 @@ export const cardsDatabase: Record<string, CardData> = {
     type: 'operator',
     count: 4,
     image: '/cards/sqrt.svg',
+    canHaveExponent: true,
     hasEffect: true,
     effects: {
       optionA: { id: 'EFF_011', name: 'Obnovení ruky', description: 'Odhození celého obsahu ruky a dobrání nových karet.', target: 'OPPONENT' }

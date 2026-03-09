@@ -53,21 +53,25 @@ export function HandoffScreen({ isHandoff, players, nextIndex, onReveal }: { isH
   if (!isHandoff) return null;
   return (
     <div className="fixed inset-0 bg-slate-950 z-200 flex flex-col items-center justify-center text-white text-center p-4">
+      <style>{`
+        @keyframes shrinkBar {
+          0% { width: 100%; }
+          100% { width: 0%; }
+        }
+      `}</style>
       <div className="h-2 w-64 bg-emerald-500/10 rounded-full mb-12 overflow-hidden border border-white/5">
-        <div className="h-full bg-emerald-500 animate-pulse origin-left" />
+        <div className="h-full bg-emerald-500 origin-left" style={{ animation: 'shrinkBar 3s linear forwards' }} />
       </div>
-      <h2 className="text-2xl font-mono mb-2 uppercase tracking-[0.3em] text-slate-500">Příprava tabule</h2>
-      <h3 className="text-5xl font-black mb-12 text-white tracking-tighter italic font-chalk">
-        Teď hraje: {players[nextIndex]?.name}
+      <h3 className="text-6xl font-black mb-12 text-white tracking-tighter italic font-chalk">
+        {players[nextIndex]?.name}
       </h3>
       <Button 
         size="lg" 
         className="bg-emerald-600 hover:bg-emerald-500 px-16 py-10 text-2xl font-black rounded-3xl shadow-[0_0_25px_rgba(16,185,129,0.25)] border-b-4 border-emerald-800" 
         onClick={onReveal}
       >
-        VSTOUPIT DO POSLUCHÁRNY
+        HRÁT
       </Button>
-      <p className="mt-8 text-slate-600 text-sm font-mono animate-pulse">Ujistěte se, že ostatní nevidí vaši ruku!</p>
     </div>
   );
 }
@@ -207,7 +211,7 @@ export function MinigameDialog({ minigameMode, onPick }: { minigameMode: any, on
 
   const config: Record<string, { title: string; desc: string; color: string }> = {
     'EFF_015': { title: "Vize budoucnosti", desc: "Získej jednu kartu. Zbytek určí příští tahy v balíčku.", color: "text-blue-400" },
-    'EFF_017': { title: "Rekurze hřbitova", desc: "Vytáhni zapomenutou vědomost zpět do své ruky.", color: "text-purple-400" }
+    'EFF_017': { title: "Rekurze odhazovacího pole", desc: "Vytáhni zapomenutou vědomost zpět do své ruky.", color: "text-purple-400" }
   };
 
   const current = config[minigameMode.effectId] || { title: "Výběr karty", desc: "", color: "text-emerald-400" };

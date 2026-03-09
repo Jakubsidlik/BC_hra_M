@@ -15,7 +15,7 @@ y;Proměnná Y;variable;10;1;EFF_004;Následující hráč musí z ruky odhodit 
 x;Proměnná X;variable;10;1;EFF_005;Následující hráč musí z ruky odhodit všechny operace;0;1;0;0
 +;Součet;operator;15;1;EFF_006; Následující hráč musí v příštím tahu použít libovolnou operaci.;0;1;0;0
 -;Rozdíl;operator;15;1;EFF_007;Odstranění 1 libovolné karty z ruky zvoleného oponenta.;0;0;0;0
-*;Součin;operator;15;1;EFF_008;Zdvojnásobení počtu dobíraných karet v příštím tahu.;0;1;0;0
+*;Součin;operator;15;1;EFF_008;Zdvojnásobení počtu dobíraných karet v příštím tahu.;1;0;0;0
 /;Podíl;operator;15;1;EFF_009;Náhled na 3 vrchní karty balíčku a jejich libovolné přerovnání.;0;1;0;0
 a^b;Mocnina;operator;4;1;EFF_010;Následující hráč přeskakuje svůj tah.;0;1;0;0
 sqrt;Odmocnina;operator;4;1;EFF_011;Odhození celého obsahu ruky a dobrání nových karet.;0;0;1;0
