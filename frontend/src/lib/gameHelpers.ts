@@ -124,12 +124,25 @@ export function getTargetName(targetCode?: string): string {
 }
 
 export function getBorderColor(symbol: string): string {
-  if (!isNaN(Number(symbol))) return 'border-slate-400';
-  if (['+', '-', '*', '/', '(', ')'].includes(symbol)) return 'border-blue-500';
-  if (['x', 'π', 'e', 'n'].includes(symbol)) return 'border-emerald-500';
-  if (['∫', '∑', 'lim', 'd/dx'].includes(symbol)) return 'border-amber-500';
-  if (['sin', 'cos', 'tg', 'cotg', 'log', 'ln', 'sqrt', 'mod'].includes(symbol)) return 'border-purple-500';
-  return 'border-slate-500';
+  // Čísla: modré
+  if (!isNaN(Number(symbol)) || ['π', 'e'].includes(symbol)) return 'border-blue-500';
+  
+  // Proměnné: šedé
+  if (['x', 'y', 'n'].includes(symbol)) return 'border-slate-400';
+  
+  // Syntaxe (závorky, rovná se): černé
+  if (['(', ')', '='].includes(symbol)) return 'border-black';
+  
+  // Operace: oranžové
+  const operators = [
+    '+', '-', '*', '/', 'a^b', 'sqrt', 'mod', 'n!', 
+    'd/dx', 'int', '∑', 'log', 'ln', 'sin', 'cos', 'tg', 'cotg', 
+    'nCk', '∏', 'lim', 'det'
+  ];
+  if (operators.includes(symbol)) return 'border-orange-500';
+  
+  // Fallback
+  return 'border-slate-400';
 }
 
 // 5. GENEROVÁNÍ BALÍČKU (Pokud ji máš vyřešenou jinak, nahraď svou původní)

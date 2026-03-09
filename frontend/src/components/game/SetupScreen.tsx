@@ -110,7 +110,7 @@ export function SetupScreen({ onStart }: SetupScreenProps) {
               />
 
               <div className="mt-2">
-                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">Barva osobního prostoru L</label>
+                <label className="block text-[10px] font-bold uppercase tracking-widest mb-3">Barva osobního prostoru L</label>
                 <div className="flex flex-wrap gap-3">
                   {AVAILABLE_THEMES.map(theme => {
                     const isSelected = player.theme === theme.id;
