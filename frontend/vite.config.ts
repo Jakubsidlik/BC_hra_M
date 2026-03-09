@@ -15,15 +15,18 @@ export default defineConfig({
     // <--- TADY ZAČÍNÁ PWA NASTAVENÍ --->
     VitePWA({
       registerType: 'autoUpdate',
-      // Říkáme aplikaci, jaké soubory si má uložit do paměti telefonu pro rychlé načítání
-      includeAssets: ['tabule.svg', 'fonts/Chalkduster.ttf'], 
+      // Aktivovat PWA i v dev módu (jinak prohlížeč nevidí manifest → zobrazuje Vite ikonu)
+      devOptions: { enabled: true },
+      includeAssets: ['tabule.svg', 'fonts/Chalkduster.ttf'],
       manifest: {
         name: 'Math4fun',
         short_name: 'Math4fun',
         description: 'Matematická karetní duelovka z univerzitního prostředí.',
-        theme_color: '#0f172a', // Barva horní lišty telefonu (odpovídá slate-900)
-        background_color: '#0f172a', // Barva při zapínání appky
-        display: 'standalone', // To nejdůležitější: Schová prohlížeč a tváří se jako normální appka!
+        start_url: '/',
+        scope: '/',
+        theme_color: '#0f172a',
+        background_color: '#0f172a',
+        display: 'standalone',
         icons: [
           {
             src: '/icons/icon-192.png',
