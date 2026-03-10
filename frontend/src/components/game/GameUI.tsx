@@ -29,11 +29,11 @@ export function VictoryScreen({ winner, onReset }: { winner: Player | null, onRe
         <p className="text-slate-400 font-mono uppercase tracking-[0.4em] mb-8 italic">Quod Erat Demonstrandum</p>
 
         <h2 className="text-4xl text-white font-bold mb-4">
-          Matematik <span className="text-emerald-400 underline decoration-wavy decoration-emerald-500/50">{winner.name}</span> zkonstruoval rovnost!
+           <span className="text-emerald-400 underline decoration-wavy decoration-emerald-500/50">{winner.name}</span> zkonstruoval rovnost!
         </h2>
 
         <p className="text-slate-400 text-lg mb-12 font-mono">
-          Důkaz byl přijat. Identita $L = R$ byla potvrzena.
+          L = R
         </p>
 
         <Button
@@ -41,7 +41,7 @@ export function VictoryScreen({ winner, onReset }: { winner: Player | null, onRe
           className="bg-emerald-600 hover:bg-emerald-500 text-white font-black text-2xl px-16 py-10 rounded-2xl shadow-2xl transition-all hover:scale-105 border-b-4 border-emerald-800"
           onClick={onReset}
         >
-          DALŠÍ SEMESTR
+          DALŠÍ POKUS
         </Button>
       </div>
     </div>
