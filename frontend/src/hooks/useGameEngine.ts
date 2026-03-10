@@ -438,9 +438,8 @@ export function useGameEngine() {
     if (effect) {
       let activeId = effect.id;
 
-      // --- 1. KONTROLA TARGETING REŽIMU ---
-      // Pokud efekt vyžaduje kartu soupeře (např. EFF_006) a ID karty ještě nemáme, zapneme TargetingMode
-      const cardTargetingEffects = ['EFF_002', 'EFF_006', 'EFF_014'];
+      // Pokud efekt vyžaduje kartu soupeře a ID karty ještě nemáme, zapneme TargetingMode
+      const cardTargetingEffects = ['EFF_002'];
       if (cardTargetingEffects.includes(activeId) && !targetCardId) {
         setTargetingMode({ effectId: activeId, targetPlayerId });
         setEffectStep('CHOOSE_EFFECT');
