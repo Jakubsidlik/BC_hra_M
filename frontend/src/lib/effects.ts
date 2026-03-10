@@ -12,7 +12,7 @@ export interface GameCard {
 }
 
 export interface PlayerStatus {
-  mathModifiers: string[]; // Seznam aktivních modifikátorů pro Python engine
+  mathModifiers: string[]; // Seznam aktivních závorek pro Python engine
   extraTurn?: boolean;
   extraDraw?: number;
   drawReduction?: number;

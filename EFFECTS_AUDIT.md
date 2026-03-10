@@ -7,7 +7,7 @@
 
 ## 📊 Přehled Efektů (25/25 Implementováno)
 
-### ✅ EFF_001 - Bonus ke lízání (0-9, π)
+### ✅ EFF_001 - Bonus k přidávání karet (0-9, π)
 - **Typ:** SELF
 - **Akce:** Zvýšení `extraDraw` o +1
 - **Stav:** ✅ Implementováno v effects.ts:115

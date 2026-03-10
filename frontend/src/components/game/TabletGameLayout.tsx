@@ -323,12 +323,12 @@ export function TabletGameLayout({ currentPlayer, state, actions }: TabletGameLa
               {modifierCard ? (
                 <>
                   <span className="text-base font-black text-white leading-none">{modifierCard.symbol}</span>
-                  <span className="text-[10px] uppercase tracking-tighter text-white/50 font-bold mt-1">Modifikátor</span>
+                  <span className="text-[10px] uppercase tracking-tighter text-white/50 font-bold mt-1">Závorky</span>
                 </>
               ) : (
                 <>
                   <span className="text-base font-black text-white/30">( )</span>
-                  <span className="text-[10px] uppercase tracking-tighter text-white/40 font-bold mt-1">Modifikátor</span>
+                  <span className="text-[10px] uppercase tracking-tighter text-white/40 font-bold mt-1">Závorky</span>
                 </>
               )}
             </div>

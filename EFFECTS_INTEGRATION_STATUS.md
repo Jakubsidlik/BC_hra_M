@@ -108,7 +108,7 @@
 Všechny efekty karet se nyní aktivují správně podle jejich popisu a fungují v souladu s herní logikou.
 
 **Možné Testy:**
-1. ✅ Aktivovat EFF_001 (bonus ke lízání) - měl by hráč dostat +1 kartu?
+1. ✅ Aktivovat EFF_001 (bonus k přidávání karet) - měl by hráč dostat +1 kartu?
 2. ✅ Aktivovat EFF_003 (imunita) - měl by být imunitní na EFF_006?
 3. ✅ Aktivovat EFF_009 (náhled balíčku) - měl by se zobrazit dialog?
 4. ✅ Aktivovat EFF_025 (otočení pořadí) - mělo by se změnit pořadí tahů?

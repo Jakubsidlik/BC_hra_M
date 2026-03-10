@@ -448,14 +448,14 @@ export function MobileGameLayout({ currentPlayer, state, actions }: MobileGameLa
                     {modifierCard.symbol}
                   </span>
                   <span className="text-[10px] uppercase tracking-tighter text-white/50 font-bold mt-1">
-                    Modifikátor
+                    Závorky
                   </span>
                 </>
               ) : (
                 <>
                   <span className="text-base font-black text-white/30">( )</span>
                   <span className="text-[10px] uppercase tracking-tighter text-white/40 font-bold mt-1">
-                    Modifikátor
+                    Závorky
                   </span>
                 </>
               )}

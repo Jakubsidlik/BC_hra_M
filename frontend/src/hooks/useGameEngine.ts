@@ -84,7 +84,7 @@ export function useGameEngine() {
   }, []);
 
   // ==========================================
-  // 2. LOGIKA TAHŮ A LÍZÁNÍ
+  // 2. LOGIKA TAHŮ A PŘIDÁVÁNÍ KARET
   // ==========================================
 
   const performDraw = useCallback((count: number, playerIndex: number) => {
