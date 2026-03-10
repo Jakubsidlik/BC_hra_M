@@ -44,7 +44,7 @@
 
 | EFF | Název | Typ | cardsDB | effects.ts | useGameEngine | Stav |
 |-----|-------|-----|---------|-----------|---------------|------|
-| 001 | Bonus ke lízání | SELF | ✅ | ✅ | ✅ | ✅ FUNC |
+| 001 | Bonus karty | SELF | ✅ | ✅ | ✅ | ✅ FUNC |
 | 002 | Výměna L | SELF | ✅ | ✅ | ✅ | ✅ FUNC |
 | 003 | Imunita | SELF | ✅ | ✅ | ✅ | ✅ FUNC |
 | 004 | Zničení čísel | OPPONENT | ✅ | ✅ | ✅ | ✅ FUNC |
