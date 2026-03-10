@@ -494,7 +494,7 @@ export function DesktopGameLayout({ currentPlayer, state, actions }: DesktopGame
         {/* translateY(-110px) to lift the whole fan up as in the mockup */}
         <div
           className="relative max-w-lg mx-auto flex justify-center items-end h-48 select-none"
-          style={{ transform: 'translateY(-150px)' }}
+          style={{ transform: 'translateY(-200px)' }}
         >
           {handCards.map((card, index) => (
             <DesktopHandCard
