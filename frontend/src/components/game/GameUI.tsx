@@ -120,86 +120,132 @@ export function EffectDialog({
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) onClose(); }}>
-      <DialogContent className="w-[92vw] max-w-lg bg-slate-900 border-2 border-slate-700 text-white shadow-[0_0_50px_rgba(0,0,0,0.8)] rounded-2xl overflow-hidden p-4 sm:p-6">
-        
-        <DialogHeader>
-          <DialogTitle className="text-2xl sm:text-4xl font-chalk text-center text-emerald-400 drop-shadow-md">
+      <DialogContent className="w-[92vw] max-w-[450px] p-0 border-0 shadow-2xl rounded-xl overflow-hidden"
+        style={{ background: '#141e17', border: '4px solid rgba(39,104,56,0.3)' }}>
+
+        {/* Header */}
+        <div className="flex items-center justify-between p-2"
+          style={{ background: 'rgba(20,30,23,0.5)' }}>
+          <button
+            onClick={onClose}
+            className="text-slate-400 hover:text-white transition-colors p-1"
+          >
+            <span className="material-symbols-outlined text-xl">close</span>
+          </button>
+          <DialogTitle className="sr-only">
             {effectStep === 'CHOOSE_EFFECT' ? 'Využití karty' : 'Cíl útoku'}
           </DialogTitle>
-          <DialogDescription className="text-center text-slate-400 mt-2 font-mono italic text-xs sm:text-sm">
-            {effectStep === 'CHOOSE_EFFECT' 
-              ? "Jedna karta, dvě cesty. Vyberte moudře." 
-              : "Na koho dopadne váha vaší inteligence?"}
-          </DialogDescription>
-        </DialogHeader>
+        </div>
 
-        {effectStep === 'CHOOSE_EFFECT' && (
-          <div className="flex flex-col gap-3 mt-4">
-            
-            {/* VOLBA 1: AKTIVACE SCHOPNOSTI */}
-            {effect && (
-              <Button 
-                variant="outline" 
-                className="h-auto p-3 sm:p-5 flex flex-col items-start gap-2 border-emerald-500/30 bg-emerald-950/20 hover:bg-emerald-900/40 hover:border-emerald-400 transition-all text-left group w-full overflow-hidden" 
-                onClick={handleEffectClick}
-              >
-                <div className="w-full flex justify-between items-center gap-2 min-w-0 overflow-hidden">
-                  <span className="font-black text-emerald-400 uppercase text-sm sm:text-base tracking-wide sm:tracking-widest truncate min-w-0 group-hover:scale-105 transition-transform">
-                    {effect.name}
+        {/* Scrollable content */}
+        <div className="flex-1 overflow-y-auto px-6 pb-2 flex flex-col items-center justify-center gap-4">
+
+          {effectStep === 'CHOOSE_EFFECT' && (
+            <>
+              {/* Nadpis */}
+              <h3 className="text-emerald-400 text-2xl sm:text-3xl font-bold text-center" style={{ fontFamily: "'Merienda', cursive" }}>
+                Využití karty
+              </h3>
+
+              {/* Volba 1: Efekt */}
+              {effect && (
+                <div className="w-full">
+                  <button
+                    onClick={handleEffectClick}
+                    className="w-full text-left rounded-xl overflow-hidden hover:scale-[1.02] transition-transform"
+                    style={{
+                      border: '2px solid rgba(255,255,255,0.8)',
+                      boxShadow: 'inset 0 0 0 2px rgba(39,104,56,0.5)',
+                      background: 'hsla(151,21%,46%,0.2)',
+                    }}
+                  >
+                    <div className="rounded-lg p-4 flex flex-col items-center gap-2 text-center"
+                      style={{ background: 'rgba(20,30,23,0.4)' }}>
+                      <span className="inline-block px-2 py-0.5 text-emerald-400 text-[10px] font-bold tracking-widest rounded-full"
+                        style={{ background: 'rgba(16,185,129,0.2)', border: '1px solid rgba(16,185,129,0.3)' }}>
+                        EFEKT
+                      </span>
+                      <h4 className="text-white text-lg sm:text-xl font-bold" style={{ fontFamily: "'Merienda', cursive" }}>
+                        {effect.name}
+                      </h4>
+                      <p className="text-slate-300 text-sm leading-relaxed break-words">
+                        {effect.description}
+                      </p>
+                    </div>
+                  </button>
+                </div>
+              )}
+
+              {/* Volba 2: Symbol */}
+              <div className="w-full">
+                <button
+                  onClick={() => handleEffectChoice('NONE')}
+                  className="w-full rounded-xl p-4 flex items-center justify-center hover:bg-white/5 transition-colors"
+                  style={{
+                    border: '2px solid rgba(255,255,255,0.8)',
+                    boxShadow: 'inset 0 0 0 2px rgba(39,104,56,0.5)',
+                    background: 'rgba(20,30,23,0.6)',
+                  }}
+                >
+                  <span className="text-white font-bold text-base sm:text-lg" style={{ fontFamily: "'Merienda', cursive" }}>
+                    Položit na plochu L
                   </span>
-                  <Badge className="bg-emerald-500 text-slate-900 font-bold border-none shadow-lg whitespace-nowrap flex-shrink-0 text-[10px] sm:text-xs">EFEKT</Badge>
-                </div>
-                <span className="text-xs sm:text-sm text-slate-300 leading-relaxed font-medium w-full break-words whitespace-normal">
-                  {effect.description}
-                </span>
-                <span className="text-[9px] sm:text-[10px] text-emerald-500/50 uppercase font-bold tracking-tight w-full break-words whitespace-normal">
-                  Účinek se aplikuje a karta zůstane položena na ploše L
-                </span>
-              </Button>
-            )}
-            
-            {/* VOLBA 2: MATEMATICKÝ SYMBOL */}
-            <Button 
-              variant="outline" 
-              className="h-16 sm:h-20 flex flex-col items-center justify-center border-slate-700 bg-slate-800/50 hover:bg-slate-800 hover:border-blue-500/50 transition-all group w-full overflow-hidden" 
-              onClick={() => handleEffectChoice('NONE')}
-            >
-              <span className="font-bold text-base sm:text-xl group-hover:text-blue-400 transition-colors">Položit na plochu L</span>
-              <span className="text-[10px] text-slate-500 font-mono truncate w-full text-center px-2">Hrát jako symbol: {pendingEffect.card.symbol}</span>
-            </Button>
+                </button>
+              </div>
 
-            <Button variant="ghost" className="mt-1 text-slate-600 hover:text-red-400 transition-colors text-xs sm:text-sm" onClick={onClose}>
-              Zrušit a vrátit kartu do ruky
-            </Button>
-          </div>
-        )}
-
-        {effectStep === 'CHOOSE_TARGET' && (
-          <div className="flex flex-col gap-3 mt-4">
-            {players.filter((p: Player) => p.id !== currentPlayerId).map((opponent: Player) => (
-              <Button 
-                key={opponent.id} 
-                variant="outline" 
-                className="h-16 sm:h-20 font-bold border-2 border-white/5 hover:border-red-500/50 hover:bg-red-950/10 transition-all flex justify-between px-4 sm:px-8 rounded-2xl group w-full overflow-hidden"
-                onClick={() => handleEffectChoice('ACTIVATE', opponent.id)}
+              {/* Zrušit */}
+              <button
+                onClick={onClose}
+                className="text-slate-500 hover:text-slate-300 transition-colors text-sm font-medium underline underline-offset-4 mb-2"
               >
-                <div className="flex flex-col items-start min-w-0 overflow-hidden">
-                  <span className="font-mono text-[10px] text-slate-500 uppercase tracking-wider group-hover:text-red-400">Oponent</span>
-                  <span className="font-chalk text-xl sm:text-3xl tracking-tight truncate">{opponent.name}</span>
-                </div>
-                <div className={`w-4 h-4 rounded-full flex-shrink-0 ${opponent.theme.split(' ')[0]} border border-white/20 shadow-lg`} />
-              </Button>
-            ))}
+                Zrušit a vrátit kartu do ruky
+              </button>
+            </>
+          )}
 
-            <Button 
-              variant="ghost" 
-              className="mt-4 text-slate-500 hover:text-white font-mono text-xs tracking-widest" 
-              onClick={() => setEffectStep('CHOOSE_EFFECT')}
-            >
-              ← NÁVRAT K VÝBĚRU EFEKTU
-            </Button>
-          </div>
-        )}
+          {effectStep === 'CHOOSE_TARGET' && (
+            <>
+              <h3 className="text-red-400 text-2xl sm:text-3xl font-bold text-center" style={{ fontFamily: "'Merienda', cursive" }}>
+                Cíl útoku
+              </h3>
+              <p className="text-slate-400 text-sm text-center font-mono italic">Na koho dopadne váha vaší inteligence?</p>
+
+              <div className="w-full flex flex-col gap-3">
+                {players.filter((p: Player) => p.id !== currentPlayerId).map((opponent: Player) => (
+                  <button
+                    key={opponent.id}
+                    onClick={() => handleEffectChoice('ACTIVATE', opponent.id)}
+                    className="w-full rounded-xl p-4 flex items-center justify-between hover:bg-white/5 transition-colors"
+                    style={{
+                      border: '2px solid rgba(255,255,255,0.8)',
+                      boxShadow: 'inset 0 0 0 2px rgba(39,104,56,0.5)',
+                      background: 'rgba(20,30,23,0.6)',
+                    }}
+                  >
+                    <div className="flex flex-col items-start overflow-hidden">
+                      <span className="font-mono text-[10px] text-slate-500 uppercase tracking-wider">Oponent</span>
+                      <span className="text-white text-xl font-bold truncate" style={{ fontFamily: "'Merienda', cursive" }}>
+                        {opponent.name}
+                      </span>
+                    </div>
+                    <div className={`w-4 h-4 rounded-full flex-shrink-0 ${opponent.theme.split(' ')[0]} border border-white/20`} />
+                  </button>
+                ))}
+              </div>
+
+              <button
+                className="text-slate-500 hover:text-slate-300 transition-colors text-xs font-mono tracking-widest underline underline-offset-4 mb-2"
+                onClick={() => setEffectStep('CHOOSE_EFFECT')}
+              >
+                ← NÁVRAT K VÝBĚRU EFEKTU
+              </button>
+            </>
+          )}
+        </div>
+
+        {/* Dekorativní vignet */}
+        <div className="absolute inset-0 pointer-events-none rounded-xl"
+          style={{ border: '12px solid rgba(0,0,0,0.1)' }} />
       </DialogContent>
     </Dialog>
   );
