@@ -466,29 +466,14 @@ export function useGameEngine() {
       if (metadata?.deckPreviewTriggered) {
         // EFF_009: Náhled a přerovnání balíčku
         setDeckPreviewMode({ originalDeck: deck });
-        // Zdrž úklidu, až se dialog uzavře
-        setDiscardPile(old => [...old, { ...pendingEffect.card, exponent: null }]);
-        setPlayers(prev => {
-          const next = JSON.parse(JSON.stringify(prev));
-          const p = next[currentPlayerIndex];
-          p.hand = p.hand.filter((c: GameCard) => c.id !== pendingEffect.card.id);
-          return next;
-        });
-        // Úklid se provede až v handleDeckPreviewConfirm
+        addCardToGameState(pendingEffect.card, pendingEffect.targetId, pendingEffect.insertPosition);
         return;
       }
 
       if (metadata?.moduloOperationTriggered) {
         // EFF_012: Výběr čísla z ruky
         setModuloMode({ activePlayerIndex: currentPlayerIndex, targetPlayerId });
-        // Stejně jako výše, úklid prodloužíme
-        setDiscardPile(old => [...old, { ...pendingEffect.card, exponent: null }]);
-        setPlayers(prev => {
-          const next = JSON.parse(JSON.stringify(prev));
-          const p = next[currentPlayerIndex];
-          p.hand = p.hand.filter((c: GameCard) => c.id !== pendingEffect.card.id);
-          return next;
-        });
+        addCardToGameState(pendingEffect.card, pendingEffect.targetId, pendingEffect.insertPosition);
         return;
       }
 
@@ -500,18 +485,11 @@ export function useGameEngine() {
         setCurrentPlayerIndex(newActiveIndex >= 0 ? newActiveIndex : 0);
       }
 
-      // --- 5. ZAHOZENÍ KARTY NA ODHAZOVACÍ POLE ---
-      // Karta se nepokládá na stůl, ale "spálí" se pro efekt
-      setDiscardPile(old => [...old, { ...pendingEffect.card, exponent: null }]);
-      setPlayers(prev => {
-        const next = JSON.parse(JSON.stringify(prev));
-        const p = next[currentPlayerIndex];
-        p.hand = p.hand.filter((c: GameCard) => c.id !== pendingEffect.card.id);
-        return next;
-      });
+      // --- 5. POLOŽENÍ KARTY NA PLOCHU L ---
+      // Karta se po využití efektu stává součástí plochy L
+      addCardToGameState(pendingEffect.card, pendingEffect.targetId, pendingEffect.insertPosition);
 
       toast.success(`Efekt ${effect.name} aktivován!`);
-      setHasModifiedBoardThisTurn(true);
     }
   } else {
     // --- VOLBA 'NONE': POLOŽENÍ NA PLOCHU L ---

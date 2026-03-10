@@ -153,7 +153,7 @@ export function EffectDialog({
                   {effect.description}
                 </span>
                 <span className="text-[10px] text-emerald-500/50 uppercase font-bold tracking-tighter overflow-wrap w-full">
-                  Karta bude po použití zahozena
+                  Účinek se aplikuje a karta zůstane položena na ploše L
                 </span>
               </Button>
             )}
