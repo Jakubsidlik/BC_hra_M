@@ -24,16 +24,16 @@ export interface CardData {
 // DATABÁZE VŠECH KARET VE HŘE (Mapování podle karty.csv)
 export const cardsDatabase: Record<string, CardData> = {
   // --- ČÍSLA (EFF_001: Dobrání 1 karty navíc) ---
-  '0': { symbol: '0', type: 'number', count: 10, image: '/cards/0.svg', hasEffect: true, effects: { optionA: { id: 'EFF_001', name: 'Bonus ke lízání', description: 'Dobrání 1 karty navíc v příštím tahu.', target: 'SELF' } } },
-  '1': { symbol: '1', type: 'number', count: 10, image: '/cards/1.svg', hasEffect: true, effects: { optionA: { id: 'EFF_001', name: 'Bonus ke lízání', description: 'Dobrání 1 karty navíc v příštím tahu.', target: 'SELF' } } },
-  '2': { symbol: '2', type: 'number', count: 10, image: '/cards/2.svg', hasEffect: true, effects: { optionA: { id: 'EFF_001', name: 'Bonus ke lízání', description: 'Dobrání 1 karty navíc v příštím tahu.', target: 'SELF' } } },
-  '3': { symbol: '3', type: 'number', count: 10, image: '/cards/3.svg', hasEffect: true, effects: { optionA: { id: 'EFF_001', name: 'Bonus ke lízání', description: 'Dobrání 1 karty navíc v příštím tahu.', target: 'SELF' } } },
-  '4': { symbol: '4', type: 'number', count: 10, image: '/cards/4.svg', hasEffect: true, effects: { optionA: { id: 'EFF_001', name: 'Bonus ke lízání', description: 'Dobrání 1 karty navíc v příštím tahu.', target: 'SELF' } } },
-  '5': { symbol: '5', type: 'number', count: 10, image: '/cards/5.svg', hasEffect: true, effects: { optionA: { id: 'EFF_001', name: 'Bonus ke lízání', description: 'Dobrání 1 karty navíc v příštím tahu.', target: 'SELF' } } },
-  '6': { symbol: '6', type: 'number', count: 10, image: '/cards/6.svg', hasEffect: true, effects: { optionA: { id: 'EFF_001', name: 'Bonus ke lízání', description: 'Dobrání 1 karty navíc v příštím tahu.', target: 'SELF' } } },
-  '7': { symbol: '7', type: 'number', count: 10, image: '/cards/7.svg', hasEffect: true, effects: { optionA: { id: 'EFF_001', name: 'Bonus ke lízání', description: 'Dobrání 1 karty navíc v příštím tahu.', target: 'SELF' } } },
-  '8': { symbol: '8', type: 'number', count: 10, image: '/cards/8.svg', hasEffect: true, effects: { optionA: { id: 'EFF_001', name: 'Bonus ke lízání', description: 'Dobrání 1 karty navíc v příštím tahu.', target: 'SELF' } } },
-  '9': { symbol: '9', type: 'number', count: 10, image: '/cards/9.svg', hasEffect: true, effects: { optionA: { id: 'EFF_001', name: 'Bonus ke lízání', description: 'Dobrání 1 karty navíc v příštím tahu.', target: 'SELF' } } },
+  '0': { symbol: '0', type: 'number', count: 10, image: '/cards/0.svg', hasEffect: true, effects: { optionA: { id: 'EFF_001', name: 'Bonus karty', description: 'Dobrání 1 karty navíc v příštím tahu.', target: 'SELF' } } },
+  '1': { symbol: '1', type: 'number', count: 10, image: '/cards/1.svg', hasEffect: true, effects: { optionA: { id: 'EFF_001', name: 'Bonus karty', description: 'Dobrání 1 karty navíc v příštím tahu.', target: 'SELF' } } },
+  '2': { symbol: '2', type: 'number', count: 10, image: '/cards/2.svg', hasEffect: true, effects: { optionA: { id: 'EFF_001', name: 'Bonus karty', description: 'Dobrání 1 karty navíc v příštím tahu.', target: 'SELF' } } },
+  '3': { symbol: '3', type: 'number', count: 10, image: '/cards/3.svg', hasEffect: true, effects: { optionA: { id: 'EFF_001', name: 'Bonus karty', description: 'Dobrání 1 karty navíc v příštím tahu.', target: 'SELF' } } },
+  '4': { symbol: '4', type: 'number', count: 10, image: '/cards/4.svg', hasEffect: true, effects: { optionA: { id: 'EFF_001', name: 'Bonus karty', description: 'Dobrání 1 karty navíc v příštím tahu.', target: 'SELF' } } },
+  '5': { symbol: '5', type: 'number', count: 10, image: '/cards/5.svg', hasEffect: true, effects: { optionA: { id: 'EFF_001', name: 'Bonus karty', description: 'Dobrání 1 karty navíc v příštím tahu.', target: 'SELF' } } },
+  '6': { symbol: '6', type: 'number', count: 10, image: '/cards/6.svg', hasEffect: true, effects: { optionA: { id: 'EFF_001', name: 'Bonus karty', description: 'Dobrání 1 karty navíc v příštím tahu.', target: 'SELF' } } },
+  '7': { symbol: '7', type: 'number', count: 10, image: '/cards/7.svg', hasEffect: true, effects: { optionA: { id: 'EFF_001', name: 'Bonus karty', description: 'Dobrání 1 karty navíc v příštím tahu.', target: 'SELF' } } },
+  '8': { symbol: '8', type: 'number', count: 10, image: '/cards/8.svg', hasEffect: true, effects: { optionA: { id: 'EFF_001', name: 'Bonus karty', description: 'Dobrání 1 karty navíc v příštím tahu.', target: 'SELF' } } },
+  '9': { symbol: '9', type: 'number', count: 10, image: '/cards/9.svg', hasEffect: true, effects: { optionA: { id: 'EFF_001', name: 'Bonus karty', description: 'Dobrání 1 karty navíc v příštím tahu.', target: 'SELF' } } },
 
   // --- KONSTANTY A PROMĚNNÉ ---
   'π': { 
