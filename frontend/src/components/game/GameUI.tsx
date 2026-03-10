@@ -29,7 +29,7 @@ export function VictoryScreen({ winner, onReset }: { winner: Player | null, onRe
         <p className="text-slate-400 font-mono uppercase tracking-[0.4em] mb-8 italic">Quod Erat Demonstrandum</p>
 
         <h2 className="text-4xl text-white font-bold mb-4">
-           <span className="text-emerald-400 underline decoration-wavy decoration-emerald-500/50">{winner.name}</span> zkonstruoval rovnost!
+          <span className="text-emerald-400 underline decoration-wavy decoration-emerald-500/50">{winner.name}</span> zkonstruoval rovnost!
         </h2>
 
         <p className="text-slate-400 text-lg mb-12 font-mono">
@@ -65,9 +65,9 @@ export function HandoffScreen({ isHandoff, players, nextIndex, onReveal }: { isH
       <h3 className="text-6xl font-black mb-12 text-white tracking-tighter italic font-chalk">
         {players[nextIndex]?.name}
       </h3>
-      <Button 
-        size="lg" 
-        className="bg-emerald-600 hover:bg-emerald-500 px-16 py-10 text-2xl font-black rounded-3xl shadow-[0_0_25px_rgba(16,185,129,0.25)] border-b-4 border-emerald-800" 
+      <Button
+        size="lg"
+        className="bg-emerald-600 hover:bg-emerald-500 px-16 py-10 text-2xl font-black rounded-3xl shadow-[0_0_25px_rgba(16,185,129,0.25)] border-b-4 border-emerald-800"
         onClick={onReveal}
       >
         HRÁT
@@ -79,7 +79,7 @@ export function HandoffScreen({ isHandoff, players, nextIndex, onReveal }: { isH
 // --- 3. ZAMĚŘOVACÍ REŽIM (Interakce s plochou soupeře) ---
 export function TargetingOverlay({ targetingMode, pendingEffect, players, handleBoardCardClick, onCancel }: any) {
   if (!targetingMode || !pendingEffect) return null;
-  
+
   const targetPlayer = players.find((p: Player) => p.id === targetingMode.targetPlayerId);
 
   return (
@@ -91,17 +91,17 @@ export function TargetingOverlay({ targetingMode, pendingEffect, players, handle
           Zvol prvek na ploše matematika: <span className="text-red-500 font-bold">{targetPlayer?.name}</span>
         </p>
       </div>
-      
+
       <div className="w-full max-w-6xl bg-black/40 p-12 rounded-[4rem] border-4 border-red-500/30 shadow-[0_0_80px_rgba(239,68,68,0.08)] relative">
-         <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-red-600 px-6 py-1 rounded-full text-xs font-bold tracking-widest text-white uppercase">Cílová oblast</div>
-         <BoardArea 
-            id="target-board" 
-            cards={targetPlayer?.board || []} 
-            isTargeting={true} 
-            onCardClick={handleBoardCardClick} 
-          />
+        <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-red-600 px-6 py-1 rounded-full text-xs font-bold tracking-widest text-white uppercase">Cílová oblast</div>
+        <BoardArea
+          id="target-board"
+          cards={targetPlayer?.board || []}
+          isTargeting={true}
+          onCardClick={handleBoardCardClick}
+        />
       </div>
-      
+
       <Button size="lg" variant="ghost" className="mt-12 text-slate-500 hover:text-white text-xl hover:bg-white/5" onClick={onCancel}>
         PŘERUŠIT OPERACI
       </Button>
@@ -110,10 +110,10 @@ export function TargetingOverlay({ targetingMode, pendingEffect, players, handle
 }
 
 // --- 4. DIALOG EFEKTU (Klíčové rozhodnutí tahu) ---
-export function EffectDialog({ 
-  open, effectStep, pendingEffect, players, currentPlayerId, handleEffectClick, handleEffectChoice, setEffectStep, onClose 
+export function EffectDialog({
+  open, effectStep, pendingEffect, players, currentPlayerId, handleEffectClick, handleEffectChoice, setEffectStep, onClose
 }: EffectDialogProps) {
-  
+
   if (!pendingEffect) return null;
   const cardData = cardsDatabase[pendingEffect.card.symbol];
   const effect = cardData?.effects?.optionA;
@@ -121,11 +121,11 @@ export function EffectDialog({
   return (
     <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) onClose(); }}>
       <DialogContent className="w-[92vw] max-w-[450px] p-0 border-0 shadow-2xl rounded-xl overflow-hidden"
-        style={{ background: '#141e17', border: '4px solid rgba(39,104,56,0.3)' }}>
+        style={{ background: 'rgb(30,41,59)', border: '4px solid rgba(255,255,255,0.08)' }}>
 
         {/* Header */}
         <div className="flex items-center justify-between p-2"
-          style={{ background: 'rgba(20,30,23,0.5)' }}>
+          style={{ background: 'rgba(15,23,42,0.6)' }}>
           <button
             onClick={onClose}
             className="text-slate-400 hover:text-white transition-colors p-1"
@@ -143,7 +143,7 @@ export function EffectDialog({
           {effectStep === 'CHOOSE_EFFECT' && (
             <>
               {/* Nadpis */}
-              <h3 className="text-emerald-400 text-2xl sm:text-3xl font-bold text-center" style={{ fontFamily: "'Merienda', cursive" }}>
+              <h3 className="text-white text-2xl sm:text-3xl font-bold text-center" style={{ fontFamily: "'Merienda', cursive" }}>
                 Využití karty
               </h3>
 
@@ -155,14 +155,14 @@ export function EffectDialog({
                     className="w-full text-left rounded-xl overflow-hidden hover:scale-[1.02] transition-transform"
                     style={{
                       border: '2px solid rgba(255,255,255,0.8)',
-                      boxShadow: 'inset 0 0 0 2px rgba(39,104,56,0.5)',
-                      background: 'hsla(151,21%,46%,0.2)',
+                      boxShadow: 'inset 0 0 0 2px rgba(255,255,255,0.2)',
+                      background: 'rgba(255,255,255,0.05)',
                     }}
                   >
                     <div className="rounded-lg p-4 flex flex-col items-center gap-2 text-center"
-                      style={{ background: 'rgba(20,30,23,0.4)' }}>
-                      <span className="inline-block px-2 py-0.5 text-emerald-400 text-[10px] font-bold tracking-widest rounded-full"
-                        style={{ background: 'rgba(16,185,129,0.2)', border: '1px solid rgba(16,185,129,0.3)' }}>
+                      style={{ background: 'rgba(30,41,59,0.5)' }}>
+                      <span className="inline-block px-2 py-0.5 text-white text-[10px] font-bold tracking-widest rounded-full"
+                        style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}>
                         EFEKT
                       </span>
                       <h4 className="text-white text-lg sm:text-xl font-bold" style={{ fontFamily: "'Merienda', cursive" }}>
@@ -183,8 +183,8 @@ export function EffectDialog({
                   className="w-full rounded-xl p-4 flex items-center justify-center hover:bg-white/5 transition-colors"
                   style={{
                     border: '2px solid rgba(255,255,255,0.8)',
-                    boxShadow: 'inset 0 0 0 2px rgba(39,104,56,0.5)',
-                    background: 'rgba(20,30,23,0.6)',
+                    boxShadow: 'inset 0 0 0 2px rgba(255,255,255,0.05)',
+                    background: 'rgba(15,23,42,0.8)',
                   }}
                 >
                   <span className="text-white font-bold text-base sm:text-lg" style={{ fontFamily: "'Merienda', cursive" }}>
@@ -263,7 +263,7 @@ export function MinigameDialog({ minigameMode, onPick }: { minigameMode: any, on
   const current = config[minigameMode.effectId] || { title: "Výběr karty", desc: "", color: "text-emerald-400" };
 
   return (
-    <Dialog open={!!minigameMode} onOpenChange={() => {}}>
+    <Dialog open={!!minigameMode} onOpenChange={() => { }}>
       <DialogContent className="sm:max-w-2xl bg-slate-900 text-white border-slate-700 rounded-[2.5rem]">
         <DialogHeader>
           <DialogTitle className={`text-4xl font-chalk text-center ${current.color} drop-shadow-lg`}>{current.title}</DialogTitle>
@@ -271,15 +271,15 @@ export function MinigameDialog({ minigameMode, onPick }: { minigameMode: any, on
             {current.desc}
           </DialogDescription>
         </DialogHeader>
-        
+
         <div className="flex justify-center gap-6 py-12 min-h-16rem bg-black/40 rounded-3xl mt-6 border border-white/5 relative overflow-hidden">
           <div className="absolute inset-0 bg-linear-to-t from-emerald-500/5 to-transparent pointer-events-none" />
           {minigameMode.cards.length === 0 ? (
             <div className="text-slate-600 italic flex items-center font-mono">Prázdnota...</div>
           ) : (
             minigameMode.cards.map((card: GameCard) => (
-              <div 
-                key={card.id} 
+              <div
+                key={card.id}
                 onClick={() => onPick(card.id)}
                 className="w-28 h-40 bg-white border-4 border-slate-300 rounded-2xl flex items-center justify-center shadow-2xl cursor-pointer hover:scale-110 hover:border-emerald-500 hover:rotate-2 transition-all group"
               >
@@ -288,9 +288,9 @@ export function MinigameDialog({ minigameMode, onPick }: { minigameMode: any, on
             ))
           )}
         </div>
-        
+
         <div className="flex justify-center mt-6">
-           <Button variant="outline" className="border-slate-700 text-slate-500 hover:text-white" onClick={() => onPick('CANCEL')}>ZAVŘÍT OKNO</Button>
+          <Button variant="outline" className="border-slate-700 text-slate-500 hover:text-white" onClick={() => onPick('CANCEL')}>ZAVŘÍT OKNO</Button>
         </div>
       </DialogContent>
     </Dialog>
@@ -300,7 +300,7 @@ export function MinigameDialog({ minigameMode, onPick }: { minigameMode: any, on
 // --- 6. REŽIM ZÁVOREK (Syntaxe nade vše) ---
 export function BracketOverlay({ bracketMode, players, currentPlayerId, handleBracketClick, onCancel }: any) {
   if (!bracketMode) return null;
-  
+
   const currentPlayer = players.find((p: Player) => p.id === currentPlayerId);
 
   return (
@@ -309,22 +309,22 @@ export function BracketOverlay({ bracketMode, players, currentPlayerId, handleBr
         <h2 className="text-6xl text-white font-black mb-6 tracking-tighter uppercase font-chalk drop-shadow-lg">Režim závorek</h2>
         <div className="inline-block bg-emerald-500/10 py-4 px-10 rounded-full border-2 border-emerald-500/30 shadow-[0_0_25px_rgba(16,185,129,0.08)]">
           <p className="text-2xl text-emerald-400 animate-pulse font-mono tracking-tight font-bold">
-            {bracketMode.step === 'LEFT' 
-              ? "① Vyber kartu, PŘED kterou položíš '('" 
+            {bracketMode.step === 'LEFT'
+              ? "① Vyber kartu, PŘED kterou položíš '('"
               : "② Vyber kartu, ZA kterou položíš ')'"}
           </p>
         </div>
       </div>
-      
+
       <div className="w-full max-w-6xl bg-white/5 p-16 rounded-[4rem] border-4 border-emerald-500/20 shadow-[0_0_80px_rgba(16,185,129,0.04)]">
-         <BoardArea 
-            id="bracket-board" 
-            cards={currentPlayer?.board || []} 
-            isTargeting={true} 
-            onCardClick={handleBracketClick} 
-          />
+        <BoardArea
+          id="bracket-board"
+          cards={currentPlayer?.board || []}
+          isTargeting={true}
+          onCardClick={handleBracketClick}
+        />
       </div>
-      
+
       <Button size="lg" variant="ghost" className="mt-12 text-slate-600 hover:text-white text-xl tracking-[0.2em] font-mono" onClick={onCancel}>
         PŘERUŠIT MANIPULACI
       </Button>
@@ -333,16 +333,16 @@ export function BracketOverlay({ bracketMode, players, currentPlayerId, handleBr
 }
 
 // --- 6. DIALOG PRO NÁHLED BALÍČKU (EFF_009) ---
-export function DeckPreviewDialog({ 
-  open, 
-  deck, 
-  onConfirm, 
-  onCancel 
-}: { 
-  open: boolean; 
-  deck: GameCard[]; 
-  onConfirm: (reorderedDeck: GameCard[]) => void; 
-  onCancel: () => void; 
+export function DeckPreviewDialog({
+  open,
+  deck,
+  onConfirm,
+  onCancel
+}: {
+  open: boolean;
+  deck: GameCard[];
+  onConfirm: (reorderedDeck: GameCard[]) => void;
+  onCancel: () => void;
 }) {
   const [reordered, setReordered] = React.useState<GameCard[]>([...deck.slice(0, 3)]);
   const rest = [...deck.slice(3)];
@@ -376,8 +376,8 @@ export function DeckPreviewDialog({
             <div key={`${card.id}-${idx}`} className="flex items-center justify-between p-3 bg-slate-800 rounded-lg border border-emerald-500/30">
               <span className="font-bold text-emerald-300 text-lg">{card.symbol}</span>
               <div className="flex gap-2">
-                <Button 
-                  size="sm" 
+                <Button
+                  size="sm"
                   variant="outline"
                   onClick={() => moveCard(idx, 'up')}
                   disabled={idx === 0}
@@ -385,8 +385,8 @@ export function DeckPreviewDialog({
                 >
                   ↑
                 </Button>
-                <Button 
-                  size="sm" 
+                <Button
+                  size="sm"
                   variant="outline"
                   onClick={() => moveCard(idx, 'down')}
                   disabled={idx === reordered.length - 1}
@@ -401,13 +401,13 @@ export function DeckPreviewDialog({
         </div>
 
         <div className="flex gap-2 pt-4">
-          <Button 
+          <Button
             onClick={handleConfirm}
             className="flex-1 bg-emerald-600 hover:bg-emerald-500 font-bold"
           >
             Potvrdit
           </Button>
-          <Button 
+          <Button
             onClick={onCancel}
             variant="destructive"
             className="flex-1"
@@ -421,16 +421,16 @@ export function DeckPreviewDialog({
 }
 
 // --- 7. DIALOG PRO VÝBĚR MODULA (EFF_012) ---
-export function ModuloDialog({ 
-  open, 
-  hand, 
-  onSelect, 
-  onCancel 
-}: { 
-  open: boolean; 
-  hand: GameCard[]; 
-  onSelect: (number: number) => void; 
-  onCancel: () => void; 
+export function ModuloDialog({
+  open,
+  hand,
+  onSelect,
+  onCancel
+}: {
+  open: boolean;
+  hand: GameCard[];
+  onSelect: (number: number) => void;
+  onCancel: () => void;
 }) {
   const numberCards = hand.filter(card => cardsDatabase[card.symbol]?.type === 'number');
 
@@ -464,7 +464,7 @@ export function ModuloDialog({
         )}
 
         {numberCards.length > 0 && (
-          <Button 
+          <Button
             onClick={onCancel}
             variant="destructive"
             className="w-full mt-4"
