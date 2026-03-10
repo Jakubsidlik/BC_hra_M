@@ -351,7 +351,7 @@ export function TabletGameLayout({ currentPlayer, state, actions }: TabletGameLa
                 />
                 <span className="material-symbols-outlined text-2xl text-white relative z-10">style</span>
                 <span className="text-[10px] uppercase tracking-tighter text-white font-bold mt-1 relative z-10">
-                  Líznout ({deck.length})
+                  Přidat ({deck.length})
                 </span>
               </div>
             </div>
