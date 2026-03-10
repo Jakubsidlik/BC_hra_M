@@ -37,7 +37,7 @@ interface BoardDropZoneProps {
 }
 
 // ==========================================
-// NOVÁ: DROP ZÓNA MEZI KARTAMI
+// DROP ZÓNA MEZI KARTAMI — SVISLÝ KURZOR
 // ==========================================
 export function BoardDropZone({ id, isVisible }: BoardDropZoneProps) {
   const { setNodeRef, isOver } = useDroppable({ id });
@@ -45,17 +45,28 @@ export function BoardDropZone({ id, isVisible }: BoardDropZoneProps) {
   return (
     <div
       ref={setNodeRef}
-      className={`transition-all duration-300 ease-out ${
-        isVisible 
-          ? 'w-8 md:w-12 lg:w-16 opacity-100' 
-          : 'w-2 opacity-0'
-      } h-36 md:h-44 lg:h-48 flex items-center justify-center`}
+      className="flex items-stretch justify-center flex-shrink-0 self-stretch"
+      style={{
+        width: isOver ? '2rem' : (isVisible ? '1rem' : '0.375rem'),
+        minHeight: '5rem',
+        opacity: isVisible ? 1 : 0,
+        transition: 'width 150ms ease, opacity 200ms ease',
+        paddingTop: '0.5rem',
+        paddingBottom: '0.5rem',
+      }}
     >
-      <div className={`w-full h-8 md:h-12 lg:h-16 rounded-lg border-2 border-dashed transition-all duration-300 ${
-        isOver 
-          ? 'border-emerald-400 bg-emerald-400/20 scale-110 shadow-[0_0_20px_rgba(16,185,129,0.3)]' 
-          : 'border-white/20 bg-white/5'
-      }`} />
+      <div
+        className="mx-auto rounded-full flex-1"
+        style={{
+          width: isOver ? '3px' : '2px',
+          background: isOver
+            ? 'linear-gradient(to bottom, transparent 0%, #ffffff 15%, #4ade80 50%, #ffffff 85%, transparent 100%)'
+            : 'linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.35) 25%, rgba(255,255,255,0.35) 75%, transparent 100%)',
+          boxShadow: isOver ? '0 0 10px rgba(255,255,255,0.9), 0 0 20px rgba(74,222,128,0.7)' : 'none',
+          transition: 'all 150ms ease',
+          minHeight: '4rem',
+        }}
+      />
     </div>
   );
 }

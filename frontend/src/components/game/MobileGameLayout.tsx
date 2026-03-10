@@ -1,9 +1,10 @@
 // @ts-nocheck
-import React from 'react';
-import { useDraggable, useDroppable } from '@dnd-kit/core';
+import React, { useState } from 'react';
+import { useDraggable, useDroppable, useDndMonitor } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 import { cardsDatabase } from '@/data/cardsDB';
 import { getBorderColor } from '@/lib/gameHelpers';
+import { BoardDropZone } from '@/components/game/Cards';
 import type { GameCard, Player } from '@/lib/effects';
 
 const BASE = import.meta.env.BASE_URL;
@@ -223,11 +224,11 @@ function MobileDiscardSlot({ discardCount, isDiscarding, palette }: MobileDiscar
       style={{
         width: '5.5rem',
         height: '8.25rem',
-        backgroundColor: isOver && isDiscarding ? 'rgba(127,29,29,0.8)' : `${palette.bgMid}aa`,
-        borderColor: isOver && isDiscarding ? '#ef4444' : 'rgba(255,255,255,0.3)',
+        backgroundColor: isOver ? 'rgba(127,29,29,0.8)' : `${palette.bgMid}aa`,
+        borderColor: isOver ? '#ef4444' : 'rgba(255,255,255,0.3)',
       }}
       className={`rounded-md border-2 shadow-inner relative flex flex-col items-center justify-center overflow-hidden transition-all duration-300
-        ${isOver && isDiscarding ? 'scale-105' : ''}
+        ${isOver ? 'scale-105' : ''}
         ${isDiscarding && !isOver ? 'animate-pulse ring-4 ring-red-500/50' : ''}
       `}
     >
@@ -240,6 +241,46 @@ function MobileDiscardSlot({ discardCount, isDiscarding, palette }: MobileDiscar
         <div className="absolute -top-3 right-0 bg-red-600 text-white text-[9px] px-2 py-1 rounded-full animate-bounce shadow-md pointer-events-none">
           SEM
         </div>
+      )}
+    </div>
+  );
+}
+
+// ==========================================
+// MOBILE DRAGGABLE BOARD CARD
+// ==========================================
+function DraggableBoardCard({ card, palette, hasModifiedBoardThisTurn }: { card: GameCard; palette: ThemePalette; hasModifiedBoardThisTurn: boolean }) {
+  const cardData = cardsDatabase[card.symbol];
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+    id: card.id,
+    data: card,
+  });
+
+  const style: React.CSSProperties = {
+    width: '3.5rem',
+    height: '5rem',
+    backgroundColor: `${palette.bgDark}cc`,
+    borderColor: isDragging ? palette.primary : 'rgba(255,255,255,0.25)',
+    transform: transform ? CSS.Translate.toString(transform) : undefined,
+    zIndex: isDragging ? 99999 : undefined,
+    opacity: isDragging ? 0.5 : 1,
+    boxShadow: isDragging ? `0 0 20px ${palette.glow}` : undefined,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      {...listeners}
+      {...attributes}
+      className={`rounded-md border-2 flex items-center justify-center shadow-md transition-colors duration-700
+        ${!hasModifiedBoardThisTurn ? 'cursor-grab active:cursor-grabbing hover:border-red-400/60 hover:scale-105' : 'cursor-default'}
+      `}
+      style={style}
+    >
+      {cardData?.image ? (
+        <img src={`${BASE}${cardData.image.replace(/^\//, '')}`} alt={card.symbol} className="w-full h-full object-contain p-1" />
+      ) : (
+        <span className="text-2xl font-black text-white">{card.symbol}</span>
       )}
     </div>
   );
@@ -264,6 +305,98 @@ function MobileBoardDropZone({ id, palette }: { id: string; palette: ThemePalett
 }
 
 // ==========================================
+// BRACKET KARTA — draggable, stack (, [, {
+// ==========================================
+interface BracketCardProps {
+  syntax: GameCard[];
+  bracketMode: { leftInsertPosition: number; pairIndex: number } | null;
+  palette: ThemePalette;
+  onCancel: () => void;
+}
+
+function BracketCard({ syntax, bracketMode, palette, onCancel }: BracketCardProps) {
+  const openSymbols = ['(', '[', '{'];
+  const closeSymbols = [')', ']', '}'];
+
+  // V RIGHT fázi: zobraz uzavírací závorku jako draggable
+  if (bracketMode) {
+    const closeSymbol = closeSymbols[bracketMode.pairIndex];
+    const closeCard = syntax.find(c => c.symbol === closeSymbol);
+    const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+      id: closeCard?.id ?? 'bracket-close-dummy',
+      data: closeCard,
+      disabled: !closeCard,
+    });
+    return (
+      <div className="flex flex-col items-center gap-1">
+        <div
+          ref={setNodeRef}
+          {...listeners}
+          {...attributes}
+          className="rounded-md border-2 border-yellow-400/80 shadow-sm flex flex-col items-center justify-center cursor-grab active:cursor-grabbing"
+          style={{
+            width: '5.5rem',
+            height: '8.25rem',
+            backgroundColor: isDragging ? `${palette.bgDark}cc` : `${palette.bgMid}dd`,
+            boxShadow: `0 0 12px rgba(250,204,21,0.5)`,
+            transform: transform ? `translate(${transform.x}px,${transform.y}px)` : undefined,
+            zIndex: isDragging ? 99999 : undefined,
+          }}
+        >
+          <span className="text-3xl font-black text-yellow-300 leading-none">{closeSymbol}</span>
+          <span className="text-[9px] uppercase text-yellow-300/60 font-bold mt-1 tracking-tight">pravá závorka</span>
+        </div>
+        <button
+          onClick={onCancel}
+          className="text-[9px] text-red-400/70 hover:text-red-400 uppercase tracking-tight transition-colors"
+        >
+          Zrušit
+        </button>
+      </div>
+    );
+  }
+
+  // Normální fáze: zobraz první dostupný pár
+  const firstOpen = syntax.find(c => openSymbols.includes(c.symbol));
+  const exhausted = !firstOpen;
+
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+    id: firstOpen?.id ?? 'bracket-exhausted',
+    data: firstOpen,
+    disabled: exhausted,
+  });
+
+  return (
+    <div
+      ref={setNodeRef}
+      {...(exhausted ? {} : listeners)}
+      {...(exhausted ? {} : attributes)}
+      className={`rounded-md border-2 shadow-sm flex flex-col items-center justify-center transition-transform
+        ${exhausted ? 'opacity-40 cursor-not-allowed' : 'cursor-grab active:cursor-grabbing hover:scale-105'}
+      `}
+      style={{
+        width: '5.5rem',
+        height: '8.25rem',
+        backgroundColor: `${palette.bgDark}cc`,
+        borderColor: exhausted ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.6)',
+        boxShadow: exhausted ? 'none' : `0 0 10px ${palette.glow}`,
+        transform: transform ? `translate(${transform.x}px,${transform.y}px)` : undefined,
+        zIndex: isDragging ? 99999 : undefined,
+      }}
+    >
+      {exhausted ? (
+        <span className="text-[9px] uppercase tracking-tight text-white/30 font-bold text-center px-1">Závorky vyčerpány</span>
+      ) : (
+        <>
+          <span className="text-2xl font-black text-white leading-none">{firstOpen!.symbol}</span>
+          <span className="text-[9px] uppercase tracking-tight text-white/40 font-bold mt-1">Závorky</span>
+        </>
+      )}
+    </div>
+  );
+}
+
+// ==========================================
 // MAIN MOBILE GAME LAYOUT
 // ==========================================
 interface MobileGameLayoutProps {
@@ -273,18 +406,26 @@ interface MobileGameLayoutProps {
     discardPile: GameCard[];
     isDiscarding: boolean;
     hasModifiedBoardThisTurn: boolean;
-    bracketMode: { step: 'LEFT' | 'RIGHT'; leftIndex: number | null; pairIndex?: number } | null;
+    bracketMode: { leftInsertPosition: number; pairIndex: number } | null;
   };
   actions: {
     checkMathEngine: () => void;
     handleEndTurn: () => void;
     handleDiscard: (id: string) => void;
+    cancelBracketMode: () => void;
   };
 }
 
 export function MobileGameLayout({ currentPlayer, state, actions }: MobileGameLayoutProps) {
-  const { deck, discardPile, isDiscarding, hasModifiedBoardThisTurn } = state;
+  const { deck, discardPile, isDiscarding, hasModifiedBoardThisTurn, bracketMode } = state;
   const palette = getPalette(currentPlayer.theme);
+
+  const [isDraggingCard, setIsDraggingCard] = useState(false);
+  useDndMonitor({
+    onDragStart: () => setIsDraggingCard(true),
+    onDragEnd: () => setIsDraggingCard(false),
+    onDragCancel: () => setIsDraggingCard(false),
+  });
 
   const modifierCard = currentPlayer.hand[0] ?? null;
   const handCards = currentPlayer.hand;
@@ -346,41 +487,33 @@ export function MobileGameLayout({ currentPlayer, state, actions }: MobileGameLa
             />
 
             {/* Board cards */}
-            <div className="z-10 flex items-end gap-2 flex-wrap justify-center w-full">
+            <div className="z-10 flex items-stretch gap-0 flex-wrap justify-center w-full" style={{ minHeight: '5rem' }}>
               {currentPlayer.board.length === 0 ? (
                 <span
-                  className="uppercase tracking-[0.2em] text-xl pointer-events-none select-none italic"
+                  className="uppercase tracking-[0.2em] text-xl pointer-events-none select-none italic self-center"
                   style={{ color: 'rgba(255,255,255,0.12)' }}
                 >
                   Tabule
                 </span>
               ) : (
-                currentPlayer.board.map((card) => {
-                  const cardData = cardsDatabase[card.symbol];
-                  return (
-                    <div key={card.id} className="flex flex-col items-center">
-                      <div
-                        className="rounded-md border-2 flex items-center justify-center shadow-md transition-colors duration-700"
-                        style={{
-                          width: '3.5rem',
-                          height: '5rem',
-                          backgroundColor: `${palette.bgDark}cc`,
-                          borderColor: 'rgba(255,255,255,0.25)',
-                        }}
-                      >
-                        {cardData?.image ? (
-                          <img
-                            src={`${BASE}${cardData.image.replace(/^\//, '')}`}
-                            alt={card.symbol}
-                            className="w-full h-full object-contain p-1"
-                          />
-                        ) : (
-                          <span className="text-2xl font-black text-white">{card.symbol}</span>
-                        )}
+                <>
+                  {/* Kurzor před první kartou */}
+                  <BoardDropZone id="main-board-before-0" isVisible={isDraggingCard} />
+                  {currentPlayer.board.map((card, index) => (
+                    <React.Fragment key={card.id}>
+                      <div className="flex flex-col items-center">
+                        <DraggableBoardCard card={card} palette={palette} hasModifiedBoardThisTurn={hasModifiedBoardThisTurn} />
                       </div>
-                    </div>
-                  );
-                })
+                      {/* Kurzor za každou kartou */}
+                      <BoardDropZone
+                        id={index < currentPlayer.board.length - 1
+                          ? `main-board-between-${index}-${index + 1}`
+                          : `main-board-after-${currentPlayer.board.length - 1}`}
+                        isVisible={isDraggingCard}
+                      />
+                    </React.Fragment>
+                  ))}
+                </>
               )}
             </div>
 
@@ -431,36 +564,13 @@ export function MobileGameLayout({ currentPlayer, state, actions }: MobileGameLa
         {/* UTILITY CARD ROW */}
         <section className="flex justify-center gap-4 px-4 py-2">
 
-          {/* Modifier — first hand card preview */}
-          <div className="flex flex-col items-center">
-            <div
-              className="rounded-md border-2 border-white/60 shadow-sm flex flex-col items-center justify-center cursor-pointer active:scale-95 transition-transform"
-              style={{
-                width: '5.5rem',
-                height: '8.25rem',
-                backgroundColor: `${palette.bgDark}cc`,
-                boxShadow: `0 0 10px ${palette.glow}`,
-              }}
-            >
-              {modifierCard ? (
-                <>
-                  <span className="text-base font-black text-white leading-none">
-                    {modifierCard.symbol}
-                  </span>
-                  <span className="text-[10px] uppercase tracking-tighter text-white/50 font-bold mt-1">
-                    Závorky
-                  </span>
-                </>
-              ) : (
-                <>
-                  <span className="text-base font-black text-white/30">( )</span>
-                  <span className="text-[10px] uppercase tracking-tighter text-white/40 font-bold mt-1">
-                    Závorky
-                  </span>
-                </>
-              )}
-            </div>
-          </div>
+          {/* Závorky */}
+          <BracketCard
+            syntax={currentPlayer.syntax}
+            bracketMode={bracketMode}
+            palette={palette}
+            onCancel={actions.cancelBracketMode}
+          />
 
           {/* Discard zone */}
           <MobileDiscardSlot discardCount={discardPile.length} isDiscarding={isDiscarding} palette={palette} />
@@ -492,10 +602,10 @@ export function MobileGameLayout({ currentPlayer, state, actions }: MobileGameLa
 
       {/* ── FOOTER (hand fan) ── */}
       <footer
-        className="mt-auto pb-12 pt-6 px-4 transition-colors duration-700"
+        className="mt-auto pb-4 pt-2 px-4 transition-colors duration-700"
         style={{ background: `linear-gradient(to top, ${palette.footerBg} 0%, transparent 100%)` }}
       >
-        <div className="relative h-44 max-w-lg mx-auto flex justify-center items-end select-none">
+        <div className="relative h-44 max-w-lg mx-auto flex justify-center items-end select-none" style={{ transform: 'translateY(-60px)' }}>
           {handCards.map((card, index) => (
             <MiniHandCard
               key={card.id}

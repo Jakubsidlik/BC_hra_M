@@ -120,13 +120,13 @@ export function EffectDialog({
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) onClose(); }}>
-      <DialogContent className="w-[90vw] max-w-lg bg-slate-900 border-2 border-slate-700 text-white shadow-[0_0_50px_rgba(0,0,0,0.8)] rounded-2rem">
+      <DialogContent className="w-[92vw] max-w-lg bg-slate-900 border-2 border-slate-700 text-white shadow-[0_0_50px_rgba(0,0,0,0.8)] rounded-2xl overflow-hidden p-4 sm:p-6">
         
         <DialogHeader>
-          <DialogTitle className="text-3xl sm:text-4xl font-chalk text-center text-emerald-400 drop-shadow-md">
+          <DialogTitle className="text-2xl sm:text-4xl font-chalk text-center text-emerald-400 drop-shadow-md">
             {effectStep === 'CHOOSE_EFFECT' ? 'Využití karty' : 'Cíl útoku'}
           </DialogTitle>
-          <DialogDescription className="text-center text-slate-400 mt-2 font-mono italic">
+          <DialogDescription className="text-center text-slate-400 mt-2 font-mono italic text-xs sm:text-sm">
             {effectStep === 'CHOOSE_EFFECT' 
               ? "Jedna karta, dvě cesty. Vyberte moudře." 
               : "Na koho dopadne váha vaší inteligence?"}
@@ -134,25 +134,25 @@ export function EffectDialog({
         </DialogHeader>
 
         {effectStep === 'CHOOSE_EFFECT' && (
-          <div className="flex flex-col gap-4 mt-6">
+          <div className="flex flex-col gap-3 mt-4">
             
             {/* VOLBA 1: AKTIVACE SCHOPNOSTI */}
             {effect && (
               <Button 
                 variant="outline" 
-                className="h-auto p-6 flex flex-col items-start gap-3 border-emerald-500/30 bg-emerald-950/20 hover:bg-emerald-900/40 hover:border-emerald-400 transition-all text-left group min-w-0" 
+                className="h-auto p-3 sm:p-5 flex flex-col items-start gap-2 border-emerald-500/30 bg-emerald-950/20 hover:bg-emerald-900/40 hover:border-emerald-400 transition-all text-left group w-full overflow-hidden" 
                 onClick={handleEffectClick}
               >
-                <div className="w-full flex justify-between items-center gap-2 min-w-0">
-                  <span className="font-black text-emerald-400 uppercase tracking-widest text-base group-hover:scale-105 transition-transform shrink-0">
+                <div className="w-full flex justify-between items-center gap-2 min-w-0 overflow-hidden">
+                  <span className="font-black text-emerald-400 uppercase text-sm sm:text-base tracking-wide sm:tracking-widest truncate min-w-0 group-hover:scale-105 transition-transform">
                     {effect.name}
                   </span>
-                  <Badge className="bg-emerald-500 text-slate-900 font-bold border-none shadow-lg shrink-0">EFEKT</Badge>
+                  <Badge className="bg-emerald-500 text-slate-900 font-bold border-none shadow-lg whitespace-nowrap flex-shrink-0 text-[10px] sm:text-xs">EFEKT</Badge>
                 </div>
-                <span className="text-sm text-slate-300 leading-relaxed font-medium overflow-wrap w-full">
+                <span className="text-xs sm:text-sm text-slate-300 leading-relaxed font-medium w-full break-words whitespace-normal">
                   {effect.description}
                 </span>
-                <span className="text-[10px] text-emerald-500/50 uppercase font-bold tracking-tighter overflow-wrap w-full">
+                <span className="text-[9px] sm:text-[10px] text-emerald-500/50 uppercase font-bold tracking-tight w-full break-words whitespace-normal">
                   Účinek se aplikuje a karta zůstane položena na ploše L
                 </span>
               </Button>
@@ -161,14 +161,14 @@ export function EffectDialog({
             {/* VOLBA 2: MATEMATICKÝ SYMBOL */}
             <Button 
               variant="outline" 
-              className="h-20 flex flex-col items-center justify-center border-slate-700 bg-slate-800/50 hover:bg-slate-800 hover:border-blue-500/50 transition-all group" 
+              className="h-16 sm:h-20 flex flex-col items-center justify-center border-slate-700 bg-slate-800/50 hover:bg-slate-800 hover:border-blue-500/50 transition-all group w-full overflow-hidden" 
               onClick={() => handleEffectChoice('NONE')}
             >
-              <span className="font-bold text-xl group-hover:text-blue-400 transition-colors tracking-tight">Položit na plochu L</span>
-              <span className="text-[10px] text-slate-500 font-mono">Hrát jako symbol: {pendingEffect.card.symbol}</span>
+              <span className="font-bold text-base sm:text-xl group-hover:text-blue-400 transition-colors">Položit na plochu L</span>
+              <span className="text-[10px] text-slate-500 font-mono truncate w-full text-center px-2">Hrát jako symbol: {pendingEffect.card.symbol}</span>
             </Button>
 
-            <Button variant="ghost" className="mt-2 text-slate-600 hover:text-red-400 transition-colors" onClick={onClose}>
+            <Button variant="ghost" className="mt-1 text-slate-600 hover:text-red-400 transition-colors text-xs sm:text-sm" onClick={onClose}>
               Zrušit a vrátit kartu do ruky
             </Button>
           </div>
@@ -180,20 +180,20 @@ export function EffectDialog({
               <Button 
                 key={opponent.id} 
                 variant="outline" 
-                className="h-20 text-xl font-bold border-2 border-white/5 hover:border-red-500/50 hover:bg-red-950/10 transition-all flex justify-between px-8 rounded-2xl group"
+                className="h-16 sm:h-20 font-bold border-2 border-white/5 hover:border-red-500/50 hover:bg-red-950/10 transition-all flex justify-between px-4 sm:px-8 rounded-2xl group w-full overflow-hidden"
                 onClick={() => handleEffectChoice('ACTIVATE', opponent.id)}
               >
-                <div className="flex flex-col items-start">
-                  <span className="font-mono text-[10px] text-slate-500 uppercase tracking-widest group-hover:text-red-400">Oponent</span>
-                  <span className="font-chalk text-3xl tracking-widest">{opponent.name}</span>
+                <div className="flex flex-col items-start min-w-0 overflow-hidden">
+                  <span className="font-mono text-[10px] text-slate-500 uppercase tracking-wider group-hover:text-red-400">Oponent</span>
+                  <span className="font-chalk text-xl sm:text-3xl tracking-tight truncate">{opponent.name}</span>
                 </div>
-                <div className={`w-4 h-4 rounded-full ${opponent.theme.split(' ')[0]} border border-white/20 shadow-lg`} />
+                <div className={`w-4 h-4 rounded-full flex-shrink-0 ${opponent.theme.split(' ')[0]} border border-white/20 shadow-lg`} />
               </Button>
             ))}
 
             <Button 
               variant="ghost" 
-              className="mt-6 text-slate-500 hover:text-white font-mono text-xs tracking-widest" 
+              className="mt-4 text-slate-500 hover:text-white font-mono text-xs tracking-widest" 
               onClick={() => setEffectStep('CHOOSE_EFFECT')}
             >
               ← NÁVRAT K VÝBĚRU EFEKTU

@@ -22,8 +22,7 @@ import {
   TargetingOverlay, 
   HandoffScreen, 
   MinigameDialog, 
-  VictoryScreen, 
-  BracketOverlay,
+  VictoryScreen,
   DeckPreviewDialog,
   ModuloDialog
 } from '@/components/game/GameUI';
@@ -116,14 +115,7 @@ export default function App() {
         }} 
       />
 
-      <BracketOverlay 
-        bracketMode={state.bracketMode} 
-        players={state.players} 
-        currentPlayerId={currentPlayer.id} 
-        handleBracketClick={actions.handleBracketClick} 
-        onCancel={() => actions.setBracketMode(null)} 
-      />
-      
+
       <DeckPreviewDialog
         open={!!state.deckPreviewMode}
         deck={state.deck}
@@ -162,6 +154,7 @@ export default function App() {
             checkMathEngine: actions.checkMathEngine,
             handleEndTurn: actions.handleEndTurn,
             handleDiscard: actions.handleDiscard,
+            cancelBracketMode: actions.cancelBracketMode,
           }}
         />
       ) : deviceType === 'tablet' ? (
@@ -172,6 +165,7 @@ export default function App() {
             checkMathEngine: actions.checkMathEngine,
             handleEndTurn: actions.handleEndTurn,
             handleDiscard: actions.handleDiscard,
+            cancelBracketMode: actions.cancelBracketMode,
           }}
         />
       ) : (
@@ -182,6 +176,7 @@ export default function App() {
             checkMathEngine: actions.checkMathEngine,
             handleEndTurn: actions.handleEndTurn,
             handleDiscard: actions.handleDiscard,
+            cancelBracketMode: actions.cancelBracketMode,
           }}
         />
       )}
