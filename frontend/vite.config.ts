@@ -5,10 +5,12 @@ import { defineConfig } from "vite"
 import { VitePWA } from "vite-plugin-pwa" // <--- TADY JE NOVÝ IMPORT
 
 // https://vite.dev/config/
+const base = process.env.GITHUB_ACTIONS ? "/BC_hra_M/" : "/";
+
 export default defineConfig({
   // Pro GitHub Pages: base se nastaví podle názvu repozitáře
   // Lokálně "/" , na GitHub Pages "/NAZEV-REPO/"
-  base: process.env.GITHUB_ACTIONS ? "/BC_hra_M/" : "/",
+  base,
   plugins: [
     react(), 
     tailwindcss(),
@@ -22,20 +24,20 @@ export default defineConfig({
         name: 'Math4fun',
         short_name: 'Math4fun',
         description: 'Matematická karetní duelovka z univerzitního prostředí.',
-        start_url: '/',
-        scope: '/',
+        start_url: base,
+        scope: base,
         theme_color: '#0f172a',
         background_color: '#0f172a',
         display: 'standalone',
         icons: [
           {
-            src: '/icons/icon-192.png',
+            src: `${base}icons/icon-192.png`,
             sizes: '192x192',
             type: 'image/png',
             purpose: 'any'
           },
           {
-            src: '/icons/icon-512.png',
+            src: `${base}icons/icon-512.png`,
             sizes: '512x512',
             type: 'image/png',
             purpose: 'any maskable'
