@@ -1,11 +1,12 @@
 import { useDraggable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 import type { GameCard } from '@/lib/effects';
+import type { Player } from '@/lib/effects';
 
 interface BracketsDisplayProps {
   syntax: GameCard[];
   onBracketDragStart: (bracket: GameCard, pairIndex: number) => void;
-  currentPlayer: any;
+  currentPlayer: Player;
 }
 
 // Mapování symbolu závorky na vizuální label

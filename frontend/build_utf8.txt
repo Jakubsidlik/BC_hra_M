@@ -1,0 +1,75 @@
+﻿
+> BC_hra@0.0.0 build
+> tsc -b && vite build
+
+[36mvite v7.3.1 [32mbuilding client environment for production...[36m[39m
+transforming...
+[32mÔťô[39m 1875 modules transformed.
+node.exe : [31mÔťŚ[39m Build failed in 1.65s
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Pro
+gram Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ( 
+   [31mÔťŚ[39m Build failed in 1.65s:Strin  
+  g) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandEr 
+   ror
+ 
+[31merror during build:
+[31m[vite-plugin-pwa:build] There was an erro
+r during the build:
+  src/lib/gameHelpers.ts (272:9): "cardsDataba
+se" is not exported by "src/data/cardsDB.js", 
+imported by "src/lib/gameHelpers.ts".
+Additionally, handling the error in the 'build
+End' hook caused the following error:
+  src/lib/gameHelpers.ts (272:9): "cardsDataba
+se" is not exported by "src/data/cardsDB.js", 
+imported by "src/lib/gameHelpers.ts".[31m
+file: [36mC:/Users/jakub/OneDrive/Dokumenty/G
+itHub/BC_hra_M/frontend/src/lib/gameHelpers.ts
+:272:9[31m
+[33m
+270: 
+271: // 5. GENEROV├üN├Ź BAL├Ź─îKU (Pokud ji m├
+í┼í vy┼Öe┼íenou jinak, nahra─Ć svou p┼»vodn├ş)
+272: import { cardsDatabase } from '../data/ca
+rdsDB';
+              ^
+273: export function generateFilteredDeck(diff
+iculty: DifficultyMode): GameCard[] {
+274:   const deck: GameCard[] = [];
+[31m
+    at getRollupError (file:///C:/Users/jakub/
+OneDrive/Dokumenty/GitHub/BC_hra_M/frontend/no
+de_modules/rollup/dist/es/shared/parseAst.js:4
+02:41)
+    at file:///C:/Users/jakub/OneDrive/Dokumen
+ty/GitHub/BC_hra_M/frontend/node_modules/rollu
+p/dist/es/shared/node-entry.js:23467:39
+    at async catchUnfinishedHookActions (file:
+///C:/Users/jakub/OneDrive/Dokumenty/GitHub/BC
+_hra_M/frontend/node_modules/rollup/dist/es/sh
+ared/node-entry.js:22925:16)
+    at async rollupInternal (file:///C:/Users/
+jakub/OneDrive/Dokumenty/GitHub/BC_hra_M/front
+end/node_modules/rollup/dist/es/shared/node-en
+try.js:23450:5)
+    at async buildEnvironment (file:///C:/User
+s/jakub/OneDrive/Dokumenty/GitHub/BC_hra_M/fro
+ntend/node_modules/vite/dist/node/chunks/confi
+g.js:33541:12)
+    at async Object.build (file:///C:/Users/ja
+kub/OneDrive/Dokumenty/GitHub/BC_hra_M/fronten
+d/node_modules/vite/dist/node/chunks/config.js
+:33900:19)
+    at async Object.buildApp (file:///C:/Users
+/jakub/OneDrive/Dokumenty/GitHub/BC_hra_M/fron
+tend/node_modules/vite/dist/node/chunks/config
+.js:33897:153)
+    at async CAC.<anonymous> (file:///C:/Users
+/jakub/OneDrive/Dokumenty/GitHub/BC_hra_M/fron
+tend/node_modules/vite/dist/node/cli.js:629:3)
+[39m

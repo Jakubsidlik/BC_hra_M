@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /// <reference types="react" />
 
 // This file provides a catch-all JSX.IntrinsicElements declaration

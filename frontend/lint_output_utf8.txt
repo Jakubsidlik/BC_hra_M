@@ -1,0 +1,72 @@
+﻿
+> BC_hra@0.0.0 lint
+> eslint .
+
+
+C:\Users\jakub\OneDrive\Dokumenty\GitHub\BC_hra_M\frontend\dev-dist\workbox-5a5d9309.js
+    69:7   error  Definition for rule '@typescript-eslint/ban-types' was not found                @typescript-eslint/ban-types
+   436:5   error  Definition for rule '@typescript-eslint/ban-types' was not found                @typescript-eslint/ban-types
+   769:11  error  Definition for rule '@typescript-eslint/no-unsafe-member-access' was not found  @typescript-eslint/no-unsafe-member-access
+   771:13  error  Definition for rule '@typescript-eslint/no-unsafe-assignment' was not found     @typescript-eslint/no-unsafe-assignment
+   965:11  error  Definition for rule '@typescript-eslint/no-unsafe-assignment' was not found     @typescript-eslint/no-unsafe-assignment
+   981:13  error  Definition for rule '@typescript-eslint/no-unsafe-assignment' was not found     @typescript-eslint/no-unsafe-assignment
+  1665:5   error  Definition for rule '@typescript-eslint/ban-types' was not found                @typescript-eslint/ban-types
+  2793:9   error  Definition for rule '@typescript-eslint/no-unsafe-return' was not found         @typescript-eslint/no-unsafe-return
+  2840:9   error  Definition for rule '@typescript-eslint/no-unsafe-return' was not found         @typescript-eslint/no-unsafe-return
+
+C:\Users\jakub\OneDrive\Dokumenty\GitHub\BC_hra_M\frontend\src\App.tsx
+  13:10  error  'HandCard' is defined but never used   @typescript-eslint/no-unused-vars
+  13:20  error  'BoardArea' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\jakub\OneDrive\Dokumenty\GitHub\BC_hra_M\frontend\src\components\game\DesktopGameLayout.tsx
+  224:74  error  React Hook "useDraggable" is called conditionally. React Hooks must be called in the exact same order in every component render  react-hooks/rules-of-hooks
+  254:72  error  React Hook "useDraggable" is called conditionally. React Hooks must be called in the exact same order in every component render  react-hooks/rules-of-hooks
+
+C:\Users\jakub\OneDrive\Dokumenty\GitHub\BC_hra_M\frontend\src\components\game\GameUI.tsx
+   82:109  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  257:74   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  303:105  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  453:38   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\jakub\OneDrive\Dokumenty\GitHub\BC_hra_M\frontend\src\components\game\MobileGameLayout.tsx
+  324:74  error  React Hook "useDraggable" is called conditionally. React Hooks must be called in the exact same order in every component render  react-hooks/rules-of-hooks
+  362:72  error  React Hook "useDraggable" is called conditionally. React Hooks must be called in the exact same order in every component render  react-hooks/rules-of-hooks
+
+C:\Users\jakub\OneDrive\Dokumenty\GitHub\BC_hra_M\frontend\src\components\game\TabletGameLayout.tsx
+  216:74  error  React Hook "useDraggable" is called conditionally. React Hooks must be called in the exact same order in every component render  react-hooks/rules-of-hooks
+  248:72  error  React Hook "useDraggable" is called conditionally. React Hooks must be called in the exact same order in every component render  react-hooks/rules-of-hooks
+
+C:\Users\jakub\OneDrive\Dokumenty\GitHub\BC_hra_M\frontend\src\global.d.ts
+  10:27  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\jakub\OneDrive\Dokumenty\GitHub\BC_hra_M\frontend\src\hooks\useGameEngine.ts
+  523:6   warning  React Hook useCallback has missing dependencies: 'flattenCardTree' and 'removeCardRecursively'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  532:17  error    Unexpected any. Specify a different type                                                                                                            @typescript-eslint/no-explicit-any
+
+C:\Users\jakub\OneDrive\Dokumenty\GitHub\BC_hra_M\frontend\src\hooks\usePWAInstall.ts
+  23:28  error  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+  24:5   error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\jakub\OneDrive\Dokumenty\GitHub\BC_hra_M\frontend\src\hooks\usePWAInstall.ts:24:5
+  22 |       window.matchMedia('(display-mode: standalone)').matches ||
+  23 |       (window.navigator as any).standalone === true;
+> 24 |     setIsInstalled(isStandalone);
+     |     ^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  25 |
+  26 |     const handler = (e: Event) => {
+  27 |       e.preventDefault(); // Zabr├ínit automatick├ęmu banneru prohl├ş┼że─Źe  react-hooks/set-state-in-effect
+
+C:\Users\jakub\OneDrive\Dokumenty\GitHub\BC_hra_M\frontend\src\lib\effects.ts
+  275:7  error  Unexpected lexical declaration in case block  no-case-declarations
+  288:7  error  Unexpected lexical declaration in case block  no-case-declarations
+  301:7  error  Unexpected lexical declaration in case block  no-case-declarations
+  314:7  error  Unexpected lexical declaration in case block  no-case-declarations
+
+Ôťľ 30 problems (29 errors, 1 warning)
+

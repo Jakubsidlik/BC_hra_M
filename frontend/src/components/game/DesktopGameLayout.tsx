@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useState } from 'react';
 import { useDraggable, useDroppable, useDndMonitor } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
@@ -156,7 +155,7 @@ function DesktopDiscardSlot({ discardCount, isDiscarding, palette }: { discardCo
 // ==========================================
 // DESKTOP DRAGGABLE BOARD CARD
 // ==========================================
-function DraggableBoardCard({ card, palette, hasModifiedBoardThisTurn }: { card: GameCard; palette: ThemePalette; hasModifiedBoardThisTurn: boolean }) {
+function DraggableBoardCard({ card, palette }: { card: GameCard; palette: ThemePalette; hasModifiedBoardThisTurn: boolean }) {
   const cardData = cardsDatabase[card.symbol];
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: card.id,
@@ -315,7 +314,6 @@ export function DesktopGameLayout({ currentPlayer, state, actions }: DesktopGame
     onDragCancel: () => setIsDraggingCard(false),
   });
 
-  const modifierCard = currentPlayer.hand[0] ?? null;
   const handCards = currentPlayer.hand;
 
   return (

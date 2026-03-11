@@ -1,13 +1,6 @@
-// @ts-nocheck
-// ensure JSX intrinsic elements are recognized (workaround for language-server glitches)
-import * as React from 'react';
-import type { JSX } from 'react/jsx-runtime';
 
 import { DndContext, useSensor, useSensors, MouseSensor, TouchSensor } from '@dnd-kit/core';
-import type { DifficultyMode } from '@/lib/gameHelpers';
-import { Button } from "@/components/ui/button";
 import { Toaster } from "sonner";
-import { Badge } from "@/components/ui/badge";
 
 // Importy Hooku a dat
 import { useGameEngine } from '@/hooks/useGameEngine';
@@ -15,8 +8,6 @@ import { cardsDatabase } from '@/data/cardsDB';
 import { useDeviceType } from '@/hooks/useDeviceType';
 
 // Importy Komponent
-import { HandCard, BoardArea } from '@/components/game/Cards';
-import { BracketsDisplay } from '@/components/game/BracketsDisplay';
 import { 
   EffectDialog, 
   TargetingOverlay, 
@@ -29,7 +20,6 @@ import {
 import { SetupScreen } from '@/components/game/SetupScreen';
 import { MainMenu, RulesScreen, DifficultySelection } from '@/components/game/StartScreens';
 import { IntegralSetupDialog } from '@/components/game/IntegralSetupDialog';
-import { DiscardZone } from '@/components/game/DiscardZone';
 import { MobileGameLayout } from '@/components/game/MobileGameLayout';
 import { TabletGameLayout } from '@/components/game/TabletGameLayout';
 import { DesktopGameLayout } from '@/components/game/DesktopGameLayout';
@@ -55,7 +45,6 @@ export default function App() {
   if (!currentPlayer) return null;
 
   return (
-    // @ts-ignore
     <DndContext onDragEnd={actions.handleDragEnd} sensors={sensors}>
       <Toaster
         position="top-center"

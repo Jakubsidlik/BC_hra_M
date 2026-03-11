@@ -534,7 +534,7 @@ export function useGameEngine() {
   if (choice === 'ACTIVATE') {
     const effect = cardsDatabase[pendingEffect.card.symbol]?.effects?.optionA;
     if (effect) {
-      let activeId = effect.id;
+      const activeId = effect.id;
 
       // Pokud efekt vyžaduje kartu soupeře a ID karty ještě nemáme, zapneme TargetingMode
       const cardTargetingEffects = ['EFF_002'];

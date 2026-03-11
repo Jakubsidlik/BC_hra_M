@@ -271,7 +271,7 @@ export const applyEffectLogic = (
       activePlayer.status.infinitePlays = true;
       break;
 
-    case "EFF_018": // sin: Všichni si předají karty po směru (clockwise)
+    case "EFF_018": { // sin: Všichni si předají karty po směru (clockwise)
       const tempHands1 = newPlayers.map(p => [...p.hand]);
       for (let i = 0; i < newPlayers.length; i++) {
         const nextIndex = (i + 1) % newPlayers.length;
@@ -283,8 +283,9 @@ export const applyEffectLogic = (
         }
       });
       break;
+    }
 
-    case "EFF_019": // cos: Všichni si předají karty proti směru (counter-clockwise)
+    case "EFF_019": { // cos: Všichni si předají karty proti směru (counter-clockwise)
       const tempHands2 = newPlayers.map(p => [...p.hand]);
       for (let i = 0; i < newPlayers.length; i++) {
         const prevIndex = (i - 1 + newPlayers.length) % newPlayers.length;
@@ -296,8 +297,9 @@ export const applyEffectLogic = (
         }
       });
       break;
+    }
 
-    case "EFF_020": // tg: Všichni si předají karty po směru
+    case "EFF_020": { // tg: Všichni si předají karty po směru
       const tempHands3 = newPlayers.map(p => [...p.hand]);
       for (let i = 0; i < newPlayers.length; i++) {
         const nextIndex = (i + 1) % newPlayers.length;
@@ -309,8 +311,9 @@ export const applyEffectLogic = (
         }
       });
       break;
+    }
 
-    case "EFF_021": // cotg: Všichni si předají karty proti směru
+    case "EFF_021": { // cotg: Všichni si předají karty proti směru
       const tempHands4 = newPlayers.map(p => [...p.hand]);
       for (let i = 0; i < newPlayers.length; i++) {
         const prevIndex = (i - 1 + newPlayers.length) % newPlayers.length;
@@ -322,6 +325,7 @@ export const applyEffectLogic = (
         }
       });
       break;
+    }
 
     case "EFF_022": // nCk: Prohození cifer v R cílového oponenta
       if (targetPlayer && typeof targetPlayer.targetR === 'number') {
