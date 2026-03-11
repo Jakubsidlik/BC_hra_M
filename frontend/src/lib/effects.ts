@@ -89,7 +89,7 @@ export const applyEffectLogic = (
   // Hluboká kopie stavu
   const newPlayers: Player[] = JSON.parse(JSON.stringify(currentState));
   const activePlayer = newPlayers[currentPlayerIndex];
-  
+
   newPlayers.forEach(ensureStatus);
 
   // Určení cílového hráče (pokud není vybrán, bere se následující)
@@ -103,7 +103,7 @@ export const applyEffectLogic = (
   if (targetPlayer && targetPlayer.id !== activePlayer.id && targetPlayer.status.immune && immuneEffects.includes(effectId)) {
     console.log(`Efekt ${effectId} zrušen: Hráč ${targetPlayer.name} má imunitu!`);
     if (activePlayer.status.notifications) {
-       activePlayer.status.notifications.push(`Tvůj útok na hráče ${targetPlayer.name} selhal kvůli imunitě!`);
+      activePlayer.status.notifications.push(`Tvůj útok na hráče ${targetPlayer.name} selhal kvůli imunitě!`);
     }
     return newPlayers;
   }
@@ -118,7 +118,7 @@ export const applyEffectLogic = (
     case "EFF_002": // π: Výměna 1 karty z vlastního L za kartu z L oponenta
       if (targetPlayer && targetCardId && playedCard) {
         let swappedCard: GameCard | null = null;
-        
+
         const findAndSwap = (cards: GameCard[]): GameCard[] => {
           return cards.map(c => {
             if (c.id === targetCardId) {
@@ -132,7 +132,7 @@ export const applyEffectLogic = (
             return c;
           });
         };
-        
+
         targetPlayer.board = findAndSwap(targetPlayer.board);
         if (swappedCard) {
           activePlayer.hand.push(swappedCard);
@@ -231,7 +231,7 @@ export const applyEffectLogic = (
       if (targetPlayer) {
         const constantSymbols = ['π', 'e', 'x', 'y'];
         let removed = false;
-        
+
         const removeConstants = (cards: GameCard[]): GameCard[] => {
           return cards.filter(c => {
             if (constantSymbols.includes(c.symbol)) {
@@ -245,7 +245,7 @@ export const applyEffectLogic = (
             return true;
           });
         };
-        
+
         targetPlayer.board = removeConstants(targetPlayer.board);
         if (removed) {
           targetPlayer.status.notifications.push(`📉 Hráč ${activePlayer.name} ti derivoval - všechny konstanty zmizely!`);
@@ -340,7 +340,7 @@ export const applyEffectLogic = (
       newPlayers.forEach((p: Player) => {
         p.status.numberLock = true;
       });
-      newPlayers[currentPlayerIndex].status.notifications.push(`🔐 Zákaz čísel pro všechny na příští kolo!`);
+      newPlayers[currentPlayerIndex].status.notifications.push(` Zákaz čísel pro všechny na příští kolo!`);
       break;
 
     case "EFF_024": // lim: Zrušení všech aktivních efektů u všech hráčů
@@ -373,7 +373,7 @@ export const applyEffectLogic = (
       newPlayers.forEach((p: Player) => {
         if (p.id !== activePlayer.id) {
           p.status.drawReduction = (p.status.drawReduction || 0) + 1;
-          p.status.notifications.push(`🥶 Hráč ${activePlayer.name} tě připravil o doberání 1 karty!`);
+          p.status.notifications.push(` Hráč ${activePlayer.name} tě připravil o doberání 1 karty!`);
         }
       });
       break;

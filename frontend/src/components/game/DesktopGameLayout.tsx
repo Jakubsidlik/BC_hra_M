@@ -38,8 +38,8 @@ function getDesktopPalette(themeId: string): ThemePalette {
 }
 
 // Desktop card dimensions (larger than mobile/tablet)
-const CARD_W = '7.26rem';
-const CARD_H = '10.88rem';
+const CARD_W = '8.35rem';
+const CARD_H = '12.5rem';
 
 // ==========================================
 // DESKTOP HAND CARD (fan footer)
@@ -163,8 +163,8 @@ function DraggableBoardCard({ card, palette }: { card: GameCard; palette: ThemeP
   });
 
   const style: React.CSSProperties = {
-    width: '4.5rem',
-    height: '6.75rem',
+    width: '5.15rem',
+    height: '7.75rem',
     backgroundColor: `${palette.bgDark}cc`,
     borderColor: isDragging ? palette.primary : 'rgba(255,255,255,0.25)',
     transform: transform ? CSS.Translate.toString(transform) : undefined,
@@ -275,9 +275,9 @@ function BracketCard({ syntax, bracketMode, palette, onCancel }: {
       {exhausted
         ? <span className="text-[9px] uppercase tracking-tight text-white/30 font-bold text-center px-1">Závorky vyčerpány</span>
         : <>
-            <span className="text-lg font-black text-white leading-none">{firstOpen!.symbol}</span>
-            <span className="text-[9px] uppercase tracking-tight text-white/40 font-bold mt-1">Závorky</span>
-          </>
+          <span className="text-lg font-black text-white leading-none">{firstOpen!.symbol}</span>
+          <span className="text-[9px] uppercase tracking-tight text-white/40 font-bold mt-1">Závorky</span>
+        </>
       }
     </div>
   );
@@ -347,8 +347,8 @@ export function DesktopGameLayout({ currentPlayer, state, actions }: DesktopGame
       </nav>
 
       {/* ── MAIN ── */}
-      {/* Desktop: max-w-[1200px], pt-0, gap-4 */}
-      <main className="flex-1 flex flex-col mx-auto w-full p-2 max-w-[1200px] pt-0 gap-4">
+      {/* Desktop: max-w-[90vw] téměř přes celou šířku, pt-0, gap-4 */}
+      <main className="flex-1 flex flex-col mx-auto w-full px-6 max-w-[90vw] pt-0 gap-4">
 
         {/* CHALKBOARD — aspect-[21/9] ultra-wide for desktop */}
         <section className="relative group">
@@ -360,8 +360,8 @@ export function DesktopGameLayout({ currentPlayer, state, actions }: DesktopGame
               backgroundColor: palette.bgMid,
               backgroundImage: `radial-gradient(circle, ${palette.bgDot} 1px, transparent 1px)`,
               backgroundSize: '30px 30px',
-              aspectRatio: '21/9',
-              minHeight: '220px',
+              aspectRatio: '21 / 6.3',
+              minHeight: '154px',
             }}
           >
             <div
