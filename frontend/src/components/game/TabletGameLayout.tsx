@@ -172,7 +172,7 @@ function DraggableBoardCard({ card, palette, hasModifiedBoardThisTurn }: { card:
       {...listeners}
       {...attributes}
       className={`rounded-md border-2 flex items-center justify-center shadow-md transition-colors duration-700
-        ${!hasModifiedBoardThisTurn ? 'cursor-grab active:cursor-grabbing hover:border-red-400/60 hover:scale-105' : 'cursor-default'}
+        cursor-grab active:cursor-grabbing hover:border-red-400/60 hover:scale-105
       `}
       style={style}
     >
@@ -474,7 +474,7 @@ export function TabletGameLayout({ currentPlayer, state, actions }: TabletGameLa
         className="mt-auto pb-12 pt-2 px-4 transition-colors duration-700"
         style={{ background: `linear-gradient(to top, ${palette.footerBg} 0%, transparent 100%)` }}
       >
-        <div className="relative h-40 max-w-lg mx-auto flex justify-center items-end select-none">
+        <div className="relative h-40 max-w-lg mx-auto flex justify-center items-end select-none" style={{ transform: 'translateY(-160px)' }}>
           {handCards.map((card, index) => (
             <TabletHandCard
               key={card.id}

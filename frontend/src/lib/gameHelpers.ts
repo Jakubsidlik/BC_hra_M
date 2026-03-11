@@ -120,6 +120,48 @@ export function parseBoardToMathString(board: GameCard[]): string {
     const card = board[i];
     let sym = symbolMap[card.symbol] || card.symbol;
 
+    if (i > 0) {
+      const prevCard = board[i - 1];
+      const prevIsDigitOrVar = prevCard.symbol.match(/^[0-9]$/) || ['x', 'y', 'π', 'e'].includes(prevCard.symbol);
+      const currIsDigitOrVar = card.symbol.match(/^[0-9]$/) || ['x', 'y', 'π', 'e'].includes(card.symbol);
+      const prevIsCloseBracket = [')', ']', '}'].includes(prevCard.symbol);
+      const currIsOpenBracket = ['(', '[', '{'].includes(card.symbol);
+      const functionPrefixes = ['sin', 'cos', 'tg', 'cotg', 'log', 'ln', 'sqrt', '∫', '∑', 'lim'];
+      const currIsFunction = functionPrefixes.some(pf => card.symbol === pf || card.symbol.startsWith(pf + '('));
+
+      // Pravidla pro implicitní násobení:
+      // 1) Číslo/Proměnná -> Otevírací závorka  (např. "5(")
+      // 2) Číslo/Proměnná -> Funkce             (např. "2sin")
+      // 3) Uzavírací závorka -> Otevírací závorka (např. ")(")
+      // 4) Uzavírací závorka -> Číslo/Proměnná  (např. ")5")
+      // 5) Uzavírací závorka -> Funkce          (např. ")sin")
+      if (
+        (prevIsDigitOrVar && currIsOpenBracket) ||
+        (prevIsDigitOrVar && currIsFunction) ||
+        (prevIsCloseBracket && currIsOpenBracket) ||
+        (prevIsCloseBracket && currIsDigitOrVar) ||
+        (prevIsCloseBracket && currIsFunction)
+      ) {
+        result += "*";
+      }
+    }
+
+    // Specifické překlady pro SymPy uvnitř symbolů s novými formacemi (závorka s parametry úhlů)
+    // Zachycuje vzor např. "sin(45°, π/4)" a vytáhne radián "π/4"
+    const goniometryMatch = sym.match(/^(sin|cos|tg|cotg)\(.*,\s*(.*)\)$/);
+    if (goniometryMatch) {
+      const func = goniometryMatch[1] === 'tg' ? 'tan' : 
+                   goniometryMatch[1] === 'cotg' ? 'cot' : 
+                   goniometryMatch[1];
+      const radian = goniometryMatch[2].replace(/π/g, 'pi');
+      sym = `${func}(${radian})`;
+    } else {
+      // Původní fallback překlady
+      sym = sym.replace(/^tg\(/, 'tan(');
+      sym = sym.replace(/^cotg\(/, 'cot(');
+      sym = sym.replace(/π/g, 'pi');
+    }
+
     // 1. ZPRACOVÁNÍ PREFIXOVÝCH FUNKCÍ (Integrál, Suma, atd.)
     if (['∫', '∑', 'lim'].includes(card.symbol)) {
       // Tady je trik: integrál "vysaje" jen to, co je v jeho dosahu
@@ -132,6 +174,8 @@ export function parseBoardToMathString(board: GameCard[]): string {
         result += `Integral(${inner}, (x, ${card.integralBounds.lower}, ${card.integralBounds.upper}))`;
       } else if (card.symbol === '∑' && card.integralBounds) {
         result += `Sum(${inner}, (n, ${card.integralBounds.lower}, ${card.integralBounds.upper}))`;
+      } else if (card.symbol === 'lim') {
+        result += `Limit(${inner}, x, 0)`; // Zjednodušená limita
       }
       
       // DŮLEŽITÉ: Po prefixové funkci už zbytek v tomto cyklu nezpracováváme,
@@ -155,13 +199,40 @@ export function parseBoardToMathString(board: GameCard[]): string {
 
 // 4. POMOCNÉ FUNKCE PRO UI
 export function hasOperation(board: GameCard[]): boolean {
-  // Všechny operace s efekty: +, -, *, /, a^b, sqrt, mod, n!, d/dx, int, ∑, log, sin, cos, tg, cotg, nCk, ∏, lim, det
+  // Všechny operace s efekty: +, -, *, /, a^b, sqrt, mod, n!, d/dx, int, ∑, log, nCk, ∏, lim, det
+  // Goniometrické funkce jako sin, cos, tg, cotg už se sem neřadí, pohlíží se na ně jako na entity vyhodnotitelné samostatně/čísla.
   const operations = [
     '+', '-', '*', '/', 'a^b', 'sqrt', 'mod', 'n!', 'd/dx', 'int',
-    '∑', 'log', 'sin', 'cos', 'tg', 'cotg', 'nCk', '∏', 'lim', 'det',
+    '∑', 'log', 'ln', 'nCk', '∏', 'lim', 'det',
     '∫', // alternativní symbol pro integrál
   ];
-  return board.some(card => operations.includes(card.symbol) || card.exponent);
+  const hasExplicitOp = board.some(card => operations.includes(card.symbol) || card.exponent);
+  if (hasExplicitOp) return true;
+
+  // Detekce implicitního násobení
+  for (let i = 1; i < board.length; i++) {
+    const prevCard = board[i - 1];
+    const card = board[i];
+    
+    const prevIsDigitOrVar = prevCard.symbol.match(/^[0-9]$/) || ['x', 'y', 'π', 'e'].includes(prevCard.symbol);
+    const currIsDigitOrVar = card.symbol.match(/^[0-9]$/) || ['x', 'y', 'π', 'e'].includes(card.symbol);
+    const prevIsCloseBracket = [')', ']', '}'].includes(prevCard.symbol);
+    const currIsOpenBracket = ['(', '[', '{'].includes(card.symbol);
+    const functionPrefixes = ['sin', 'cos', 'tg', 'cotg', 'log', 'ln', 'sqrt', '∫', '∑', 'lim'];
+    const currIsFunction = functionPrefixes.some(pf => card.symbol === pf || card.symbol.startsWith(pf + '('));
+
+    if (
+      (prevIsDigitOrVar && currIsOpenBracket) ||
+      (prevIsDigitOrVar && currIsFunction) ||
+      (prevIsCloseBracket && currIsOpenBracket) ||
+      (prevIsCloseBracket && currIsDigitOrVar) ||
+      (prevIsCloseBracket && currIsFunction)
+    ) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 export function getTargetName(targetCode?: string): string {
@@ -177,7 +248,7 @@ export function getTargetName(targetCode?: string): string {
 
 export function getBorderColor(symbol: string): string {
   // Čísla: modré
-  if (!isNaN(Number(symbol)) || ['π', 'e'].includes(symbol)) return 'border-blue-500';
+  if (!isNaN(Number(symbol)) || ['π', 'e'].includes(symbol) || ['sin', 'cos', 'tg', 'cotg'].some(pf => symbol.startsWith(pf + '('))) return 'border-blue-500';
   
   // Proměnné: šedé
   if (['x', 'y', 'n'].includes(symbol)) return 'border-slate-400';
@@ -188,7 +259,7 @@ export function getBorderColor(symbol: string): string {
   // Operace: oranžové
   const operators = [
     '+', '-', '*', '/', 'a^b', 'sqrt', 'mod', 'n!', 
-    'd/dx', 'int', '∑', 'log', 'ln', 'sin', 'cos', 'tg', 'cotg', 
+    'd/dx', 'int', '∑', 'log', 'ln', 
     'nCk', '∏', 'lim', 'det'
   ];
   if (operators.includes(symbol)) return 'border-orange-500';
@@ -224,7 +295,9 @@ export function generateFilteredDeck(difficulty: DifficultyMode): GameCard[] {
   const excludedCards = difficultyFilters[difficulty];
   
   Object.keys(cardsDatabase).forEach(symbol => {
-    if (excludedCards.includes(symbol)) return;
+    // Vyloučení pokud sedí přesně NEBO pokud je to funkce s úhlovým parametrem (např. 'sin(0)' a ex je 'sin')
+    const isExcluded = excludedCards.some(ex => symbol === ex || symbol.startsWith(ex + '('));
+    if (isExcluded) return;
     
     const cardData = cardsDatabase[symbol];
     // Přidáme počet kopií podle count v databázi

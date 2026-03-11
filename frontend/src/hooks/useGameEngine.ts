@@ -240,6 +240,24 @@ export function useGameEngine() {
     const expression = parseBoardToMathString(curr.board);
     if (!expression.trim()) return toast.error("Plocha L je prázdná!");
     if (!hasOperation(curr.board)) return toast.error("Výraz L musí obsahovat alespoň jednu operaci!");
+
+    // Validace: nesmí být dvě sousední × nebo ÷ operace vedle sebe
+    const mulDivSymbols = new Set(['*', '/', '×', '÷', '·']);
+    const hasSideBySideMulDiv = curr.board.some((c, i) => {
+      if (i === 0) return false;
+      return mulDivSymbols.has(c.symbol) && mulDivSymbols.has(curr.board[i - 1].symbol);
+    });
+    if (hasSideBySideMulDiv) {
+      toast.error("Dvě operace × nebo ÷ nesmí být vedle sebe!");
+      setPlayers(prev => {
+        const next = JSON.parse(JSON.stringify(prev));
+        setDiscardPile(old => [...old, ...next[currentPlayerIndex].board]);
+        next[currentPlayerIndex].board = [];
+        return next;
+      });
+      setHasModifiedBoardThisTurn(true);
+      return;
+    }
     
     const toastId = toast.loading("Ověřování...");
     try {
@@ -383,16 +401,6 @@ export function useGameEngine() {
         if (hasModifiedBoardThisTurn) return toast.error("Již jsi provedl akci.");
         const { removed, newCards } = removeCardRecursively(players[currentPlayerIndex].board, active.id as string);
         if (removed) {
-          // Validace: nesmí být dvě sousední * nebo / operace za sebou
-          const mulDivSymbols = new Set(['*', '/', '×', '÷', '·']);
-          const hasSideBySideMulDiv = newCards.some((c, i) => {
-            if (i === 0) return false;
-            return mulDivSymbols.has(c.symbol) && mulDivSymbols.has(newCards[i - 1].symbol);
-          });
-          if (hasSideBySideMulDiv) {
-            return toast.error("Nepovolený tah! Dvě operace × nebo ÷ nesmí být vedle sebe.", { icon: '🚫' });
-          }
-
           setPlayers(prev => {
             const next = JSON.parse(JSON.stringify(prev));
             next[currentPlayerIndex].board = newCards;
@@ -405,19 +413,23 @@ export function useGameEngine() {
       return;
     }
 
-    if (hasModifiedBoardThisTurn) return toast.error("Za kolo smíš provést 1 akci!");
-    
+    // Zjistíme jestli karta pochází z ruky nebo syntax (tj. jde o novou akci)
     const card = players[currentPlayerIndex].hand.find(c => c.id === active.id) || 
                  players[currentPlayerIndex].syntax.find(c => c.id === active.id);
-    
-    // Pokud karta není v ruce ani syntax, zkontroluj zda není na tabuli
-    // Karta z tabule může být tažena pouze na drop-discard (to bylo zpracováno výše)
-    if (!card) {
-      const isOnBoard = players[currentPlayerIndex].board.some(c => c.id === active.id);
-      if (isOnBoard) return; // Karta z tabule přetažená jinam → ignoruj
+
+    const overId = String(over.id);
+    let targetId: string | null = null;
+    let insertPosition: number | undefined = undefined;
+
+    // Pokud uživatel už akci tento tah provedl, chceme zjistit, jestli jde JEN o přesazení karty uvnitř boardu
+    // Pokud je karta POUZE na tabuli (není v ruce ani v syntax), má povoleno se přesouvat.
+    const isOnlyOnBoard = !card && players[currentPlayerIndex].board.some(c => c.id === active.id);
+    if (hasModifiedBoardThisTurn && !isOnlyOnBoard) {
+      return toast.error("Za kolo smíš z ruky provést pouze 1 akci!");
     }
-                 
+    
     // DŮLEŽITÉ: Pokud se karta nenajde, zkusíme ji z active.data
+    // Zde buď našla karta z hand/syntax, NEBO isOnlyOnBoard si ji vezme z active.data
     const cardToPlace = card || (active.data.current as GameCard | undefined);
     if (!cardToPlace) {
       toast.error("Chyba: Karta se nenašla. Zkus to znova.");
@@ -425,10 +437,6 @@ export function useGameEngine() {
     }
     
     // Rozpoznání typu drop zóny
-    const overId = String(over.id);
-    let targetId: string | null = null;
-    let insertPosition: number | undefined = undefined;
-    
     if (overId.startsWith('drop-exponent-')) {
       targetId = (over.data.current as DropData).parentId;
     } else if (overId.includes('-before-')) {
@@ -473,22 +481,44 @@ export function useGameEngine() {
       // (playLimit resets each turn via nextTurn clearing; we track via hasModifiedBoardThisTurn for limit=1)
       // The basic limit=1 case: hasModifiedBoardThisTurn already catches it (same error path above)
 
-      // Validace: nesmí být dvě sousední × nebo ÷ operace vedle sebe
-      const mulDivSymbols = new Set(['*', '/', '×', '÷', '·']);
-      if (mulDivSymbols.has(cardToPlace.symbol) && targetId === null && insertPosition !== undefined) {
-        const board = players[currentPlayerIndex].board;
-        const simulated = [...board];
-        simulated.splice(insertPosition, 0, cardToPlace);
-        const hasSideBySideMulDiv = simulated.some((c, i) => {
-          if (i === 0) return false;
-          return mulDivSymbols.has(c.symbol) && mulDivSymbols.has(simulated[i - 1].symbol);
+      // Speciální funkce pro pouhý přesun na tabuli
+      if (isOnlyOnBoard) {
+        setPlayers(prev => {
+          const next = JSON.parse(JSON.stringify(prev));
+          const p = next[currentPlayerIndex];
+          const originIndex = p.board.findIndex((c: GameCard) => c.id === cardToPlace.id);
+          
+          if (originIndex !== -1 && targetId === null && insertPosition !== undefined) {
+             // Zjistíme posun indexování
+             let adjustedPos = insertPosition;
+             if (originIndex < insertPosition) adjustedPos -= 1;
+             
+             // Přemístíme
+             const [movedCard] = p.board.splice(originIndex, 1);
+             p.board.splice(adjustedPos, 0, movedCard);
+          } else if (originIndex !== -1 && targetId) {
+             // Přidání k exponentu uvnitř tabule
+             const [movedCard] = p.board.splice(originIndex, 1);
+             
+             const canAddExponent = (targetCard: GameCard): boolean => {
+               const targetData = cardsDatabase[targetCard.symbol];
+               const cardData = cardsDatabase[movedCard.symbol];
+               const isCardNumOrVar = cardData?.type === 'number' || cardData?.type === 'variable';
+               return (targetData?.canHaveExponent === true) && isCardNumOrVar;
+             };
+             
+             const update = (cs: GameCard[]): GameCard[] => cs.map(c =>
+               c.id === targetId && canAddExponent(c) ? { ...c, exponent: movedCard } : (c.exponent ? { ...c, exponent: update([c.exponent])[0] } : c)
+             );
+             p.board = update(p.board);
+          }
+          return next;
         });
-        if (hasSideBySideMulDiv) {
-          return toast.error("Nepovolený tah! Dvě operace × nebo ÷ nesmí být vedle sebe.", { icon: '🚫' });
-        }
+        // Úmyslně se ZDE NEVOLÁ setHasModifiedBoardThisTurn(true)!
+        setPendingEffect(null);
+      } else {
+        addCardToGameState(cardToPlace, targetId, insertPosition);
       }
-
-      addCardToGameState(cardToPlace, targetId, insertPosition);
     }
   }, [currentPlayerIndex, players, isDiscarding, hasModifiedBoardThisTurn, addCardToGameState, bracketMode]);
 

@@ -19,30 +19,32 @@ interface EffectDialogProps {
   onClose: () => void;
 }
 
-// --- 1. VÍTĚZNÁ OBRAZOVKA (Konec přednášky) ---
+// --- 1. VÍTĚZNÁ OBRAZOVKA (Q.E.D) ---
 export function VictoryScreen({ winner, onReset }: { winner: Player | null, onReset: () => void }) {
   if (!winner) return null;
   return (
-    <div className="fixed inset-0 bg-slate-900/98 z-100 flex flex-col items-center justify-center p-8 backdrop-blur-xl animate-in fade-in duration-700">
-      <div className="bg-slate-800 border-4 border-emerald-500 p-12 rounded-[3rem] shadow-[0_0_80px_rgba(16,185,129,0.3)] flex flex-col items-center text-center max-w-2xl transform animate-in zoom-in duration-500">
-        <h1 className="text-9xl font-black text-emerald-400 mb-2 animate-bounce tracking-tighter font-chalk">Q.E.D.</h1>
-        <p className="text-slate-400 font-mono uppercase tracking-[0.4em] mb-8 italic">Quod Erat Demonstrandum</p>
-
-        <h2 className="text-4xl text-white font-bold mb-4">
-          <span className="text-emerald-400 underline decoration-wavy decoration-emerald-500/50">{winner.name}</span> zkonstruoval rovnost!
-        </h2>
-
-        <p className="text-slate-400 text-lg mb-12 font-mono">
-          L = R
+    <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center px-6 text-center select-none overflow-hidden min-h-[100dvh]" style={{ background: 'radial-gradient(circle at center 40%, #2e7a42 0%, #1a4225 50%, #141e17 90%)', backgroundColor: '#141e17', backgroundAttachment: 'fixed', backgroundSize: 'cover' }}>
+      <div className="absolute inset-0 pointer-events-none overflow-hidden flex items-center justify-center opacity-30">
+        <div className="absolute inset-0 flex flex-wrap content-start justify-center gap-4 -rotate-12 select-none pointer-events-none break-all text-2xl leading-relaxed tracking-widest scale-150 md:scale-125" style={{ color: '#399551', fontFamily: "'Merienda', cursive" }}>
+          {'∫εℕ⊈∑∮ℤ∪λℚπℝ⊕ξ∩∏ωδ '.repeat(35)}
+        </div>
+      </div>
+      <div className="z-10 flex flex-col items-center max-w-sm animate-in zoom-in duration-500">
+        <div className="mb-6 relative">
+          <div className="absolute -inset-24 blur-[120px] rounded-full" style={{ backgroundColor: 'rgba(57, 149, 81, 0.32)' }}></div>
+          <h1 className="text-8xl md:text-9xl font-bold relative animate-bounce" style={{ fontFamily: "'Merienda', cursive", color: '#60d984', filter: 'drop-shadow(0 0 15px rgba(96, 217, 132, 0.5))' }}>QED</h1>
+        </div>
+        <p className="text-xl md:text-2xl text-slate-100 leading-relaxed px-4 drop-shadow-md" style={{ fontFamily: "'Merienda', cursive" }}>
+          Hráč <span className="font-bold" style={{ color: '#60d984' }}>"{winner.name}"</span> jako první zkonstruoval rovnost!
         </p>
-
-        <Button
-          size="lg"
-          className="bg-emerald-600 hover:bg-emerald-500 text-white font-black text-2xl px-16 py-10 rounded-2xl shadow-2xl transition-all hover:scale-105 border-b-4 border-emerald-800"
-          onClick={onReset}
-        >
-          DALŠÍ POKUS
-        </Button>
+        <div className="mt-16 w-full max-w-[280px] flex flex-col gap-4">
+          <button onClick={onReset} className="w-full flex items-center justify-center gap-2 text-white font-bold py-4 px-8 rounded-xl transition-all shadow-lg active:scale-95" style={{ backgroundColor: '#399551' }}>
+            <span className="material-symbols-outlined">play_arrow</span> Další pokus
+          </button>
+          <button className="w-full flex items-center justify-center gap-2 text-slate-100 font-semibold py-4 px-8 rounded-xl transition-all border" style={{ backgroundColor: 'rgba(57, 149, 81, 0.4)', borderColor: 'rgba(57, 149, 81, 0.5)' }}>
+            <span className="material-symbols-outlined">menu_book</span> Detail hry
+          </button>
+        </div>
       </div>
     </div>
   );

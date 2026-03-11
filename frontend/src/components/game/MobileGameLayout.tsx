@@ -273,7 +273,7 @@ function DraggableBoardCard({ card, palette, hasModifiedBoardThisTurn }: { card:
       {...listeners}
       {...attributes}
       className={`rounded-md border-2 flex items-center justify-center shadow-md transition-colors duration-700
-        ${!hasModifiedBoardThisTurn ? 'cursor-grab active:cursor-grabbing hover:border-red-400/60 hover:scale-105' : 'cursor-default'}
+        cursor-grab active:cursor-grabbing hover:border-red-400/60 hover:scale-105
       `}
       style={style}
     >
