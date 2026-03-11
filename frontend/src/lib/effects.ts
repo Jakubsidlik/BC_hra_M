@@ -369,6 +369,15 @@ export const applyEffectLogic = (
         metadata: { turnOrderReversed: true }
       };
 
+    case "EFF_026": // ztráta karty pro všechny soupeře (goniometrické funkce)
+      newPlayers.forEach((p: Player) => {
+        if (p.id !== activePlayer.id) {
+          p.status.drawReduction = (p.status.drawReduction || 0) + 1;
+          p.status.notifications.push(`🥶 Hráč ${activePlayer.name} tě připravil o doberání 1 karty!`);
+        }
+      });
+      break;
+
     default:
       console.log(`Logika pro efekt '${effectId}' je spravována v App.tsx nebo není definována.`);
   }
