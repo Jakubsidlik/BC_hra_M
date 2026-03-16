@@ -105,7 +105,7 @@ export function BracketsDisplay({
           onDragStart={onBracketDragStart}
         />
       ) : (
-        <div className="text-center px-4 py-3 rounded-xl border border-slate-600 bg-slate-800/60 max-w-[160px]">
+        <div className="text-center px-4 py-3 rounded-xl border border-slate-600 bg-slate-800/60 max-w-40">
           <span className="text-slate-400 text-xs font-mono leading-relaxed">
             Další závorky<br />nejsou dostupné
           </span>

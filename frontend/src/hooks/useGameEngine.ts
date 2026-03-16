@@ -202,7 +202,7 @@ export function useGameEngine() {
     setPlayers(prev => {
       const next = JSON.parse(JSON.stringify(prev));
       const count = next.length;
-      const newHands = next.map((player: Player, index: number) => {
+      const newHands = next.map((_: Player, index: number) => {
         const sourceIndex = (index - direction + count) % count;
         const sourceId = next[sourceIndex].id;
         return snapshotMap.get(sourceId) ?? [];
