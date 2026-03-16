@@ -10,8 +10,12 @@ export interface GameCard {
   exponent?: GameCard | null;
   integralBounds?: { lower: number; upper: number }; // PŘIDÁNO: Pamatuje si meze integrálu
   integralVariable?: 'x' | 'y';
+  derivativeVariable?: 'x' | 'y';
+  seriesVariable?: 'x' | 'y';
+  limitVariable?: 'x' | 'y';
   slotCards?: Record<string, GameCard | null>;
   locked?: boolean;
+  afterDxDy?: boolean;
 }
 
 export interface PlayerStatus {

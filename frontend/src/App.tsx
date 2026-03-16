@@ -183,6 +183,9 @@ export default function App() {
             skipTutorial: actions.skipTutorial,
             openLeaveGameConfirm: actions.openLeaveGameConfirm,
             setIntegralVariable: actions.setIntegralVariable,
+            setDerivativeVariable: actions.setDerivativeVariable,
+            setSeriesVariable: actions.setSeriesVariable,
+            setLimitVariable: actions.setLimitVariable,
           }}
           tutorialReferenceBoard={state.tutorialReferenceBoard}
         />
@@ -199,6 +202,9 @@ export default function App() {
             skipTutorial: actions.skipTutorial,
             openLeaveGameConfirm: actions.openLeaveGameConfirm,
             setIntegralVariable: actions.setIntegralVariable,
+            setDerivativeVariable: actions.setDerivativeVariable,
+            setSeriesVariable: actions.setSeriesVariable,
+            setLimitVariable: actions.setLimitVariable,
           }}
           tutorialReferenceBoard={state.tutorialReferenceBoard}
         />
@@ -215,6 +221,9 @@ export default function App() {
             skipTutorial: actions.skipTutorial,
             openLeaveGameConfirm: actions.openLeaveGameConfirm,
             setIntegralVariable: actions.setIntegralVariable,
+            setDerivativeVariable: actions.setDerivativeVariable,
+            setSeriesVariable: actions.setSeriesVariable,
+            setLimitVariable: actions.setLimitVariable,
           }}
           tutorialReferenceBoard={state.tutorialReferenceBoard}
         />

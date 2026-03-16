@@ -146,6 +146,15 @@ function findIntegralVariable(cards: GameCard[]): 'x' | 'y' | null {
   return null;
 }
 
+// Mobile board sizing
+const FULL_CARD_W = '5.5rem';
+const FULL_CARD_H = '8.25rem';
+const BOARD_CARD_W = '1.75rem';
+const BOARD_CARD_H = '2.5rem';
+const DRAG_CARD_W = '3.5rem';
+const DRAG_CARD_H = '5rem';
+const VS_CARD_SYMBOLS = new Set(['int', 'd/dx', '∑', '∏', 'lim']);
+
 // ==========================================
 // MINI HAND CARD (fan footer)
 // ==========================================
@@ -267,12 +276,16 @@ function MobileDiscardSlot({ discardCount, isDiscarding, palette }: MobileDiscar
 function DraggableBoardCard({
   card,
   palette,
-  onIntegralVariableChange,
+  onDerivativeVariableChange,
+  onSeriesVariableChange,
+  onLimitVariableChange,
 }: {
   card: GameCard;
   palette: ThemePalette;
-  onIntegralVariableChange?: (cardId: string, variable: 'x' | 'y') => void;
   hasModifiedBoardThisTurn: boolean;
+  onDerivativeVariableChange?: (cardId: string, variable: 'x' | 'y') => void;
+  onSeriesVariableChange?: (cardId: string, variable: 'x' | 'y') => void;
+  onLimitVariableChange?: (cardId: string, variable: 'x' | 'y') => void;
 }) {
   const cardData = cardsDatabase[card.symbol];
   const specialSlots = getSpecialSlots(card.symbol);
@@ -281,10 +294,14 @@ function DraggableBoardCard({
   const hasTwoSlots = slotKeys.length === 2;
   const hasOneSlot = slotKeys.length === 1;
   const [isExpanded, setIsExpanded] = useState(false);
-  const [isIntegralMenuOpen, setIsIntegralMenuOpen] = useState(false);
-  const isIntegralCard = card.symbol === 'int';
-  const integralVar = card.integralVariable === 'y' ? 'y' : 'x';
-  const integralLabel = integralVar === 'y' ? 'dy' : 'dx';
+  const isVsCard = card.locked && VS_CARD_SYMBOLS.has(card.symbol);
+  const isDerivativeCard = card.symbol === 'd/dx';
+  const derivativeVar = card.derivativeVariable === 'y' ? 'y' : 'x';
+  const derivativeLabel = derivativeVar === 'y' ? 'dy' : 'dx';
+  const isSeriesCard = card.symbol === '∑' || card.symbol === '∏';
+  const seriesVar = card.seriesVariable === 'y' ? 'y' : 'x';
+  const isLimitCard = card.symbol === 'lim';
+  const limitVar = card.limitVariable === 'y' ? 'y' : 'x';
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: card.id,
     data: card,
@@ -336,10 +353,11 @@ function DraggableBoardCard({
 
   const isSlotOver = isOverTop || isOverBottom || isOverWhole || isOverUl || isOverUr || isOverLl || isOverLr;
 
-  const smallSize = { width: '1.75rem', height: '2.5rem' };
-  const dragSize = { width: '3.5rem', height: '5rem' };
+  const smallSize = { width: BOARD_CARD_W, height: BOARD_CARD_H };
+  const dragSize = { width: DRAG_CARD_W, height: DRAG_CARD_H };
+  const baseSize = isVsCard ? { width: FULL_CARD_W, height: FULL_CARD_H } : smallSize;
   const style: React.CSSProperties = {
-    ...(isDragging ? dragSize : smallSize),
+    ...(isDragging ? dragSize : baseSize),
     backgroundColor: `${palette.bgDark}cc`,
     borderColor: isDragging ? palette.primary : 'rgba(255,255,255,0.25)',
     transform: transform
@@ -348,17 +366,6 @@ function DraggableBoardCard({
     zIndex: isDragging ? 99999 : undefined,
     opacity: isDragging ? 0.5 : 1,
     boxShadow: isDragging ? '0 0 20px rgba(255,255,255,0.8)' : undefined,
-  };
-
-  const handleIntegralToggle = (event: React.MouseEvent<HTMLButtonElement>) => {
-    event.stopPropagation();
-    setIsIntegralMenuOpen(prev => !prev);
-  };
-
-  const handleIntegralSelect = (event: React.MouseEvent<HTMLButtonElement>, variable: 'x' | 'y') => {
-    event.stopPropagation();
-    onIntegralVariableChange?.(card.id, variable);
-    setIsIntegralMenuOpen(false);
   };
 
   return (
@@ -376,34 +383,44 @@ function DraggableBoardCard({
         }
       }}
     >
-      {isIntegralCard && (
-        <div className="absolute -right-5 top-1.5 flex flex-col items-center gap-1">
-          <button
-            type="button"
-            onClick={handleIntegralToggle}
-            className="rounded-full bg-slate-900/90 border border-white/20 px-2 py-0.5 text-[9px] font-bold text-white shadow-md hover:bg-slate-800"
-          >
-            {integralLabel}
-          </button>
-          {isIntegralMenuOpen && (
-            <div className="flex flex-col gap-1 rounded-lg border border-white/10 bg-slate-950/95 p-1 shadow-xl">
-              <button
-                type="button"
-                onClick={(event) => handleIntegralSelect(event, 'x')}
-                className={`px-2 py-0.5 text-[9px] font-bold rounded-md ${integralVar === 'x' ? 'bg-emerald-500/80 text-white' : 'text-slate-200 hover:bg-white/10'}`}
-              >
-                dx
-              </button>
-              <button
-                type="button"
-                onClick={(event) => handleIntegralSelect(event, 'y')}
-                className={`px-2 py-0.5 text-[9px] font-bold rounded-md ${integralVar === 'y' ? 'bg-emerald-500/80 text-white' : 'text-slate-200 hover:bg-white/10'}`}
-              >
-                dy
-              </button>
-            </div>
-          )}
-        </div>
+      {isDerivativeCard && (
+        <button
+          type="button"
+          onClick={(event) => {
+            event.stopPropagation();
+            const nextVar = derivativeVar === 'x' ? 'y' : 'x';
+            onDerivativeVariableChange?.(card.id, nextVar);
+          }}
+          className="absolute right-0.5 top-0.5 rounded-full border border-white/30 bg-slate-900/90 px-1 py-0.5 text-[8px] font-black text-white"
+        >
+          {derivativeLabel}
+        </button>
+      )}
+      {isSeriesCard && (
+        <button
+          type="button"
+          onClick={(event) => {
+            event.stopPropagation();
+            const nextVar = seriesVar === 'x' ? 'y' : 'x';
+            onSeriesVariableChange?.(card.id, nextVar);
+          }}
+          className="absolute right-0.5 top-0.5 rounded-full border border-white/30 bg-slate-900/90 px-1 py-0.5 text-[8px] font-black text-white"
+        >
+          {seriesVar}
+        </button>
+      )}
+      {isLimitCard && (
+        <button
+          type="button"
+          onClick={(event) => {
+            event.stopPropagation();
+            const nextVar = limitVar === 'x' ? 'y' : 'x';
+            onLimitVariableChange?.(card.id, nextVar);
+          }}
+          className="absolute right-0.5 top-0.5 rounded-full border border-white/30 bg-slate-900/90 px-1 py-0.5 text-[8px] font-black text-white"
+        >
+          {limitVar}
+        </button>
       )}
       {hasFourSlots && (
         <>
@@ -693,6 +710,9 @@ interface MobileGameLayoutProps {
     skipTutorial: () => void;
     openLeaveGameConfirm?: () => void;
     setIntegralVariable: (cardId: string, variable: 'x' | 'y') => void;
+    setDerivativeVariable: (cardId: string, variable: 'x' | 'y') => void;
+    setSeriesVariable: (cardId: string, variable: 'x' | 'y') => void;
+    setLimitVariable: (cardId: string, variable: 'x' | 'y') => void;
   };
   tutorialReferenceBoard?: GameCard[];
 }
@@ -733,6 +753,13 @@ export function MobileGameLayout({ currentPlayer, state, actions, tutorialRefere
   const palette = getPalette(currentPlayer.theme);
   const canVerify = tutorialActive ? tutorialStep === 4 : !hasModifiedBoardThisTurn;
   const integralVar = findIntegralVariable(currentPlayer.board);
+  const hasVsLockedCard = currentPlayer.board.some(card => card.locked && VS_CARD_SYMBOLS.has(card.symbol));
+  const integralCard = currentPlayer.board.find(card => card.symbol === 'int');
+  const integralLabel = integralCard?.integralVariable === 'y' ? 'dy' : 'dx';
+  const showDxDy = Boolean(integralCard);
+  const beforeCards = showDxDy ? currentPlayer.board.filter(card => !card.afterDxDy) : currentPlayer.board;
+  const afterCards = showDxDy ? currentPlayer.board.filter(card => card.afterDxDy) : [];
+  const totalBoardCards = beforeCards.length + afterCards.length;
 
   const [isDraggingCard, setIsDraggingCard] = useState(false);
   useDndMonitor({
@@ -826,7 +853,7 @@ export function MobileGameLayout({ currentPlayer, state, actions, tutorialRefere
               {tutorialReferenceBoard && tutorialReferenceBoard.length > 0 && (
                 <TutorialReferenceRow cards={tutorialReferenceBoard} palette={palette} />
               )}
-              <div className="flex items-stretch gap-0 flex-wrap justify-center w-full">
+              <div className={`flex items-stretch gap-0 flex-wrap w-full ${(hasVsLockedCard || showDxDy) ? 'justify-start' : 'justify-center'}`}>
               {currentPlayer.board.length === 0 ? (
                 <span
                   className="uppercase tracking-[0.2em] text-xl pointer-events-none select-none italic self-center"
@@ -836,27 +863,78 @@ export function MobileGameLayout({ currentPlayer, state, actions, tutorialRefere
                 </span>
               ) : (
                 <>
-                  {/* Kurzor před první kartou */}
-                  <BoardDropZone id="main-board-before-0" isVisible={isDraggingCard} />
-                  {currentPlayer.board.map((card, index) => (
-                    <React.Fragment key={card.id}>
-                      <div className="flex flex-col items-center">
-                        <DraggableBoardCard
-                          card={card}
-                          palette={palette}
-                          hasModifiedBoardThisTurn={hasModifiedBoardThisTurn}
-                          onIntegralVariableChange={actions.setIntegralVariable}
+                  <div className="flex items-stretch gap-0 flex-wrap">
+                    {hasVsLockedCard && (
+                      <div className="shrink-0" style={{ width: `calc(${BOARD_CARD_W} - 0.9rem)`, height: BOARD_CARD_H }} />
+                    )}
+                    {/* Kurzor před první kartou */}
+                    <BoardDropZone id="main-board-before-0" isVisible={isDraggingCard} />
+                    {beforeCards.map((card, index) => (
+                      <React.Fragment key={card.id}>
+                        <div className="flex flex-col items-center">
+                          <DraggableBoardCard
+                            card={card}
+                            palette={palette}
+                            hasModifiedBoardThisTurn={hasModifiedBoardThisTurn}
+                            onDerivativeVariableChange={actions.setDerivativeVariable}
+                            onSeriesVariableChange={actions.setSeriesVariable}
+                            onLimitVariableChange={actions.setLimitVariable}
+                          />
+                        </div>
+                        {/* Kurzor za každou kartou */}
+                        <BoardDropZone
+                          id={`main-board-between-${index}-${index + 1}`}
+                          isVisible={isDraggingCard}
                         />
-                      </div>
-                      {/* Kurzor za každou kartou */}
-                      <BoardDropZone
-                        id={index < currentPlayer.board.length - 1
-                          ? `main-board-between-${index}-${index + 1}`
-                          : `main-board-after-${currentPlayer.board.length - 1}`}
-                        isVisible={isDraggingCard}
-                      />
-                    </React.Fragment>
-                  ))}
+                      </React.Fragment>
+                    ))}
+                  </div>
+                  {showDxDy && (
+                    <div className="flex items-stretch gap-0 ml-auto">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const nextVar = integralCard!.integralVariable === 'y' ? 'x' : 'y';
+                          actions.setIntegralVariable(integralCard!.id, nextVar);
+                        }}
+                        className="rounded-md border-2 shadow-md flex items-center justify-center bg-slate-900/90 text-white font-black"
+                        style={{
+                          width: BOARD_CARD_W,
+                          height: BOARD_CARD_H,
+                          borderColor: 'rgba(255,255,255,0.4)',
+                          backgroundColor: `${palette.bgDark}cc`,
+                          zIndex: 20,
+                        }}
+                      >
+                        <span className="text-[10px] font-black">{integralLabel}</span>
+                      </button>
+                      <BoardDropZone id={`main-board-after-dxdy-${beforeCards.length}`} isVisible={isDraggingCard} />
+                      {afterCards.map((card, index) => {
+                        const globalIndex = beforeCards.length + index;
+                        return (
+                          <React.Fragment key={card.id}>
+                            <div className="flex flex-col items-center">
+                              <DraggableBoardCard
+                                card={card}
+                                palette={palette}
+                                hasModifiedBoardThisTurn={hasModifiedBoardThisTurn}
+                                onDerivativeVariableChange={actions.setDerivativeVariable}
+                                onSeriesVariableChange={actions.setSeriesVariable}
+                                onLimitVariableChange={actions.setLimitVariable}
+                              />
+                            </div>
+                            <BoardDropZone
+                              id={globalIndex < totalBoardCards - 1
+                                ? `main-board-between-${globalIndex}-${globalIndex + 1}`
+                                : `main-board-after-${totalBoardCards - 1}`}
+                              isVisible={isDraggingCard}
+                            />
+                          </React.Fragment>
+                        );
+                      })}
+                      <div className="shrink-0 pointer-events-none" style={{ width: BOARD_CARD_W, height: BOARD_CARD_H }} />
+                    </div>
+                  )}
                 </>
               )}
               </div>
@@ -864,7 +942,7 @@ export function MobileGameLayout({ currentPlayer, state, actions, tutorialRefere
 
             {/* Target R */}
             <div className="absolute bottom-3 right-3 flex flex-col items-end gap-2">
-              {integralVar && (
+              {integralVar && !integralCard && (
                 <div className="rounded-md border-2 border-white/30 bg-slate-900/85 px-3 py-1 text-sm font-black text-white shadow-lg">
                   d{integralVar}
                 </div>

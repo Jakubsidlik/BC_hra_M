@@ -548,6 +548,48 @@ export function useGameEngine() {
     });
   }, [currentPlayerIndex]);
 
+  const setDerivativeVariable = useCallback((cardId: string, variable: 'x' | 'y') => {
+    setPlayers(prev => {
+      const next = JSON.parse(JSON.stringify(prev));
+      const update = (cards: GameCard[]): GameCard[] => cards.map(c => {
+        if (c.id === cardId) return { ...c, derivativeVariable: variable };
+        return c.exponent ? { ...c, exponent: update([c.exponent])[0] } : c;
+      });
+      if (next[currentPlayerIndex]) {
+        next[currentPlayerIndex].board = update(next[currentPlayerIndex].board);
+      }
+      return next;
+    });
+  }, [currentPlayerIndex]);
+
+  const setSeriesVariable = useCallback((cardId: string, variable: 'x' | 'y') => {
+    setPlayers(prev => {
+      const next = JSON.parse(JSON.stringify(prev));
+      const update = (cards: GameCard[]): GameCard[] => cards.map(c => {
+        if (c.id === cardId) return { ...c, seriesVariable: variable };
+        return c.exponent ? { ...c, exponent: update([c.exponent])[0] } : c;
+      });
+      if (next[currentPlayerIndex]) {
+        next[currentPlayerIndex].board = update(next[currentPlayerIndex].board);
+      }
+      return next;
+    });
+  }, [currentPlayerIndex]);
+
+  const setLimitVariable = useCallback((cardId: string, variable: 'x' | 'y') => {
+    setPlayers(prev => {
+      const next = JSON.parse(JSON.stringify(prev));
+      const update = (cards: GameCard[]): GameCard[] => cards.map(c => {
+        if (c.id === cardId) return { ...c, limitVariable: variable };
+        return c.exponent ? { ...c, exponent: update([c.exponent])[0] } : c;
+      });
+      if (next[currentPlayerIndex]) {
+        next[currentPlayerIndex].board = update(next[currentPlayerIndex].board);
+      }
+      return next;
+    });
+  }, [currentPlayerIndex]);
+
   const handleDragEnd = useCallback((event: DragEndEvent) => {
     const { active, over } = event;
     if (!over) return;
@@ -729,6 +771,8 @@ export function useGameEngine() {
     const overId = String(over.id);
     let targetId: string | null = null;
     let insertPosition: number | undefined = undefined;
+    let forceAfterDxDy = false;
+    const beforeDxDyCount = players[currentPlayerIndex].board.filter(c => !c.afterDxDy).length;
 
     // Pokud uživatel už akci tento tah provedl, chceme zjistit, jestli jde JEN o přesazení karty uvnitř boardu
     // Pokud je karta POUZE na tabuli (není v ruce ani v syntax), má povoleno se přesouvat.
@@ -756,6 +800,12 @@ export function useGameEngine() {
     // Rozpoznání typu drop zóny
     if (overId.startsWith('drop-exponent-')) {
       targetId = (over.data.current as DropData).parentId;
+    } else if (overId.startsWith('main-board-after-dxdy-')) {
+      const match = overId.match(/main-board-after-dxdy-(\d+)/);
+      if (match) {
+        insertPosition = parseInt(match[1]);
+        forceAfterDxDy = true;
+      }
     } else if (overId.includes('-before-')) {
       // Drop před první kartou
       insertPosition = 0;
@@ -773,13 +823,20 @@ export function useGameEngine() {
       insertPosition = players[currentPlayerIndex].board.length;
     }
 
-    if (cardToPlace.symbol === '∫') {
-      setIntegralSetup({ card: cardToPlace, targetId, insertPosition });
-    } else if (cardsDatabase[cardToPlace.symbol]?.hasEffect && !tutorialActive && !isOnlyOnBoard) {
-      setPendingEffect({ card: cardToPlace, targetId, insertPosition });
+    const placeAfterDxDy = insertPosition !== undefined
+      ? (forceAfterDxDy || insertPosition > beforeDxDyCount)
+      : undefined;
+    const cardToPlaceWithDxDy = placeAfterDxDy !== undefined && !isOnlyOnBoard
+      ? { ...cardToPlace, afterDxDy: placeAfterDxDy }
+      : cardToPlace;
+
+    if (cardToPlaceWithDxDy.symbol === '∫') {
+      setIntegralSetup({ card: cardToPlaceWithDxDy, targetId, insertPosition });
+    } else if (cardsDatabase[cardToPlaceWithDxDy.symbol]?.hasEffect && !tutorialActive && !isOnlyOnBoard) {
+      setPendingEffect({ card: cardToPlaceWithDxDy, targetId, insertPosition });
     } else {
       // --- ENFORCE RESTRICTION FLAGS ---
-      const cardData = cardsDatabase[cardToPlace.symbol];
+      const cardData = cardsDatabase[cardToPlaceWithDxDy.symbol];
 
       // EFF_016: operationLock — nesmí hrát operace
       if (pStatus?.operationLock && cardData?.type === 'operator') {
@@ -804,13 +861,16 @@ export function useGameEngine() {
           const p = next[currentPlayerIndex];
           const originIndex = p.board.findIndex((c: GameCard) => c.id === cardToPlace.id);
           
-          if (originIndex !== -1 && targetId === null && insertPosition !== undefined) {
+           if (originIndex !== -1 && targetId === null && insertPosition !== undefined) {
              // Zjistíme posun indexování
              let adjustedPos = insertPosition;
              if (originIndex < insertPosition) adjustedPos -= 1;
              
              // Přemístíme
              const [movedCard] = p.board.splice(originIndex, 1);
+             if (placeAfterDxDy !== undefined) {
+              movedCard.afterDxDy = placeAfterDxDy;
+             }
              p.board.splice(adjustedPos, 0, movedCard);
           } else if (originIndex !== -1 && targetId) {
              // Přidání k exponentu uvnitř tabule
@@ -833,7 +893,7 @@ export function useGameEngine() {
         // Úmyslně se ZDE NEVOLÁ setHasModifiedBoardThisTurn(true)!
         setPendingEffect(null);
       } else {
-        addCardToGameState(cardToPlace, targetId, insertPosition);
+        addCardToGameState(cardToPlaceWithDxDy, targetId, insertPosition);
       }
     }
   }, [currentPlayerIndex, players, isDiscarding, hasModifiedBoardThisTurn, addCardToGameState, bracketMode, updatePlayerStats]);
@@ -1246,7 +1306,7 @@ export function useGameEngine() {
       handleDragEnd, cancelBracketMode, setMinigameMode, setBracketMode,
       setTargetingMode, setIntegralSetup, setPendingEffect, setEffectStep,
       setChosenEffectChoice, setPlayers, addCardToGameState, handleDiscardExpression,
-      setIntegralVariable,
+      setIntegralVariable, setDerivativeVariable, setSeriesVariable, setLimitVariable,
       handleDeckPreviewConfirm, handleModuloSelect, setDeckPreviewMode, setModuloMode,
       setTutorialStep, resetTutorial, skipTutorial, returnToModeSelect,
       openLeaveGameConfirm, closeLeaveGameConfirm, confirmLeaveGame,

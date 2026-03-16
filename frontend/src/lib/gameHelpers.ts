@@ -209,7 +209,11 @@ export function parseBoardToMathString(board: GameCard[]): string {
       // Tady je trik: integrál "vysaje" jen to, co je v jeho dosahu
       // Pro jednoduchost teď bereme vše napravo, ale bez 'break'
       // Pokud chceš, aby integrál končil, doporučuji přidat kartu "dx" nebo ")"
-      const rest = board.slice(i + 1);
+      let rest = board.slice(i + 1);
+      if (card.symbol === 'int') {
+        const endIdx = rest.findIndex(nextCard => nextCard.afterDxDy);
+        if (endIdx >= 0) rest = rest.slice(0, endIdx);
+      }
       const inner = parseBoardToMathString(rest) || "1";
 
       if (card.symbol === 'int') {
@@ -218,18 +222,23 @@ export function parseBoardToMathString(board: GameCard[]): string {
         const upper = card.slotCards?.upper ? parseBoardToMathString([card.slotCards.upper]) : '1';
         result += `Integral(${inner}, (${variable}, ${lower}, ${upper}))`;
       } else if (card.symbol === '∑') {
+        const variable = card.seriesVariable === 'y' ? 'y' : 'x';
         const lower = card.slotCards?.lower ? parseBoardToMathString([card.slotCards.lower]) : '1';
         const upper = card.slotCards?.upper ? parseBoardToMathString([card.slotCards.upper]) : '1';
-        result += `Sum(${inner}, (n, ${lower}, ${upper}))`;
+        result += `Sum(${inner}, (${variable}, ${lower}, ${upper}))`;
       } else if (card.symbol === '∏') {
+        const variable = card.seriesVariable === 'y' ? 'y' : 'x';
         const lower = card.slotCards?.lower ? parseBoardToMathString([card.slotCards.lower]) : '1';
         const upper = card.slotCards?.upper ? parseBoardToMathString([card.slotCards.upper]) : '1';
-        result += `Product(${inner}, (n, ${lower}, ${upper}))`;
+        result += `Product(${inner}, (${variable}, ${lower}, ${upper}))`;
       } else if (card.symbol === 'd/dx') {
+        const variable = card.derivativeVariable === 'y' ? 'y' : 'x';
         const order = card.slotCards?.order ? parseBoardToMathString([card.slotCards.order]) : '1';
-        result += `Derivative(${inner}, x, ${order})`;
+        result += `Derivative(${inner}, ${variable}, ${order})`;
       } else if (card.symbol === 'lim') {
-        result += `Limit(${inner}, x, 0)`; // Zjednodušená limita
+        const variable = card.limitVariable === 'y' ? 'y' : 'x';
+        const target = card.slotCards?.single ? parseBoardToMathString([card.slotCards.single]) : '0';
+        result += `Limit(${inner}, ${variable}, ${target})`;
       }
       
       // DŮLEŽITÉ: Po prefixové funkci už zbytek v tomto cyklu nezpracováváme,
@@ -325,6 +334,7 @@ export function getBorderColor(symbol: string): string {
 // 5. GENEROVÁNÍ BALÍČKU (Pokud ji máš vyřešenou jinak, nahraď svou původní)
 export function generateFilteredDeck(difficulty: DifficultyMode): GameCard[] {
   const deck: GameCard[] = [];
+  const vsSpecialOperators = ['d/dx', 'int', '∑', '∏', 'lim'];
   
   // Definice vyloučených karet podle obtížností
   // ZŠ: Jen základní operace (+, -, *, /), čísla, proměnné (x, y)
@@ -345,7 +355,7 @@ export function generateFilteredDeck(difficulty: DifficultyMode): GameCard[] {
     'VŠ': []
   };
 
-  const excludedCards = difficultyFilters[difficulty];
+  const excludedCards = [...new Set([...difficultyFilters[difficulty], ...vsSpecialOperators])];
   
   Object.keys(cardsDatabase).forEach(symbol => {
     // Vyloučení pokud sedí přesně NEBO pokud je to funkce s úhlovým parametrem (např. 'sin(0)' a ex je 'sin')
