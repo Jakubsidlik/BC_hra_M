@@ -22,9 +22,9 @@ interface BoardAreaProps {
   id: string;
   cards: GameCard[];
   targetR?: number | string;
-  playerTheme?: string; 
-  isTargeting?: boolean;     
-  onCardClick?: (id: string) => void; 
+  playerTheme?: string;
+  isTargeting?: boolean;
+  onCardClick?: (id: string) => void;
   onIntegralVariableChange?: (cardId: string, variable: 'x' | 'y') => void;
   absoluteValue?: boolean; // Pro zobrazení |L|
   bracketMode?: { step: 'LEFT' | 'RIGHT', leftIndex: number | null, pairIndex?: number } | null;
@@ -90,7 +90,7 @@ interface HandCardProps {
 // ==========================================
 export function HandCard({ card, index, total, isDiscarding, onDiscard }: HandCardProps) {
   const cardData = cardsDatabase[card.symbol];
-  
+
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: card.id,
     data: card,
@@ -100,14 +100,14 @@ export function HandCard({ card, index, total, isDiscarding, onDiscard }: HandCa
   // VÝPOČET VĚJÍŘE
   const midpoint = (total - 1) / 2;
   const distanceFromCenter = index - midpoint;
-  
+
   const rotation = isDragging ? 0 : distanceFromCenter * 6;
   const translateY = isDragging ? 0 : Math.abs(distanceFromCenter) * 4;
   const translateX = isDragging ? 0 : distanceFromCenter * 2;
 
   const style = {
-    transform: transform 
-      ? CSS.Translate.toString(transform) 
+    transform: transform
+      ? CSS.Translate.toString(transform)
       : `rotate(${rotation}deg) translateY(${translateY}px) translateX(${translateX}px)`,
     zIndex: isDragging ? 99999 : 10 + index,
     opacity: 1,
@@ -118,14 +118,14 @@ export function HandCard({ card, index, total, isDiscarding, onDiscard }: HandCa
   return (
     <div
       ref={setNodeRef}
-      {...listeners} 
+      {...listeners}
       {...attributes}
       onClick={() => isDiscarding && onDiscard && onDiscard(card.id)}
       style={style}
       className={`relative w-20 h-28 sm:w-24 sm:h-32 md:w-28 md:h-36 lg:w-32 lg:h-40 rounded-xl border-3 md:border-4 transition-all duration-200 origin-bottom bg-slate-800 shadow-xl
         ${isDragging ? 'scale-110 shadow-[0_0_25px_rgba(16,185,129,0.6)] ring-2 ring-emerald-400/50 rotate-0' : ''}
-        ${isDiscarding 
-          ? 'cursor-pointer border-red-500 hover:scale-105 hover:shadow-[0_0_15px_rgba(239,68,68,0.4)] ring-2 ring-red-600/15 animate-pulse' 
+        ${isDiscarding
+          ? 'cursor-pointer border-red-500 hover:scale-105 hover:shadow-[0_0_15px_rgba(239,68,68,0.4)] ring-2 ring-red-600/15 animate-pulse'
           : 'cursor-grab active:cursor-grabbing hover:-translate-y-8 hover:z-50 hover:scale-105'}
         ${borderColor}
       `}
@@ -138,9 +138,9 @@ export function HandCard({ card, index, total, isDiscarding, onDiscard }: HandCa
 
       <div className="w-full h-full flex items-center justify-center p-2 pointer-events-none">
         {cardData?.image ? (
-          <img 
-            src={`${BASE}${cardData.image.replace(/^\//, '')}`} 
-            alt={card.symbol} 
+          <img
+            src={`${BASE}${cardData.image.replace(/^\//, '')}`}
+            alt={card.symbol}
             className="w-full h-full object-contain drop-shadow-[0_0_5px_rgba(255,255,255,0.4)]"
           />
         ) : (
@@ -167,7 +167,7 @@ export function BoardCard({ card, isTargeting, onCardClick, onIntegralVariableCh
   const isIntegralCard = card.symbol === 'int';
   const integralVar = card.integralVariable === 'y' ? 'y' : 'x';
   const integralLabel = integralVar === 'y' ? 'dy' : 'dx';
-  
+
   // Zóna pro vhození exponentu
   const { setNodeRef: setDropRef, isOver } = useDroppable({
     id: `drop-exponent-${card.id}`,
@@ -255,7 +255,7 @@ export function BoardCard({ card, isTargeting, onCardClick, onIntegralVariableCh
   };
 
   return (
-    <div 
+    <div
       className={`relative flex flex-col items-center justify-end h-36 md:h-44 lg:h-48 group ${isTargeting ? 'cursor-pointer' : ''}`}
       style={style}
       onClick={handleClick}
@@ -453,25 +453,25 @@ export function BoardCard({ card, isTargeting, onCardClick, onIntegralVariableCh
       )}
       {/* Zóna pro Exponent - Skrytá, dokud nad ni nenajedeš */}
       {cardData?.canHaveExponent && (
-      <div
-        ref={setDropRef}
-        className={`absolute -top-4 -right-6 w-12 h-16 md:w-14 md:h-20 lg:w-16 lg:h-22 rounded-lg transition-all duration-200 z-10 flex items-center justify-center
+        <div
+          ref={setDropRef}
+          className={`absolute -top-4 -right-6 w-12 h-16 md:w-14 md:h-20 lg:w-16 lg:h-22 rounded-lg transition-all duration-200 z-10 flex items-center justify-center
           ${card.exponent ? 'opacity-100' : (isOver ? 'opacity-100 border-2 border-dashed border-yellow-400 bg-yellow-400/20 scale-110' : 'opacity-0')}
           ${isTargeting ? 'pointer-events-none' : ''} 
         `}
-      >
-        {card.exponent && (
-          <div className="w-full h-full scale-90 pointer-events-none">
-            <div className={`w-full h-full bg-slate-800 rounded-lg border-2 ${getBorderColor(card.exponent.symbol)} flex items-center justify-center p-1`}>
-              {cardsDatabase[card.exponent.symbol]?.image ? (
-                <img src={`${BASE}${cardsDatabase[card.exponent.symbol].image.replace(/^\//, '')}`} className="w-full h-full object-contain" alt="exp" />
-              ) : (
-                <span className="text-xl font-chalk text-slate-200">{card.exponent.symbol}</span>
-              )}
+        >
+          {card.exponent && (
+            <div className="w-full h-full scale-90 pointer-events-none">
+              <div className={`w-full h-full bg-slate-800 rounded-lg border-2 ${getBorderColor(card.exponent.symbol)} flex items-center justify-center p-1`}>
+                {cardsDatabase[card.exponent.symbol]?.image ? (
+                  <img src={`${BASE}${cardsDatabase[card.exponent.symbol].image.replace(/^\//, '')}`} className="w-full h-full object-contain" alt="exp" />
+                ) : (
+                  <span className="text-xl font-chalk text-slate-200">{card.exponent.symbol}</span>
+                )}
+              </div>
             </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
       )}
 
       {isIntegralCard && !isTargeting && (
@@ -505,7 +505,7 @@ export function BoardCard({ card, isTargeting, onCardClick, onIntegralVariableCh
       )}
 
       {/* Hlavní karta na stole */}
-      <div 
+      <div
         className={`w-20 h-28 sm:w-24 sm:h-32 md:w-28 md:h-36 lg:w-32 lg:h-40 rounded-xl border-3 md:border-4 flex items-center justify-center bg-slate-800 shadow-xl
         ${borderColor}
         ${cardData?.hasEffect ? 'shadow-[0_0_15px_rgba(16,185,129,0.15)]' : ''}
@@ -515,9 +515,9 @@ export function BoardCard({ card, isTargeting, onCardClick, onIntegralVariableCh
       `}>
         <div className="w-full h-full flex items-center justify-center p-3">
           {cardData?.image ? (
-            <img 
-              src={`${BASE}${cardData.image.replace(/^\//, '')}`} 
-              alt={cardData.symbol} 
+            <img
+              src={`${BASE}${cardData.image.replace(/^\//, '')}`}
+              alt={cardData.symbol}
               className="w-full h-full object-contain pointer-events-none drop-shadow-[0_0_4px_rgba(255,255,255,0.6)]"
             />
           ) : (
@@ -557,10 +557,10 @@ export function BoardArea({ id, cards, targetR, playerTheme, isTargeting, onCard
   useEffect(() => {
     const handleDragStart = () => setIsDraggingOver(true);
     const handleDragEnd = () => setIsDraggingOver(false);
-    
+
     document.addEventListener('dnd-kit:drag:start', handleDragStart);
     document.addEventListener('dnd-kit:drag:end', handleDragEnd);
-    
+
     return () => {
       document.removeEventListener('dnd-kit:drag:start', handleDragStart);
       document.removeEventListener('dnd-kit:drag:end', handleDragEnd);
@@ -569,7 +569,7 @@ export function BoardArea({ id, cards, targetR, playerTheme, isTargeting, onCard
 
   return (
     <div className="flex flex-col lg:flex-row items-center w-full gap-6 lg:gap-10">
-      
+
       {/* NALEVO: Konstrukce L */}
       <div
         ref={setNodeRef}
@@ -593,45 +593,39 @@ export function BoardArea({ id, cards, targetR, playerTheme, isTargeting, onCard
               </div>
             ) : (
               // Karty s drop zónami mezi nimi
-              <>
+              <div className="flex flex-row items-center justify-center">
                 {/* Drop zóna před první kartou */}
-                <div className="relative">
-                  <BoardDropZone 
-                    id={`${id}-before-0`} 
-                    isVisible={isDraggingOver} 
-                  />
-                </div>
-                
+                <BoardDropZone
+                  id={`${id}-before-0`}
+                  isVisible={isDraggingOver}
+                />
+
                 {cards.map((c, index) => (
                   <React.Fragment key={c.id}>
-                    <BoardCard 
-                      card={c} 
-                      isTargeting={isTargeting} 
-                      onCardClick={onCardClick} 
+                    <BoardCard
+                      card={c}
+                      isTargeting={isTargeting}
+                      onCardClick={onCardClick}
                       onIntegralVariableChange={onIntegralVariableChange}
-                      absoluteValue={absoluteValue} 
+                      absoluteValue={absoluteValue}
                     />
-                    
+
                     {/* Drop zóna za kartou */}
                     {index < cards.length - 1 && (
-                      <div className="relative">
-                        <BoardDropZone 
-                          id={`${id}-between-${index}-${index + 1}`} 
-                          isVisible={isDraggingOver} 
-                        />
-                      </div>
+                      <BoardDropZone
+                        id={`${id}-between-${index}-${index + 1}`}
+                        isVisible={isDraggingOver}
+                      />
                     )}
                   </React.Fragment>
                 ))}
-                
+
                 {/* Drop zóna za poslední kartou */}
-                <div className="relative">
-                  <BoardDropZone 
-                    id={`${id}-after-${cards.length - 1}`} 
-                    isVisible={isDraggingOver} 
-                  />
-                </div>
-              </>
+                <BoardDropZone
+                  id={`${id}-after-${cards.length - 1}`}
+                  isVisible={isDraggingOver}
+                />
+              </div>
             )}
           </div>
 
