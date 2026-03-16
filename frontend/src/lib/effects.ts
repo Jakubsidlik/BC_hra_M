@@ -76,6 +76,7 @@ export interface EffectResult {
     turnOrderReversed?: boolean;
     deckPreviewTriggered?: boolean;
     moduloOperationTriggered?: boolean;
+    handSwapDirection?: 1 | -1;
   };
 }
 
@@ -277,61 +278,29 @@ export const applyEffectLogic = (
       activePlayer.status.infinitePlays = true;
       break;
 
-    case "EFF_018": { // sin: Všichni si předají karty po směru (clockwise)
-      const tempHands1 = newPlayers.map(p => [...p.hand]);
-      for (let i = 0; i < newPlayers.length; i++) {
-        const nextIndex = (i + 1) % newPlayers.length;
-        newPlayers[nextIndex].hand = tempHands1[i];
-      }
-      newPlayers.forEach(p => {
-        if (p.id !== activePlayer.id) {
-          p.status.notifications.push(`🔄 Všichni si vyměnili karty po směru!`);
-        }
-      });
-      break;
-    }
+    case "EFF_018": // sin: Všichni si předají karty po směru (clockwise)
+      return {
+        players: newPlayers,
+        metadata: { handSwapDirection: 1 }
+      };
 
-    case "EFF_019": { // cos: Všichni si předají karty proti směru (counter-clockwise)
-      const tempHands2 = newPlayers.map(p => [...p.hand]);
-      for (let i = 0; i < newPlayers.length; i++) {
-        const prevIndex = (i - 1 + newPlayers.length) % newPlayers.length;
-        newPlayers[prevIndex].hand = tempHands2[i];
-      }
-      newPlayers.forEach(p => {
-        if (p.id !== activePlayer.id) {
-          p.status.notifications.push(`🔄 Všichni si vyměnili karty proti směru!`);
-        }
-      });
-      break;
-    }
+    case "EFF_019": // cos: Všichni si předají karty proti směru (counter-clockwise)
+      return {
+        players: newPlayers,
+        metadata: { handSwapDirection: -1 }
+      };
 
-    case "EFF_020": { // tg: Všichni si předají karty po směru
-      const tempHands3 = newPlayers.map(p => [...p.hand]);
-      for (let i = 0; i < newPlayers.length; i++) {
-        const nextIndex = (i + 1) % newPlayers.length;
-        newPlayers[nextIndex].hand = tempHands3[i];
-      }
-      newPlayers.forEach(p => {
-        if (p.id !== activePlayer.id) {
-          p.status.notifications.push(`🔄 Všichni si vyměnili karty po směru!`);
-        }
-      });
-      break;
-    }
+    case "EFF_020": // tg: Všichni si předají karty po směru
+      return {
+        players: newPlayers,
+        metadata: { handSwapDirection: 1 }
+      };
 
-    case "EFF_021": { // cotg: Všichni si předají karty proti směru
-      const tempHands4 = newPlayers.map(p => [...p.hand]);
-      for (let i = 0; i < newPlayers.length; i++) {
-        const prevIndex = (i - 1 + newPlayers.length) % newPlayers.length;
-        newPlayers[prevIndex].hand = tempHands4[i];
-      }
-      newPlayers.forEach(p => {
-        if (p.id !== activePlayer.id) {
-          p.status.notifications.push(`🔄 Všichni si vyměnili karty proti směru!`);
-        }
-      });
-      break;
-    }
+    case "EFF_021": // cotg: Všichni si předají karty proti směru
+      return {
+        players: newPlayers,
+        metadata: { handSwapDirection: -1 }
+      };
 
     case "EFF_022": // nCk: Prohození cifer v R cílového oponenta
       if (targetPlayer && typeof targetPlayer.targetR === 'number') {

@@ -537,6 +537,21 @@ export function BoardCard({ card, isTargeting, onCardClick, onIntegralVariableCh
 export function BoardArea({ id, cards, targetR, playerTheme, isTargeting, onCardClick, onIntegralVariableChange, absoluteValue }: BoardAreaProps) {
   const { setNodeRef, isOver } = useDroppable({ id });
   const [isDraggingOver, setIsDraggingOver] = useState(false);
+  const integralVar = (() => {
+    const stack = [...cards];
+    while (stack.length > 0) {
+      const card = stack.pop();
+      if (!card) continue;
+      if (card.integralVariable) return card.integralVariable;
+      if (card.exponent) stack.push(card.exponent);
+      if (card.slotCards) {
+        Object.values(card.slotCards).forEach(slotCard => {
+          if (slotCard) stack.push(slotCard);
+        });
+      }
+    }
+    return null;
+  })();
 
   // Sledování drag stavu pro vizuální feedback
   useEffect(() => {
@@ -632,12 +647,19 @@ export function BoardArea({ id, cards, targetR, playerTheme, isTargeting, onCard
       </div>
 
       {/* NAPRAVO: Cíl R */}
-      <div className="flex flex-col items-center justify-center bg-black/50 backdrop-blur-xl p-6 md:p-8 lg:p-12 rounded-3xl lg:rounded-[3rem] border-2 border-white/10 min-w-32 md:min-w-40 lg:min-w-56 shadow-xl transition-transform hover:scale-105">
-        <div className="text-5xl md:text-7xl lg:text-9xl font-chalk text-white drop-shadow-[0_0_25px_rgba(255,255,255,0.7)] text-center">
-          {targetR}
-        </div>
-        <div className="text-[8px] md:text-[10px] lg:text-xs font-mono text-white/40 uppercase tracking-[0.4em] mt-3 md:mt-4 lg:mt-6 font-black text-center">
-          Výsledek
+      <div className="flex flex-col items-center justify-center gap-3">
+        {integralVar && (
+          <div className="rounded-md border-2 border-white/30 bg-slate-900/85 px-3 py-1 text-sm font-black text-white shadow-lg">
+            d{integralVar}
+          </div>
+        )}
+        <div className="flex flex-col items-center justify-center bg-black/50 backdrop-blur-xl p-6 md:p-8 lg:p-12 rounded-3xl lg:rounded-[3rem] border-2 border-white/10 min-w-32 md:min-w-40 lg:min-w-56 shadow-xl transition-transform hover:scale-105">
+          <div className="text-5xl md:text-7xl lg:text-9xl font-chalk text-white drop-shadow-[0_0_25px_rgba(255,255,255,0.7)] text-center">
+            {targetR}
+          </div>
+          <div className="text-[8px] md:text-[10px] lg:text-xs font-mono text-white/40 uppercase tracking-[0.4em] mt-3 md:mt-4 lg:mt-6 font-black text-center">
+            Výsledek
+          </div>
         </div>
       </div>
 

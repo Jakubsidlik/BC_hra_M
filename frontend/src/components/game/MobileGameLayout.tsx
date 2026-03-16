@@ -130,6 +130,22 @@ function getPalette(themeId: string): ThemePalette {
   return THEME_PALETTES[themeId] ?? THEME_PALETTES['bg-emerald-600/60'];
 }
 
+function findIntegralVariable(cards: GameCard[]): 'x' | 'y' | null {
+  const stack = [...cards];
+  while (stack.length > 0) {
+    const card = stack.pop();
+    if (!card) continue;
+    if (card.integralVariable) return card.integralVariable;
+    if (card.exponent) stack.push(card.exponent);
+    if (card.slotCards) {
+      Object.values(card.slotCards).forEach(slotCard => {
+        if (slotCard) stack.push(slotCard);
+      });
+    }
+  }
+  return null;
+}
+
 // ==========================================
 // MINI HAND CARD (fan footer)
 // ==========================================
@@ -716,6 +732,7 @@ export function MobileGameLayout({ currentPlayer, state, actions, tutorialRefere
   const { deck, discardPile, isDiscarding, hasModifiedBoardThisTurn, bracketMode, tutorialActive, tutorialStep } = state;
   const palette = getPalette(currentPlayer.theme);
   const canVerify = tutorialActive ? tutorialStep === 4 : !hasModifiedBoardThisTurn;
+  const integralVar = findIntegralVariable(currentPlayer.board);
 
   const [isDraggingCard, setIsDraggingCard] = useState(false);
   useDndMonitor({
@@ -846,12 +863,19 @@ export function MobileGameLayout({ currentPlayer, state, actions, tutorialRefere
             </div>
 
             {/* Target R */}
-            <div
-              className="absolute bottom-3 right-3 flex items-center gap-2 backdrop-blur-sm p-2 rounded-lg border border-white/20"
-              style={{ background: 'rgba(0,0,0,0.30)' }}
-            >
-              <span className="text-xl font-bold text-white">=</span>
-              <span className="text-3xl font-black text-white px-1">{currentPlayer.targetR}</span>
+            <div className="absolute bottom-3 right-3 flex flex-col items-end gap-2">
+              {integralVar && (
+                <div className="rounded-md border-2 border-white/30 bg-slate-900/85 px-3 py-1 text-sm font-black text-white shadow-lg">
+                  d{integralVar}
+                </div>
+              )}
+              <div
+                className="flex items-center gap-2 backdrop-blur-sm p-2 rounded-lg border border-white/20"
+                style={{ background: 'rgba(0,0,0,0.30)' }}
+              >
+                <span className="text-xl font-bold text-white">=</span>
+                <span className="text-3xl font-black text-white px-1">{currentPlayer.targetR}</span>
+              </div>
             </div>
           </div>
         </section>

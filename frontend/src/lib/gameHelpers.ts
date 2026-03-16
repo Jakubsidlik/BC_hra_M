@@ -158,7 +158,10 @@ export function parseBoardToMathString(board: GameCard[]): string {
       const prevIsCloseBracket = [')', ']', '}'].includes(prevCard.symbol);
       const currIsOpenBracket = ['(', '[', '{'].includes(card.symbol);
       const functionPrefixes = ['sin', 'cos', 'tg', 'cotg', 'log', 'ln', 'sqrt', 'int', '∑', '∏', 'lim', 'd/dx'];
+      const trigPrefixes = ['sin', 'cos', 'tg', 'cotg'];
       const currIsFunction = functionPrefixes.some(pf => card.symbol === pf || card.symbol.startsWith(pf + '('));
+      const prevIsTrigFunction = trigPrefixes.some(pf => prevCard.symbol === pf || prevCard.symbol.startsWith(pf + '('));
+      const currIsTrigFunction = trigPrefixes.some(pf => card.symbol === pf || card.symbol.startsWith(pf + '('));
 
       // Pravidla pro implicitní násobení:
       // 1) Číslo/Proměnná -> Otevírací závorka  (např. "5(")
@@ -169,6 +172,9 @@ export function parseBoardToMathString(board: GameCard[]): string {
       if (
         (prevIsDigitOrVar && currIsOpenBracket) ||
         (prevIsDigitOrVar && currIsFunction) ||
+        (prevIsTrigFunction && currIsDigitOrVar) ||
+        (prevIsTrigFunction && currIsOpenBracket) ||
+        (prevIsTrigFunction && currIsTrigFunction) ||
         (prevIsCloseBracket && currIsOpenBracket) ||
         (prevIsCloseBracket && currIsDigitOrVar) ||
         (prevIsCloseBracket && currIsFunction)

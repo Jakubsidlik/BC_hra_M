@@ -69,6 +69,7 @@ export function useGameEngine() {
   const [winner, setWinner] = useState<Player | null>(null);
   const [gameSummaryOpen, setGameSummaryOpen] = useState(false);
   const [gameStats, setGameStats] = useState<GameStats | null>(null);
+  const [pendingHandSwap, setPendingHandSwap] = useState<{ direction: 1 | -1; snapshot: { playerId: number; hand: GameCard[] }[] } | null>(null);
 
   // --- TUTORIAL ---
   const [tutorialActive, setTutorialActive] = useState(false);
@@ -193,7 +194,30 @@ export function useGameEngine() {
     }
   }, [deck, discardPile, updatePlayerStats]);
 
+  const applyPendingHandSwap = useCallback(() => {
+    if (!pendingHandSwap) return;
+    const { direction, snapshot } = pendingHandSwap;
+    const snapshotMap = new Map(snapshot.map(entry => [entry.playerId, entry.hand]));
+
+    setPlayers(prev => {
+      const next = JSON.parse(JSON.stringify(prev));
+      const count = next.length;
+      const newHands = next.map((player: Player, index: number) => {
+        const sourceIndex = (index - direction + count) % count;
+        const sourceId = next[sourceIndex].id;
+        return snapshotMap.get(sourceId) ?? [];
+      });
+      next.forEach((player: Player, index: number) => {
+        player.hand = newHands[index];
+      });
+      return next;
+    });
+
+    setPendingHandSwap(null);
+  }, [pendingHandSwap]);
+
   const finalizeTurn = useCallback(() => {
+    applyPendingHandSwap();
     setIsDiscarding(false);
     const p = players[currentPlayerIndex];
     if (p?.status?.extraTurn) {
@@ -213,7 +237,7 @@ export function useGameEngine() {
       return;
     }
     setIsHandoff(true);
-  }, [players, currentPlayerIndex, performDraw, updatePlayerStats]);
+  }, [applyPendingHandSwap, players, currentPlayerIndex, performDraw, updatePlayerStats]);
 
   const handleDiscardExpression = () => {
     if (hasModifiedBoardThisTurn) return toast.error("Již jsi provedl akci za tento tah!");
@@ -248,9 +272,23 @@ export function useGameEngine() {
       return toast.error("V tutoriálu teď není čas ukončit tah.");
     }
     const p = players[currentPlayerIndex];
-    if (p.hand.length > 5) {
+    const hasOperatorInHand = p?.hand?.some((card: GameCard) => cardsDatabase[card.symbol]?.type === 'operator') ?? false;
+    if (p?.status?.mustPlayOperation && hasOperatorInHand) {
+      return toast.error("Musíš v tomto tahu zahrát operaci.");
+    }
+    if (p?.status?.mustPlayOperation && !hasOperatorInHand) {
+      setPlayers(prev => {
+        const next = JSON.parse(JSON.stringify(prev));
+        if (next[currentPlayerIndex]?.status) {
+          next[currentPlayerIndex].status.mustPlayOperation = false;
+        }
+        return next;
+      });
+    }
+    const handLimit = tutorialActive && tutorialStep === 2 ? 6 : 5;
+    if (p.hand.length > handLimit) {
       setIsDiscarding(true);
-      toast.warning(`Limit ruky překročen! Musíš zahodit ${p.hand.length - 5} karet.`);
+      toast.warning(`Limit ruky překročen! Musíš zahodit ${p.hand.length - handLimit} karet.`);
       return;
     }
     finalizeTurn();
@@ -287,7 +325,8 @@ export function useGameEngine() {
         const p = next[activePlayerIdx];
         
         // Kontrola nového počtu karet (po odebrání)
-        if (p.hand.length <= 5) {
+        const handLimit = tutorialActive && tutorialStep === 2 ? 6 : 5;
+        if (p.hand.length <= handLimit) {
           setIsDiscarding(false);
           if (tutorialActive) {
             setTutorialDiscardDone(true);
@@ -296,6 +335,7 @@ export function useGameEngine() {
           } else {
             // Přechod k dalšímu hráči
             setTimeout(() => {
+              applyPendingHandSwap();
               setIsHandoff(true);
             }, 300);
           }
@@ -347,7 +387,6 @@ export function useGameEngine() {
         // Jednokolová omezení — resetovat na začátku nového tahu hráče
         next[nextIdx].status.operationLock = false;
         next[nextIdx].status.numberLock = false;
-        next[nextIdx].status.mustPlayOperation = false;
         next[nextIdx].status.playLimit = null;
         next[nextIdx].status.infinitePlays = false;
       }
@@ -451,6 +490,7 @@ export function useGameEngine() {
   const addCardToGameState = useCallback((card: GameCard, targetId: string | null, insertPosition?: number) => {
     const slotCards = card.slotCards ?? createSlotCards(card.symbol);
     const cardWithSlots = slotCards ? { ...card, slotCards } : card;
+    const cardData = cardsDatabase[cardWithSlots.symbol];
     // Odebrat kartu z ruky a přidat na tabuli okamžitě
     setPlayers(prev => {
       const next = JSON.parse(JSON.stringify(prev));
@@ -477,6 +517,9 @@ export function useGameEngine() {
         p.board.splice(insertPosition, 0, cardWithSlots);
       } else {
         p.board.push(cardWithSlots);
+      }
+      if (p.status && cardData?.type === 'operator') {
+        p.status.mustPlayOperation = false;
       }
       return next;
     });
@@ -642,6 +685,9 @@ export function useGameEngine() {
       if (slotCardData?.type === 'operator' || slotCardData?.type === 'syntax') {
         return toast.error("Do okénka lze vložit jen čísla nebo symboly.");
       }
+      if (players[currentPlayerIndex].status?.mustPlayOperation) {
+        return toast.error("Musíš v tomto tahu zahrát operaci.");
+      }
       if (players[currentPlayerIndex].status?.numberLock) {
         return toast.error("Tento tah nesmíš hrát číslo! (Zákaz čísel ∏)");
       }
@@ -729,7 +775,7 @@ export function useGameEngine() {
 
     if (cardToPlace.symbol === '∫') {
       setIntegralSetup({ card: cardToPlace, targetId, insertPosition });
-    } else if (cardsDatabase[cardToPlace.symbol]?.hasEffect && !tutorialActive) {
+    } else if (cardsDatabase[cardToPlace.symbol]?.hasEffect && !tutorialActive && !isOnlyOnBoard) {
       setPendingEffect({ card: cardToPlace, targetId, insertPosition });
     } else {
       // --- ENFORCE RESTRICTION FLAGS ---
@@ -820,13 +866,27 @@ export function useGameEngine() {
       if (immediateDraw[activeId]) performDraw(immediateDraw[activeId], currentPlayerIndex);
 
       // --- 3. APLIKACE LOGIKY EFEKTU ---
+      const playersForEffect = players.map((p, idx) => {
+        if (idx !== currentPlayerIndex) return p;
+        return { ...p, hand: p.hand.filter((c: GameCard) => c.id !== pendingEffect.card.id) };
+      });
       const effectResult = applyEffectLogic(
-        activeId, players, currentPlayerIndex, targetPlayerId, targetCardId, pendingEffect.card, difficulty
+        activeId, playersForEffect, currentPlayerIndex, targetPlayerId, targetCardId, pendingEffect.card, difficulty
       );
 
       // Zpracování EffectResult s metadaty
       const resultPlayers = Array.isArray(effectResult) ? effectResult : effectResult.players;
       metadata = !Array.isArray(effectResult) ? effectResult.metadata : undefined;
+
+      if (metadata?.handSwapDirection) {
+        setPendingHandSwap({
+          direction: metadata.handSwapDirection,
+          snapshot: playersForEffect.map(p => ({
+            playerId: p.id,
+            hand: p.hand.map(card => ({ ...card }))
+          }))
+        });
+      }
 
       setPlayers(resultPlayers);
 
@@ -989,6 +1049,7 @@ export function useGameEngine() {
     setDeck(deckCopy);
     setPlayers(newPlayers);
     resetGameStats(newPlayers);
+    setPendingHandSwap(null);
     setGamePhase('PLAYING');
   };
 
@@ -998,7 +1059,7 @@ export function useGameEngine() {
       symbol
     });
 
-    const p1HandSymbols = ['2', '*', 'sin(π/2)', '+', '3', '2', '7', '8'];
+    const p1HandSymbols = ['2', '*', 'sin(π/2)', '+', '3', '2', '7', '8', '4', '9'];
     const p1Hand = p1HandSymbols.map(sym => makeCard(sym, 't1'));
         const referenceBoard: GameCard[] = [
           makeCard('(', 'ref'),
@@ -1010,7 +1071,7 @@ export function useGameEngine() {
           makeCard(')', 'ref'),
         ];
 
-    const discardableIds = p1Hand.filter(c => ['7', '8'].includes(c.symbol)).map(c => c.id);
+    const discardableIds = p1Hand.filter(c => ['7', '8', '4', '9'].includes(c.symbol)).map(c => c.id);
 
     const newPlayers: Player[] = [
       {
@@ -1055,6 +1116,7 @@ export function useGameEngine() {
     setHasModifiedBoardThisTurn(false);
     setPlaysThisTurn(0);
     resetGameStats(newPlayers);
+    setPendingHandSwap(null);
 
     setTutorialAllowedDiscardIds(discardableIds);
     setTutorialActive(true);
@@ -1086,6 +1148,7 @@ export function useGameEngine() {
     setPlaysThisTurn(0);
     setGameStats(null);
     setGameSummaryOpen(false);
+    setPendingHandSwap(null);
     setGamePhase('PICK_MODE');
   };
 
@@ -1105,6 +1168,7 @@ export function useGameEngine() {
     setPlaysThisTurn(0);
     setGameStats(null);
     setGameSummaryOpen(false);
+    setPendingHandSwap(null);
     setGamePhase('PICK_MODE');
   };
 

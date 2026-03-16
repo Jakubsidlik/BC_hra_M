@@ -21,7 +21,7 @@ export function TutorialOverlay({ active, step, onNext }: { active: boolean; ste
     },
     {
       title: 'Konec tahu a odhazování',
-      text: 'Klikni na Konec tahu. Máš více než 5 karet, proto jednu přebytečnou zahoď na odhazovací pole.'
+      text: 'Klikni na Konec tahu. Máš více než 5 karet, proto odhoď přebytečné karty na odhazovací pole (ať ti zůstane 6).'
     },
     {
       title: 'Závorky a mocnina',
@@ -41,7 +41,7 @@ export function TutorialOverlay({ active, step, onNext }: { active: boolean; ste
   const showNext = step === 0 || step === 1;
 
   return (
-    <div className="fixed left-1/2 top-6 z-[120] w-[92vw] max-w-xl -translate-x-1/2 rounded-2xl border border-white/10 bg-slate-950/85 p-5 text-slate-100 shadow-2xl backdrop-blur-md">
+    <div className="fixed left-1/2 top-6 z-120 w-[92vw] max-w-xl -translate-x-1/2 rounded-2xl border border-white/10 bg-slate-950/85 p-5 text-slate-100 shadow-2xl backdrop-blur-md">
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">Tutoriál</p>
@@ -76,7 +76,7 @@ interface EffectDialogProps {
 export function VictoryScreen({ winner, onReset, onShowDetails }: { winner: Player | null, onReset: () => void, onShowDetails: () => void }) {
   if (!winner) return null;
   return (
-    <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center px-6 text-center select-none overflow-hidden min-h-[100dvh]" style={{ background: 'radial-gradient(circle at center 40%, #2e7a42 0%, #1a4225 50%, #141e17 90%)', backgroundColor: '#141e17', backgroundAttachment: 'fixed', backgroundSize: 'cover' }}>
+    <div className="fixed inset-0 z-100 flex flex-col items-center justify-center px-6 text-center select-none overflow-hidden min-h-dvh" style={{ background: 'radial-gradient(circle at center 40%, #2e7a42 0%, #1a4225 50%, #141e17 90%)', backgroundColor: '#141e17', backgroundAttachment: 'fixed', backgroundSize: 'cover' }}>
       <div className="absolute inset-0 pointer-events-none overflow-hidden flex items-center justify-center opacity-30">
         <div className="absolute inset-0 flex flex-wrap content-start justify-center gap-4 -rotate-12 select-none pointer-events-none break-all text-2xl leading-relaxed tracking-widest scale-150 md:scale-125" style={{ color: '#399551', fontFamily: "'Merienda', cursive" }}>
           {'∫εℕ⊈∑∮ℤ∪λℚπℝ⊕ξ∩∏ωδ '.repeat(300)}
@@ -90,7 +90,7 @@ export function VictoryScreen({ winner, onReset, onShowDetails }: { winner: Play
         <p className="text-xl md:text-2xl text-slate-100 leading-relaxed px-4 drop-shadow-md" style={{ fontFamily: "'Merienda', cursive" }}>
           Hráč <span className="font-bold" style={{ color: '#60d984' }}>"{winner.name}"</span> jako první zkonstruoval rovnost!
         </p>
-        <div className="mt-16 w-full max-w-[280px] flex flex-col gap-4">
+        <div className="mt-16 w-full max-w-70 flex flex-col gap-4">
           <button onClick={onReset} className="w-full flex items-center justify-center gap-2 text-white font-bold py-4 px-8 rounded-xl transition-all shadow-lg active:scale-95" style={{ backgroundColor: '#399551' }}>
             <span className="material-symbols-outlined">play_arrow</span> Další hra
           </button>
@@ -161,7 +161,7 @@ export function GameSummaryDialog({
   };
 
   return (
-    <div className="fixed inset-0 z-[120] bg-slate-950/95 flex items-center justify-center p-6">
+    <div className="fixed inset-0 z-120 bg-slate-950/95 flex items-center justify-center p-6">
       <div className="w-full max-w-5xl rounded-2xl border border-white/10 bg-slate-900/80 backdrop-blur-md p-6 text-slate-100">
         <div className="flex items-start justify-between gap-4">
           <div>
@@ -309,7 +309,7 @@ export function EffectDialog({
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) onClose(); }}>
-      <DialogContent className="w-[92vw] max-w-[450px] p-0 border-0 shadow-2xl rounded-xl overflow-hidden"
+      <DialogContent className="w-[92vw] max-w-112.5 p-0 border-0 shadow-2xl rounded-xl overflow-hidden"
         style={{ background: 'rgb(30,41,59)', border: '4px solid rgba(255,255,255,0.08)' }}>
 
         {/* Header */}
@@ -357,7 +357,7 @@ export function EffectDialog({
                       <h4 className="text-white text-lg sm:text-xl font-bold" style={{ fontFamily: "'Merienda', cursive" }}>
                         {effect.name}
                       </h4>
-                      <p className="text-slate-300 text-sm leading-relaxed break-words">
+                      <p className="text-slate-300 text-sm leading-relaxed wrap-break-word">
                         {effect.description}
                       </p>
                     </div>
@@ -417,7 +417,7 @@ export function EffectDialog({
                         {opponent.name}
                       </span>
                     </div>
-                    <div className={`w-4 h-4 rounded-full flex-shrink-0 ${opponent.theme.split(' ')[0]} border border-white/20`} />
+                    <div className={`w-4 h-4 rounded-full shrink-0 ${opponent.theme.split(' ')[0]} border border-white/20`} />
                   </button>
                 ))}
               </div>
@@ -670,7 +670,7 @@ export function ModuloDialog({
 export function LeaveGameDialog({ open, onConfirm, onCancel }: { open: boolean; onConfirm: () => void; onCancel: () => void }) {
   return (
     <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) onCancel(); }}>
-      <DialogContent className="w-[92vw] max-w-[420px] p-6 border-0 shadow-2xl rounded-xl overflow-hidden"
+      <DialogContent className="w-[92vw] max-w-105 p-6 border-0 shadow-2xl rounded-xl overflow-hidden"
         style={{ background: 'rgb(30,41,59)', border: '4px solid rgba(255,255,255,0.08)' }}>
         <DialogHeader>
           <DialogTitle className="text-2xl text-white" style={{ fontFamily: "'Merienda', cursive" }}>

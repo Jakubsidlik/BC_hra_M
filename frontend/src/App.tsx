@@ -1,5 +1,6 @@
 
 import { DndContext, useSensor, useSensors, MouseSensor, TouchSensor } from '@dnd-kit/core';
+import { snapCenterToCursor } from '@dnd-kit/modifiers';
 import { Toaster } from "sonner";
 
 // Importy Hooku a dat
@@ -60,7 +61,7 @@ export default function App() {
   if (!currentPlayer) return null;
 
   return (
-    <DndContext onDragEnd={actions.handleDragEnd} sensors={sensors}>
+    <DndContext onDragEnd={actions.handleDragEnd} sensors={sensors} modifiers={[snapCenterToCursor]}>
       <Toaster
         position="top-center"
         toastOptions={{

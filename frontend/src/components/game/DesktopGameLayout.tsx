@@ -37,6 +37,22 @@ function getDesktopPalette(themeId: string): ThemePalette {
   return THEME_PALETTES[themeId] ?? THEME_PALETTES['bg-emerald-600/60'];
 }
 
+function findIntegralVariable(cards: GameCard[]): 'x' | 'y' | null {
+  const stack = [...cards];
+  while (stack.length > 0) {
+    const card = stack.pop();
+    if (!card) continue;
+    if (card.integralVariable) return card.integralVariable;
+    if (card.exponent) stack.push(card.exponent);
+    if (card.slotCards) {
+      Object.values(card.slotCards).forEach(slotCard => {
+        if (slotCard) stack.push(slotCard);
+      });
+    }
+  }
+  return null;
+}
+
 // Desktop card dimensions (larger than mobile/tablet)
 const CARD_W = '8.35rem';
 const CARD_H = '12.5rem';
@@ -603,6 +619,7 @@ export function DesktopGameLayout({ currentPlayer, state, actions, tutorialRefer
   const { deck, discardPile, isDiscarding, hasModifiedBoardThisTurn, bracketMode, tutorialActive, tutorialStep } = state;
   const palette = getDesktopPalette(currentPlayer.theme);
   const canVerify = tutorialActive ? tutorialStep === 4 : !hasModifiedBoardThisTurn;
+  const integralVar = findIntegralVariable(currentPlayer.board);
 
   const [isDraggingCard, setIsDraggingCard] = useState(false);
   useDndMonitor({
@@ -728,18 +745,28 @@ export function DesktopGameLayout({ currentPlayer, state, actions, tutorialRefer
             </div>
 
             {/* Target R — scaled up as per mockup */}
-            <div
-              className="absolute bottom-4 right-4 flex items-center gap-2 backdrop-blur-sm p-2 rounded-lg border border-white/20 origin-bottom-right"
-              style={{
-                background: 'rgba(0,0,0,0.20)',
-                transform: 'scale(1.32)',
-                transformOrigin: 'bottom right',
-                padding: '1.2rem',
-                borderRadius: '0.75rem',
-              }}
-            >
-              <span className="text-2xl font-bold text-white">=</span>
-              <span className="text-4xl font-black text-white px-2">{currentPlayer.targetR}</span>
+            <div className="absolute bottom-4 right-4 flex flex-col items-end gap-2">
+              {integralVar && (
+                <div
+                  className="flex items-center justify-center rounded-md border-2 border-white/30 bg-slate-900/85 px-4 py-2 text-white font-black shadow-lg"
+                  style={{ transform: 'scale(1.1)' }}
+                >
+                  d{integralVar}
+                </div>
+              )}
+              <div
+                className="flex items-center gap-2 backdrop-blur-sm p-2 rounded-lg border border-white/20 origin-bottom-right"
+                style={{
+                  background: 'rgba(0,0,0,0.20)',
+                  transform: 'scale(1.32)',
+                  transformOrigin: 'bottom right',
+                  padding: '1.2rem',
+                  borderRadius: '0.75rem',
+                }}
+              >
+                <span className="text-2xl font-bold text-white">=</span>
+                <span className="text-4xl font-black text-white px-2">{currentPlayer.targetR}</span>
+              </div>
             </div>
           </div>
         </section>
