@@ -1,4 +1,42 @@
 import type { GameCard } from './effects';
+import { cardsDatabase } from '../data/cardsDB';
+
+export type SpecialSlotKey = 'lower' | 'upper' | 'order' | 'single' | 'ul' | 'ur' | 'll' | 'lr';
+
+export interface SpecialSlotConfig {
+  key: SpecialSlotKey;
+  label: string;
+}
+
+
+const SLOT_LABELS: Record<SpecialSlotKey, string> = {
+  upper: 'Horní slot',
+  lower: 'Dolní slot',
+  order: 'Řád',
+  single: 'Slot',
+  ul: 'Horní levý',
+  ur: 'Horní pravý',
+  ll: 'Dolní levý',
+  lr: 'Dolní pravý',
+};
+
+export function getSpecialSlots(symbol: string): SpecialSlotConfig[] {
+  const slots = cardsDatabase[symbol]?.slots ?? [];
+  return slots.map(key => ({ key: key as SpecialSlotKey, label: SLOT_LABELS[key as SpecialSlotKey] || 'Slot' }));
+}
+
+export function createSlotCards(symbol: string): Record<string, GameCard | null> | undefined {
+  const slots = getSpecialSlots(symbol);
+  if (slots.length === 0) return undefined;
+  return slots.reduce<Record<string, GameCard | null>>((acc, slot) => {
+    acc[slot.key] = null;
+    return acc;
+  }, {});
+}
+
+export function getSlotCardValue(card: GameCard, key: SpecialSlotKey): GameCard | null {
+  return card.slotCards?.[key] ?? null;
+}
 
 // 1. CHYBĚJÍCÍ DEFINICE OBTÍŽNOSTI
 export type DifficultyMode = 'ZŠ' | 'SŠ' | 'VŠ';
@@ -44,7 +82,7 @@ export function generatePersonalTargetR(difficulty: DifficultyMode): string {
   }
 
   if (difficulty === 'VŠ') {
-    const category = randInt(1, 5);
+    const category = randInt(1, 4);
     switch (category) {
       case 1: return `${randInt(10, 99)}`;                         // dvouciferné číslo
       case 2: return `${randInt(10, 99)}${pickVar()}`;             // dvouciferné číslo a X/Y
@@ -86,13 +124,6 @@ export function generatePersonalTargetR(difficulty: DifficultyMode): string {
           return `${c1}${c2}${variable}`;
         }
       }
-      case 5: {
-        // kombinace čísla a mocniny X
-        const num = randInt(1, 20);
-        const variable = pickVar();
-        const power = randInt(2, 5);
-        return `${num}${variable}^${power}`;
-      }
     }
   }
 
@@ -126,7 +157,7 @@ export function parseBoardToMathString(board: GameCard[]): string {
       const currIsDigitOrVar = card.symbol.match(/^[0-9]$/) || ['x', 'y', 'π', 'e'].includes(card.symbol);
       const prevIsCloseBracket = [')', ']', '}'].includes(prevCard.symbol);
       const currIsOpenBracket = ['(', '[', '{'].includes(card.symbol);
-      const functionPrefixes = ['sin', 'cos', 'tg', 'cotg', 'log', 'ln', 'sqrt', '∫', '∑', 'lim'];
+      const functionPrefixes = ['sin', 'cos', 'tg', 'cotg', 'log', 'ln', 'sqrt', 'int', '∑', '∏', 'lim', 'd/dx'];
       const currIsFunction = functionPrefixes.some(pf => card.symbol === pf || card.symbol.startsWith(pf + '('));
 
       // Pravidla pro implicitní násobení:
@@ -146,14 +177,19 @@ export function parseBoardToMathString(board: GameCard[]): string {
       }
     }
 
-    // Specifické překlady pro SymPy uvnitř symbolů s novými formacemi (závorka s parametry úhlů)
-    // Zachycuje vzor např. "sin(45°, π/4)" a vytáhne radián "π/4"
-    const goniometryMatch = sym.match(/^(sin|cos|tg|cotg)\(.*,\s*(.*)\)$/);
+    // Specifické překlady pro SymPy u goniometrie (radian pouze, případně starý "deg, rad" zápis)
+    // Zachycuje vzor např. "sin(π/4)" nebo "sin(45°, π/4)" a použije radián
+    const goniometryMatch = sym.match(/^(sin|cos|tg|cotg)\((.*)\)$/);
     if (goniometryMatch) {
-      const func = goniometryMatch[1] === 'tg' ? 'tan' : 
-                   goniometryMatch[1] === 'cotg' ? 'cot' : 
+      const func = goniometryMatch[1] === 'tg' ? 'tan' :
+                   goniometryMatch[1] === 'cotg' ? 'cot' :
                    goniometryMatch[1];
-      const radian = goniometryMatch[2].replace(/π/g, 'pi');
+      let radian = goniometryMatch[2];
+      if (radian.includes(',')) {
+        const parts = radian.split(',');
+        radian = parts[parts.length - 1].trim();
+      }
+      radian = radian.replace(/π/g, 'pi');
       sym = `${func}(${radian})`;
     } else {
       // Původní fallback překlady
@@ -163,17 +199,29 @@ export function parseBoardToMathString(board: GameCard[]): string {
     }
 
     // 1. ZPRACOVÁNÍ PREFIXOVÝCH FUNKCÍ (Integrál, Suma, atd.)
-    if (['∫', '∑', 'lim'].includes(card.symbol)) {
+    if (['int', '∑', '∏', 'lim', 'd/dx'].includes(card.symbol)) {
       // Tady je trik: integrál "vysaje" jen to, co je v jeho dosahu
       // Pro jednoduchost teď bereme vše napravo, ale bez 'break'
       // Pokud chceš, aby integrál končil, doporučuji přidat kartu "dx" nebo ")"
       const rest = board.slice(i + 1);
       const inner = parseBoardToMathString(rest) || "1";
 
-      if (card.symbol === '∫' && card.integralBounds) {
-        result += `Integral(${inner}, (x, ${card.integralBounds.lower}, ${card.integralBounds.upper}))`;
-      } else if (card.symbol === '∑' && card.integralBounds) {
-        result += `Sum(${inner}, (n, ${card.integralBounds.lower}, ${card.integralBounds.upper}))`;
+      if (card.symbol === 'int') {
+        const variable = card.integralVariable === 'y' ? 'y' : 'x';
+        const lower = card.slotCards?.lower ? parseBoardToMathString([card.slotCards.lower]) : '0';
+        const upper = card.slotCards?.upper ? parseBoardToMathString([card.slotCards.upper]) : '1';
+        result += `Integral(${inner}, (${variable}, ${lower}, ${upper}))`;
+      } else if (card.symbol === '∑') {
+        const lower = card.slotCards?.lower ? parseBoardToMathString([card.slotCards.lower]) : '1';
+        const upper = card.slotCards?.upper ? parseBoardToMathString([card.slotCards.upper]) : '1';
+        result += `Sum(${inner}, (n, ${lower}, ${upper}))`;
+      } else if (card.symbol === '∏') {
+        const lower = card.slotCards?.lower ? parseBoardToMathString([card.slotCards.lower]) : '1';
+        const upper = card.slotCards?.upper ? parseBoardToMathString([card.slotCards.upper]) : '1';
+        result += `Product(${inner}, (n, ${lower}, ${upper}))`;
+      } else if (card.symbol === 'd/dx') {
+        const order = card.slotCards?.order ? parseBoardToMathString([card.slotCards.order]) : '1';
+        result += `Derivative(${inner}, x, ${order})`;
       } else if (card.symbol === 'lim') {
         result += `Limit(${inner}, x, 0)`; // Zjednodušená limita
       }
@@ -218,7 +266,7 @@ export function hasOperation(board: GameCard[]): boolean {
     const currIsDigitOrVar = card.symbol.match(/^[0-9]$/) || ['x', 'y', 'π', 'e'].includes(card.symbol);
     const prevIsCloseBracket = [')', ']', '}'].includes(prevCard.symbol);
     const currIsOpenBracket = ['(', '[', '{'].includes(card.symbol);
-    const functionPrefixes = ['sin', 'cos', 'tg', 'cotg', 'log', 'ln', 'sqrt', '∫', '∑', 'lim'];
+    const functionPrefixes = ['sin', 'cos', 'tg', 'cotg', 'log', 'ln', 'sqrt', 'int', '∑', '∏', 'lim', 'd/dx'];
     const currIsFunction = functionPrefixes.some(pf => card.symbol === pf || card.symbol.startsWith(pf + '('));
 
     if (
@@ -269,7 +317,6 @@ export function getBorderColor(symbol: string): string {
 }
 
 // 5. GENEROVÁNÍ BALÍČKU (Pokud ji máš vyřešenou jinak, nahraď svou původní)
-import { cardsDatabase } from '../data/cardsDB';
 export function generateFilteredDeck(difficulty: DifficultyMode): GameCard[] {
   const deck: GameCard[] = [];
   

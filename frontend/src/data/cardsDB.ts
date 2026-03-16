@@ -15,6 +15,7 @@ export interface CardData {
   image: string; // <-- PŘIDÁNA VLASTNOST PRO OBRÁZEK
   hasEffect?: boolean;
   canHaveExponent?: boolean; // <-- VLASTNOST PRO PODPORU EXPONENTŮ
+  slots?: string[]; // <-- 0-2 navazující sloty pro kontext
   effects?: {
     optionA?: EffectDetails;
     optionB?: EffectDetails;
@@ -24,16 +25,16 @@ export interface CardData {
 // DATABÁZE VŠECH KARET VE HŘE (Mapování podle karty.csv)
 export const cardsDatabase: Record<string, CardData> = {
   // --- ČÍSLA (EFF_001: Dobrání 1 karty navíc) ---
-  '0': { symbol: '0', type: 'number', count: 4, image: '/cards/0.svg', hasEffect: true, effects: { optionA: { id: 'EFF_001', name: 'Bonus karty', description: 'Dobrání 1 karty navíc v příštím tahu.', target: 'SELF' } } },
-  '1': { symbol: '1', type: 'number', count: 6, image: '/cards/1.svg', hasEffect: true, effects: { optionA: { id: 'EFF_001', name: 'Bonus karty', description: 'Dobrání 1 karty navíc v příštím tahu.', target: 'SELF' } } },
-  '2': { symbol: '2', type: 'number', count: 10, image: '/cards/2.svg', hasEffect: true, effects: { optionA: { id: 'EFF_001', name: 'Bonus karty', description: 'Dobrání 1 karty navíc v příštím tahu.', target: 'SELF' } } },
-  '3': { symbol: '3', type: 'number', count: 10, image: '/cards/3.svg', hasEffect: true, effects: { optionA: { id: 'EFF_001', name: 'Bonus karty', description: 'Dobrání 1 karty navíc v příštím tahu.', target: 'SELF' } } },
-  '4': { symbol: '4', type: 'number', count: 10, image: '/cards/4.svg', hasEffect: true, effects: { optionA: { id: 'EFF_001', name: 'Bonus karty', description: 'Dobrání 1 karty navíc v příštím tahu.', target: 'SELF' } } },
-  '5': { symbol: '5', type: 'number', count: 10, image: '/cards/5.svg', hasEffect: true, effects: { optionA: { id: 'EFF_001', name: 'Bonus karty', description: 'Dobrání 1 karty navíc v příštím tahu.', target: 'SELF' } } },
-  '6': { symbol: '6', type: 'number', count: 10, image: '/cards/6.svg', hasEffect: true, effects: { optionA: { id: 'EFF_001', name: 'Bonus karty', description: 'Dobrání 1 karty navíc v příštím tahu.', target: 'SELF' } } },
-  '7': { symbol: '7', type: 'number', count: 10, image: '/cards/7.svg', hasEffect: true, effects: { optionA: { id: 'EFF_001', name: 'Bonus karty', description: 'Dobrání 1 karty navíc v příštím tahu.', target: 'SELF' } } },
-  '8': { symbol: '8', type: 'number', count: 10, image: '/cards/8.svg', hasEffect: true, effects: { optionA: { id: 'EFF_001', name: 'Bonus karty', description: 'Dobrání 1 karty navíc v příštím tahu.', target: 'SELF' } } },
-  '9': { symbol: '9', type: 'number', count: 10, image: '/cards/9.svg', hasEffect: true, effects: { optionA: { id: 'EFF_001', name: 'Bonus karty', description: 'Dobrání 1 karty navíc v příštím tahu.', target: 'SELF' } } },
+  '0': { symbol: '0', type: 'number', count: 4, image: '/cards/0.svg', canHaveExponent: true, hasEffect: true, effects: { optionA: { id: 'EFF_001', name: 'Bonus karty', description: 'Dobrání 1 karty navíc v příštím tahu.', target: 'SELF' } } },
+  '1': { symbol: '1', type: 'number', count: 6, image: '/cards/1.svg', canHaveExponent: true, hasEffect: true, effects: { optionA: { id: 'EFF_001', name: 'Bonus karty', description: 'Dobrání 1 karty navíc v příštím tahu.', target: 'SELF' } } },
+  '2': { symbol: '2', type: 'number', count: 10, image: '/cards/2.svg', canHaveExponent: true, hasEffect: true, effects: { optionA: { id: 'EFF_001', name: 'Bonus karty', description: 'Dobrání 1 karty navíc v příštím tahu.', target: 'SELF' } } },
+  '3': { symbol: '3', type: 'number', count: 10, image: '/cards/3.svg', canHaveExponent: true, hasEffect: true, effects: { optionA: { id: 'EFF_001', name: 'Bonus karty', description: 'Dobrání 1 karty navíc v příštím tahu.', target: 'SELF' } } },
+  '4': { symbol: '4', type: 'number', count: 10, image: '/cards/4.svg', canHaveExponent: true, hasEffect: true, effects: { optionA: { id: 'EFF_001', name: 'Bonus karty', description: 'Dobrání 1 karty navíc v příštím tahu.', target: 'SELF' } } },
+  '5': { symbol: '5', type: 'number', count: 10, image: '/cards/5.svg', canHaveExponent: true, hasEffect: true, effects: { optionA: { id: 'EFF_001', name: 'Bonus karty', description: 'Dobrání 1 karty navíc v příštím tahu.', target: 'SELF' } } },
+  '6': { symbol: '6', type: 'number', count: 10, image: '/cards/6.svg', canHaveExponent: true, hasEffect: true, effects: { optionA: { id: 'EFF_001', name: 'Bonus karty', description: 'Dobrání 1 karty navíc v příštím tahu.', target: 'SELF' } } },
+  '7': { symbol: '7', type: 'number', count: 10, image: '/cards/7.svg', canHaveExponent: true, hasEffect: true, effects: { optionA: { id: 'EFF_001', name: 'Bonus karty', description: 'Dobrání 1 karty navíc v příštím tahu.', target: 'SELF' } } },
+  '8': { symbol: '8', type: 'number', count: 10, image: '/cards/8.svg', canHaveExponent: true, hasEffect: true, effects: { optionA: { id: 'EFF_001', name: 'Bonus karty', description: 'Dobrání 1 karty navíc v příštím tahu.', target: 'SELF' } } },
+  '9': { symbol: '9', type: 'number', count: 10, image: '/cards/9.svg', canHaveExponent: true, hasEffect: true, effects: { optionA: { id: 'EFF_001', name: 'Bonus karty', description: 'Dobrání 1 karty navíc v příštím tahu.', target: 'SELF' } } },
 
   // --- KONSTANTY A PROMĚNNÉ ---
   'π': { 
@@ -41,6 +42,7 @@ export const cardsDatabase: Record<string, CardData> = {
     type: 'number', 
     count: 5, 
     image: '/cards/pi.svg',
+    canHaveExponent: true,
     hasEffect: true,
     effects: {
       optionA: { id: 'EFF_002', name: 'Výměna L', description: 'Možnost výměny 1 karty z vlastního řetězce L za kartu z L oponenta.', target: 'OPPONENT' }
@@ -51,9 +53,10 @@ export const cardsDatabase: Record<string, CardData> = {
     type: 'number', 
     count: 5, 
     image: '/cards/e.svg',
+    canHaveExponent: true,
     hasEffect: true,
     effects: {
-      optionA: { id: 'EFF_003', name: 'Imunita', description: 'Imunita proti efektům karet Integrál a Derivace.', target: 'SELF' }
+      optionA: { id: 'EFF_003', name: 'Přepis R', description: 'Okamžité nahrazení celého cíle R libovolného hráče novým losem.', target: 'ANY' }
     }
   },
   'y': { 
@@ -61,6 +64,7 @@ export const cardsDatabase: Record<string, CardData> = {
     type: 'variable', 
     count: 10, 
     image: '/cards/y.svg',
+    canHaveExponent: true,
     hasEffect: true,
     effects: {
       optionA: { id: 'EFF_004', name: 'Zničení čísel', description: 'Následující hráč musí z ruky odhodit všechny číslice.', target: 'OPPONENT' }
@@ -71,6 +75,7 @@ export const cardsDatabase: Record<string, CardData> = {
     type: 'variable', 
     count: 10, 
     image: '/cards/x.svg',
+    canHaveExponent: true,
     hasEffect: true,
     effects: {
       optionA: { id: 'EFF_005', name: 'Zničení operací', description: 'Následující hráč musí z ruky odhodit všechny operace.', target: 'OPPONENT' }
@@ -125,7 +130,7 @@ export const cardsDatabase: Record<string, CardData> = {
     type: 'operator',
     count: 4,
     image: '/cards/power.svg',
-    canHaveExponent: true,
+    slots: ['single'],
     hasEffect: true,
     effects: {
       optionA: { id: 'EFF_010', name: 'Přeskočení tahu', description: 'Následující hráč přeskakuje svůj tah.', target: 'OPPONENT' }
@@ -136,7 +141,7 @@ export const cardsDatabase: Record<string, CardData> = {
     type: 'operator',
     count: 4,
     image: '/cards/sqrt.svg',
-    canHaveExponent: true,
+    slots: ['single'],
     hasEffect: true,
     effects: {
       optionA: { id: 'EFF_011', name: 'Obnovení ruky', description: 'Odhození celého obsahu ruky a dobrání nových karet.', target: 'OPPONENT' }
@@ -147,6 +152,7 @@ export const cardsDatabase: Record<string, CardData> = {
     type: 'operator', 
     count: 4, 
     image: '/cards/mod.svg',
+    slots: ['single'],
     hasEffect: true,
     effects: {
       optionA: { id: 'EFF_012', name: 'Modulo R', description: 'Hodnota R zvoleného hráče se mění na R mod (libovolné číslo z ruky).', target: 'OPPONENT' }
@@ -167,72 +173,65 @@ export const cardsDatabase: Record<string, CardData> = {
     type: 'operator',
     count: 3,
     image: '/cards/derivative.svg',
-    hasEffect: true,
-    effects: {
-      optionA: { id: 'EFF_014', name: 'Derivace', description: 'Odstranění všech konstant a proměnných z L zvoleného hráče.', target: 'OPPONENT' }
-    }
+    slots: ['order']
   },
   'int': {  
     symbol: 'int', 
     type: 'operator', 
     count: 3, 
     image: '/cards/integral.svg',
-    hasEffect: true,
-    effects: {
-      optionA: { id: 'EFF_015', name: 'Integrál', description: 'Okamžité nahrazení celého cíle R libovolného hráče novým losem.', target: 'OPPONENT' }
-    }
+    slots: ['upper', 'lower']
   },
   '∑': {  
     symbol: '∑', 
     type: 'operator', 
     count: 4, 
     image: '/cards/sum.svg',
-    hasEffect: true,
-    effects: {
-      optionA: { id: 'EFF_016', name: 'Zákaz operací', description: 'Žádný z hráčů nesmí celé další kolo použít kartu operace.', target: 'ALL' }
-    }
+    slots: ['upper', 'lower']
   },
   'log': {
     symbol: 'log',
     type: 'operator',
     count: 2,
     image: '/cards/log.svg',
+    slots: ['single'],
     hasEffect: true,
     effects: {
       optionA: { id: 'EFF_017', name: 'Neomezené hraní', description: 'Můžeš tento tah hrát libovolný počet karet.', target: 'SELF' }
     }
   },
-  // --- GONIOMETRICKÉ HODNOTY (Omezeno na validní úhly, sloupené stupně a radiány) ---
-  'sin(0°, 0)': { symbol: 'sin(0°, 0)', type: 'number', count: 1, image: '/cards/sin.svg', hasEffect: true, effects: { optionA: { id: 'EFF_018', name: 'Předání po', description: 'Všichni hráči si předají karty v ruce po směru.', target: 'ALL' } } },
-  'sin(30°, π/6)': { symbol: 'sin(30°, π/6)', type: 'number', count: 1, image: '/cards/sin.svg', hasEffect: true, effects: { optionA: { id: 'EFF_026', name: 'Ztráta karty', description: 'Všichni soupeři si v příštím tahu doberou o 1 kartu méně.', target: 'ALL' } } },
-  'sin(45°, π/4)': { symbol: 'sin(45°, π/4)', type: 'number', count: 1, image: '/cards/sin.svg', hasEffect: true, effects: { optionA: { id: 'EFF_026', name: 'Ztráta karty', description: 'Všichni soupeři si v příštím tahu doberou o 1 kartu méně.', target: 'ALL' } } },
-  'sin(60°, π/3)': { symbol: 'sin(60°, π/3)', type: 'number', count: 1, image: '/cards/sin.svg', hasEffect: true, effects: { optionA: { id: 'EFF_026', name: 'Ztráta karty', description: 'Všichni soupeři si v příštím tahu doberou o 1 kartu méně.', target: 'ALL' } } },
-  'sin(90°, π/2)': { symbol: 'sin(90°, π/2)', type: 'number', count: 1, image: '/cards/sin.svg', hasEffect: true, effects: { optionA: { id: 'EFF_018', name: 'Předání po', description: 'Všichni hráči si předají karty v ruce po směru.', target: 'ALL' } } },
-  'sin(180°, π)': { symbol: 'sin(180°, π)', type: 'number', count: 1, image: '/cards/sin.svg', hasEffect: true, effects: { optionA: { id: 'EFF_018', name: 'Předání po', description: 'Všichni hráči si předají karty v ruce po směru.', target: 'ALL' } } },
-  'sin(270°, 3π/2)': { symbol: 'sin(270°, 3π/2)', type: 'number', count: 1, image: '/cards/sin.svg', hasEffect: true, effects: { optionA: { id: 'EFF_018', name: 'Předání po', description: 'Všichni hráči si předají karty v ruce po směru.', target: 'ALL' } } },
+  // --- GONIOMETRICKÉ HODNOTY (Omezeno na validní úhly, radiány pouze) ---
+  'sin(0)': { symbol: 'sin(0)', type: 'number', count: 1, image: '/cards/sin.svg', hasEffect: true, effects: { optionA: { id: 'EFF_018', name: 'Předání po', description: 'Všichni hráči si předají karty v ruce po směru.', target: 'ALL' } } },
+  'sin(π/6)': { symbol: 'sin(π/6)', type: 'number', count: 1, image: '/cards/sin.svg', hasEffect: true, effects: { optionA: { id: 'EFF_026', name: 'Ztráta karty', description: 'Všichni soupeři si v příštím tahu doberou o 1 kartu méně.', target: 'ALL' } } },
+  'sin(π/4)': { symbol: 'sin(π/4)', type: 'number', count: 1, image: '/cards/sin.svg', hasEffect: true, effects: { optionA: { id: 'EFF_026', name: 'Ztráta karty', description: 'Všichni soupeři si v příštím tahu doberou o 1 kartu méně.', target: 'ALL' } } },
+  'sin(π/3)': { symbol: 'sin(π/3)', type: 'number', count: 1, image: '/cards/sin.svg', hasEffect: true, effects: { optionA: { id: 'EFF_026', name: 'Ztráta karty', description: 'Všichni soupeři si v příštím tahu doberou o 1 kartu méně.', target: 'ALL' } } },
+  'sin(π/2)': { symbol: 'sin(π/2)', type: 'number', count: 1, image: '/cards/sin.svg', hasEffect: true, effects: { optionA: { id: 'EFF_018', name: 'Předání po', description: 'Všichni hráči si předají karty v ruce po směru.', target: 'ALL' } } },
+  'sin(π)': { symbol: 'sin(π)', type: 'number', count: 1, image: '/cards/sin.svg', hasEffect: true, effects: { optionA: { id: 'EFF_018', name: 'Předání po', description: 'Všichni hráči si předají karty v ruce po směru.', target: 'ALL' } } },
+  'sin(3π/2)': { symbol: 'sin(3π/2)', type: 'number', count: 1, image: '/cards/sin.svg', hasEffect: true, effects: { optionA: { id: 'EFF_018', name: 'Předání po', description: 'Všichni hráči si předají karty v ruce po směru.', target: 'ALL' } } },
 
-  'cos(0°, 0)': { symbol: 'cos(0°, 0)', type: 'number', count: 1, image: '/cards/cos.svg', hasEffect: true, effects: { optionA: { id: 'EFF_019', name: 'Předání proti', description: 'Všichni hráči si předají karty v ruce proti směru.', target: 'ALL' } } },
-  'cos(30°, π/6)': { symbol: 'cos(30°, π/6)', type: 'number', count: 1, image: '/cards/cos.svg', hasEffect: true, effects: { optionA: { id: 'EFF_026', name: 'Ztráta karty', description: 'Všichni soupeři si v příštím tahu doberou o 1 kartu méně.', target: 'ALL' } } },
-  'cos(45°, π/4)': { symbol: 'cos(45°, π/4)', type: 'number', count: 1, image: '/cards/cos.svg', hasEffect: true, effects: { optionA: { id: 'EFF_026', name: 'Ztráta karty', description: 'Všichni soupeři si v příštím tahu doberou o 1 kartu méně.', target: 'ALL' } } },
-  'cos(60°, π/3)': { symbol: 'cos(60°, π/3)', type: 'number', count: 1, image: '/cards/cos.svg', hasEffect: true, effects: { optionA: { id: 'EFF_026', name: 'Ztráta karty', description: 'Všichni soupeři si v příštím tahu doberou o 1 kartu méně.', target: 'ALL' } } },
-  'cos(90°, π/2)': { symbol: 'cos(90°, π/2)', type: 'number', count: 1, image: '/cards/cos.svg', hasEffect: true, effects: { optionA: { id: 'EFF_019', name: 'Předání proti', description: 'Všichni hráči si předají karty v ruce proti směru.', target: 'ALL' } } },
-  'cos(180°, π)': { symbol: 'cos(180°, π)', type: 'number', count: 1, image: '/cards/cos.svg', hasEffect: true, effects: { optionA: { id: 'EFF_019', name: 'Předání proti', description: 'Všichni hráči si předají karty v ruce proti směru.', target: 'ALL' } } },
-  'cos(270°, 3π/2)': { symbol: 'cos(270°, 3π/2)', type: 'number', count: 1, image: '/cards/cos.svg', hasEffect: true, effects: { optionA: { id: 'EFF_019', name: 'Předání proti', description: 'Všichni hráči si předají karty v ruce proti směru.', target: 'ALL' } } },
+  'cos(0)': { symbol: 'cos(0)', type: 'number', count: 1, image: '/cards/cos.svg', hasEffect: true, effects: { optionA: { id: 'EFF_019', name: 'Předání proti', description: 'Všichni hráči si předají karty v ruce proti směru.', target: 'ALL' } } },
+  'cos(π/6)': { symbol: 'cos(π/6)', type: 'number', count: 1, image: '/cards/cos.svg', hasEffect: true, effects: { optionA: { id: 'EFF_026', name: 'Ztráta karty', description: 'Všichni soupeři si v příštím tahu doberou o 1 kartu méně.', target: 'ALL' } } },
+  'cos(π/4)': { symbol: 'cos(π/4)', type: 'number', count: 1, image: '/cards/cos.svg', hasEffect: true, effects: { optionA: { id: 'EFF_026', name: 'Ztráta karty', description: 'Všichni soupeři si v příštím tahu doberou o 1 kartu méně.', target: 'ALL' } } },
+  'cos(π/3)': { symbol: 'cos(π/3)', type: 'number', count: 1, image: '/cards/cos.svg', hasEffect: true, effects: { optionA: { id: 'EFF_026', name: 'Ztráta karty', description: 'Všichni soupeři si v příštím tahu doberou o 1 kartu méně.', target: 'ALL' } } },
+  'cos(π/2)': { symbol: 'cos(π/2)', type: 'number', count: 1, image: '/cards/cos.svg', hasEffect: true, effects: { optionA: { id: 'EFF_019', name: 'Předání proti', description: 'Všichni hráči si předají karty v ruce proti směru.', target: 'ALL' } } },
+  'cos(π)': { symbol: 'cos(π)', type: 'number', count: 1, image: '/cards/cos.svg', hasEffect: true, effects: { optionA: { id: 'EFF_019', name: 'Předání proti', description: 'Všichni hráči si předají karty v ruce proti směru.', target: 'ALL' } } },
+  'cos(3π/2)': { symbol: 'cos(3π/2)', type: 'number', count: 1, image: '/cards/cos.svg', hasEffect: true, effects: { optionA: { id: 'EFF_019', name: 'Předání proti', description: 'Všichni hráči si předají karty v ruce proti směru.', target: 'ALL' } } },
 
-  'tg(30°, π/6)': { symbol: 'tg(30°, π/6)', type: 'number', count: 1, image: '/cards/tg.svg', hasEffect: true, effects: { optionA: { id: 'EFF_026', name: 'Ztráta karty', description: 'Všichni soupeři si v příštím tahu doberou o 1 kartu méně.', target: 'ALL' } } },
-  'tg(45°, π/4)': { symbol: 'tg(45°, π/4)', type: 'number', count: 1, image: '/cards/tg.svg', hasEffect: true, effects: { optionA: { id: 'EFF_020', name: 'Předání po (tg)', description: 'Všichni hráči si předají karty v ruce po směru.', target: 'ALL' } } },
-  'tg(60°, π/3)': { symbol: 'tg(60°, π/3)', type: 'number', count: 1, image: '/cards/tg.svg', hasEffect: true, effects: { optionA: { id: 'EFF_026', name: 'Ztráta karty', description: 'Všichni soupeři si v příštím tahu doberou o 1 kartu méně.', target: 'ALL' } } },
-  'tg(180°, π)': { symbol: 'tg(180°, π)', type: 'number', count: 1, image: '/cards/tg.svg', hasEffect: true, effects: { optionA: { id: 'EFF_020', name: 'Předání po (tg)', description: 'Všichni hráči si předají karty v ruce po směru.', target: 'ALL' } } },
+  'tg(π/6)': { symbol: 'tg(π/6)', type: 'number', count: 1, image: '/cards/tg.svg', hasEffect: true, effects: { optionA: { id: 'EFF_026', name: 'Ztráta karty', description: 'Všichni soupeři si v příštím tahu doberou o 1 kartu méně.', target: 'ALL' } } },
+  'tg(π/4)': { symbol: 'tg(π/4)', type: 'number', count: 1, image: '/cards/tg.svg', hasEffect: true, effects: { optionA: { id: 'EFF_020', name: 'Předání po (tg)', description: 'Všichni hráči si předají karty v ruce po směru.', target: 'ALL' } } },
+  'tg(π/3)': { symbol: 'tg(π/3)', type: 'number', count: 1, image: '/cards/tg.svg', hasEffect: true, effects: { optionA: { id: 'EFF_026', name: 'Ztráta karty', description: 'Všichni soupeři si v příštím tahu doberou o 1 kartu méně.', target: 'ALL' } } },
+  'tg(π)': { symbol: 'tg(π)', type: 'number', count: 1, image: '/cards/tg.svg', hasEffect: true, effects: { optionA: { id: 'EFF_020', name: 'Předání po (tg)', description: 'Všichni hráči si předají karty v ruce po směru.', target: 'ALL' } } },
 
-  'cotg(30°, π/6)': { symbol: 'cotg(30°, π/6)', type: 'number', count: 1, image: '/cards/cotg.svg', hasEffect: true, effects: { optionA: { id: 'EFF_026', name: 'Ztráta karty', description: 'Všichni soupeři si v příštím tahu doberou o 1 kartu méně.', target: 'ALL' } } },
-  'cotg(45°, π/4)': { symbol: 'cotg(45°, π/4)', type: 'number', count: 1, image: '/cards/cotg.svg', hasEffect: true, effects: { optionA: { id: 'EFF_021', name: 'Předání proti (cotg)', description: 'Všichni hráči si předají karty v ruce proti směru.', target: 'ALL' } } },
-  'cotg(60°, π/3)': { symbol: 'cotg(60°, π/3)', type: 'number', count: 1, image: '/cards/cotg.svg', hasEffect: true, effects: { optionA: { id: 'EFF_026', name: 'Ztráta karty', description: 'Všichni soupeři si v příštím tahu doberou o 1 kartu méně.', target: 'ALL' } } },
-  'cotg(90°, π/2)': { symbol: 'cotg(90°, π/2)', type: 'number', count: 1, image: '/cards/cotg.svg', hasEffect: true, effects: { optionA: { id: 'EFF_021', name: 'Předání proti (cotg)', description: 'Všichni hráči si předají karty v ruce proti směru.', target: 'ALL' } } },
+  'cotg(π/6)': { symbol: 'cotg(π/6)', type: 'number', count: 1, image: '/cards/cotg.svg', hasEffect: true, effects: { optionA: { id: 'EFF_026', name: 'Ztráta karty', description: 'Všichni soupeři si v příštím tahu doberou o 1 kartu méně.', target: 'ALL' } } },
+  'cotg(π/4)': { symbol: 'cotg(π/4)', type: 'number', count: 1, image: '/cards/cotg.svg', hasEffect: true, effects: { optionA: { id: 'EFF_021', name: 'Předání proti (cotg)', description: 'Všichni hráči si předají karty v ruce proti směru.', target: 'ALL' } } },
+  'cotg(π/3)': { symbol: 'cotg(π/3)', type: 'number', count: 1, image: '/cards/cotg.svg', hasEffect: true, effects: { optionA: { id: 'EFF_026', name: 'Ztráta karty', description: 'Všichni soupeři si v příštím tahu doberou o 1 kartu méně.', target: 'ALL' } } },
+  'cotg(π/2)': { symbol: 'cotg(π/2)', type: 'number', count: 1, image: '/cards/cotg.svg', hasEffect: true, effects: { optionA: { id: 'EFF_021', name: 'Předání proti (cotg)', description: 'Všichni hráči si předají karty v ruce proti směru.', target: 'ALL' } } },
   'nCk': {
     symbol: 'nCk',
     type: 'operator',
     count: 4,
     image: '/cards/combination.svg',
+    slots: ['upper', 'lower'],
     hasEffect: true,
     effects: {
       optionA: { id: 'EFF_022', name: 'Prohození cifer', description: 'Prohození cifer v R cílového oponenta.', target: 'OPPONENT' }
@@ -243,29 +242,24 @@ export const cardsDatabase: Record<string, CardData> = {
     type: 'operator', 
     count: 2,
     image: '/cards/product.svg',
-    hasEffect: true,
-    effects: {
-      optionA: { id: 'EFF_023', name: 'Zákaz čísel', description: 'Žádný z hráčů nesmí celé další kolo použít kartu čísla.', target: 'ALL' }
-    }
+    slots: ['upper', 'lower']
   },
   'lim': { 
     symbol: 'lim', 
     type: 'operator', 
     count: 2,
     image: '/cards/limit.svg',
-    hasEffect: true,
-    effects: {
-      optionA: { id: 'EFF_024', name: 'Zrušení efektů', description: 'Zrušení všech aktivních efektů vyložených karet u všech hráčů.', target: 'ALL' }
-    }
+    slots: ['single']
   },
   'det': { 
     symbol: 'det', 
     type: 'operator', 
     count: 2, 
     image: '/cards/determinant.svg',
+    slots: ['ul', 'ur', 'll', 'lr'],
     hasEffect: true,
     effects: {
-      optionA: { id: 'EFF_025', name: 'Otočení pořadí', description: 'Změní pořadí tahů hráčů na opačné.', target: 'ALL' }
+      optionA: { id: 'EFF_024', name: 'Zrušení efektů', description: 'Zrušení všech aktivních efektů vyložených karet u všech hráčů.', target: 'ALL' }
     }
   },
 

@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { useDraggable, useDroppable, useDndMonitor } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 import { cardsDatabase } from '@/data/cardsDB';
-import { getBorderColor } from '@/lib/gameHelpers';
-import { BoardDropZone } from '@/components/game/Cards';
+import { getBorderColor, getSpecialSlots } from '@/lib/gameHelpers';
+import { BoardDropZone, type SlotDropData } from '@/components/game/Cards';
 import type { GameCard, Player } from '@/lib/effects';
 
 
@@ -94,7 +94,7 @@ function TabletHandCard({ card, index, total, isDiscarding, onDiscard, palette }
         flex flex-col p-1 transition-all duration-200 origin-bottom
         ${isDragging ? 'scale-110 ring-2 ring-white/30' : ''}
         ${isDiscarding
-          ? 'cursor-pointer !border-red-500 animate-pulse'
+          ? 'cursor-pointer border-red-500! animate-pulse'
           : 'cursor-grab active:cursor-grabbing hover:-translate-y-6'}
         ${borderColor}
       `}
@@ -147,22 +147,100 @@ function TabletDiscardSlot({ discardCount, isDiscarding, palette }: { discardCou
 // ==========================================
 // TABLET DRAGGABLE BOARD CARD
 // ==========================================
-function DraggableBoardCard({ card, palette }: { card: GameCard; palette: ThemePalette; hasModifiedBoardThisTurn: boolean }) {
+function DraggableBoardCard({
+  card,
+  palette,
+  onIntegralVariableChange,
+}: {
+  card: GameCard;
+  palette: ThemePalette;
+  onIntegralVariableChange?: (cardId: string, variable: 'x' | 'y') => void;
+  hasModifiedBoardThisTurn: boolean;
+}) {
   const cardData = cardsDatabase[card.symbol];
+  const specialSlots = getSpecialSlots(card.symbol);
+  const slotKeys = specialSlots.map(slot => slot.key);
+  const hasFourSlots = slotKeys.length === 4;
+  const hasTwoSlots = slotKeys.length === 2;
+  const hasOneSlot = slotKeys.length === 1;
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [isIntegralMenuOpen, setIsIntegralMenuOpen] = useState(false);
+  const isIntegralCard = card.symbol === 'int';
+  const integralVar = card.integralVariable === 'y' ? 'y' : 'x';
+  const integralLabel = integralVar === 'y' ? 'dy' : 'dx';
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: card.id,
     data: card,
+    disabled: card.locked,
   });
+
+  const topSlotKey = hasTwoSlots ? slotKeys[0] : null;
+  const bottomSlotKey = hasTwoSlots ? slotKeys[1] : null;
+
+  const { setNodeRef: setTopSlotRef, isOver: isOverTop } = useDroppable({
+    id: topSlotKey ? `slot-${card.id}-${topSlotKey}` : `slot-${card.id}-top`,
+    data: topSlotKey ? ({ parentId: card.id, slotKey: topSlotKey } as SlotDropData) : undefined,
+    disabled: !topSlotKey,
+  });
+  const { setNodeRef: setBottomSlotRef, isOver: isOverBottom } = useDroppable({
+    id: bottomSlotKey ? `slot-${card.id}-${bottomSlotKey}` : `slot-${card.id}-bottom`,
+    data: bottomSlotKey ? ({ parentId: card.id, slotKey: bottomSlotKey } as SlotDropData) : undefined,
+    disabled: !bottomSlotKey,
+  });
+  const ulKey = hasFourSlots ? slotKeys[0] : null;
+  const urKey = hasFourSlots ? slotKeys[1] : null;
+  const llKey = hasFourSlots ? slotKeys[2] : null;
+  const lrKey = hasFourSlots ? slotKeys[3] : null;
+  const { setNodeRef: setUlRef, isOver: isOverUl } = useDroppable({
+    id: ulKey ? `slot-${card.id}-${ulKey}` : `slot-${card.id}-ul`,
+    data: ulKey ? ({ parentId: card.id, slotKey: ulKey } as SlotDropData) : undefined,
+    disabled: !ulKey,
+  });
+  const { setNodeRef: setUrRef, isOver: isOverUr } = useDroppable({
+    id: urKey ? `slot-${card.id}-${urKey}` : `slot-${card.id}-ur`,
+    data: urKey ? ({ parentId: card.id, slotKey: urKey } as SlotDropData) : undefined,
+    disabled: !urKey,
+  });
+  const { setNodeRef: setLlRef, isOver: isOverLl } = useDroppable({
+    id: llKey ? `slot-${card.id}-${llKey}` : `slot-${card.id}-ll`,
+    data: llKey ? ({ parentId: card.id, slotKey: llKey } as SlotDropData) : undefined,
+    disabled: !llKey,
+  });
+  const { setNodeRef: setLrRef, isOver: isOverLr } = useDroppable({
+    id: lrKey ? `slot-${card.id}-${lrKey}` : `slot-${card.id}-lr`,
+    data: lrKey ? ({ parentId: card.id, slotKey: lrKey } as SlotDropData) : undefined,
+    disabled: !lrKey,
+  });
+  const { setNodeRef: setWholeSlotRef, isOver: isOverWhole } = useDroppable({
+    id: hasOneSlot ? `slot-${card.id}-${slotKeys[0]}` : `slot-${card.id}-whole`,
+    data: hasOneSlot ? ({ parentId: card.id, slotKey: slotKeys[0] } as SlotDropData) : undefined,
+    disabled: !hasOneSlot,
+  });
+
+  const isSlotOver = isOverTop || isOverBottom || isOverWhole || isOverUl || isOverUr || isOverLl || isOverLr;
 
   const style: React.CSSProperties = {
     width: '3.5rem',
     height: '5rem',
     backgroundColor: `${palette.bgDark}cc`,
     borderColor: isDragging ? palette.primary : 'rgba(255,255,255,0.25)',
-    transform: transform ? CSS.Translate.toString(transform) : undefined,
+    transform: transform
+      ? `${CSS.Translate.toString(transform)}${isSlotOver ? ' scale(2)' : ''}`
+      : (isSlotOver ? 'scale(2)' : undefined),
     zIndex: isDragging ? 99999 : undefined,
     opacity: isDragging ? 0.5 : 1,
-    boxShadow: isDragging ? `0 0 20px ${palette.glow}` : undefined,
+    boxShadow: isDragging ? '0 0 20px rgba(255,255,255,0.8)' : undefined,
+  };
+
+  const handleIntegralToggle = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+    setIsIntegralMenuOpen(prev => !prev);
+  };
+
+  const handleIntegralSelect = (event: React.MouseEvent<HTMLButtonElement>, variable: 'x' | 'y') => {
+    event.stopPropagation();
+    onIntegralVariableChange?.(card.id, variable);
+    setIsIntegralMenuOpen(false);
   };
 
   return (
@@ -170,11 +248,191 @@ function DraggableBoardCard({ card, palette }: { card: GameCard; palette: ThemeP
       ref={setNodeRef}
       {...listeners}
       {...attributes}
-      className={`rounded-md border-2 flex items-center justify-center shadow-md transition-colors duration-700
-        cursor-grab active:cursor-grabbing hover:border-red-400/60 hover:scale-105
+      className={`rounded-md border-2 flex items-center justify-center shadow-md transition-colors duration-700 relative
+        ${card.locked ? 'cursor-default' : 'cursor-grab active:cursor-grabbing hover:border-red-400/60 hover:scale-105'}
       `}
       style={style}
+      onClick={() => {
+        if (!isDragging && (hasOneSlot || hasTwoSlots || hasFourSlots)) {
+          setIsExpanded(prev => !prev);
+        }
+      }}
     >
+      {isIntegralCard && (
+        <div className="absolute -right-5 top-1.5 flex flex-col items-center gap-1">
+          <button
+            type="button"
+            onClick={handleIntegralToggle}
+            className="rounded-full bg-slate-900/90 border border-white/20 px-2 py-0.5 text-[9px] font-bold text-white shadow-md hover:bg-slate-800"
+          >
+            {integralLabel}
+          </button>
+          {isIntegralMenuOpen && (
+            <div className="flex flex-col gap-1 rounded-lg border border-white/10 bg-slate-950/95 p-1 shadow-xl">
+              <button
+                type="button"
+                onClick={(event) => handleIntegralSelect(event, 'x')}
+                className={`px-2 py-0.5 text-[9px] font-bold rounded-md ${integralVar === 'x' ? 'bg-emerald-500/80 text-white' : 'text-slate-200 hover:bg-white/10'}`}
+              >
+                dx
+              </button>
+              <button
+                type="button"
+                onClick={(event) => handleIntegralSelect(event, 'y')}
+                className={`px-2 py-0.5 text-[9px] font-bold rounded-md ${integralVar === 'y' ? 'bg-emerald-500/80 text-white' : 'text-slate-200 hover:bg-white/10'}`}
+              >
+                dy
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+      {hasFourSlots && (
+        <>
+          <div
+            ref={setUlRef}
+            className="absolute left-0 top-0 w-1/2 h-1/2 rounded-tl-md pointer-events-auto"
+            style={isOverUl ? { boxShadow: '0 0 0 2px rgba(255,255,255,0.9), 0 0 12px rgba(255,255,255,0.7)' } : undefined}
+          />
+          <div
+            ref={setUrRef}
+            className="absolute right-0 top-0 w-1/2 h-1/2 rounded-tr-md pointer-events-auto"
+            style={isOverUr ? { boxShadow: '0 0 0 2px rgba(255,255,255,0.9), 0 0 12px rgba(255,255,255,0.7)' } : undefined}
+          />
+          <div
+            ref={setLlRef}
+            className="absolute left-0 bottom-0 w-1/2 h-1/2 rounded-bl-md pointer-events-auto"
+            style={isOverLl ? { boxShadow: '0 0 0 2px rgba(255,255,255,0.9), 0 0 12px rgba(255,255,255,0.7)' } : undefined}
+          />
+          <div
+            ref={setLrRef}
+            className="absolute right-0 bottom-0 w-1/2 h-1/2 rounded-br-md pointer-events-auto"
+            style={isOverLr ? { boxShadow: '0 0 0 2px rgba(255,255,255,0.9), 0 0 12px rgba(255,255,255,0.7)' } : undefined}
+          />
+        </>
+      )}
+      {hasTwoSlots && (
+        <>
+          <div
+            ref={setTopSlotRef}
+            className="absolute left-0 right-0 top-0 h-1/2 rounded-t-md pointer-events-auto"
+            style={isOverTop ? { boxShadow: '0 0 0 2px rgba(255,255,255,0.9), 0 0 12px rgba(255,255,255,0.7)' } : undefined}
+          />
+          <div
+            ref={setBottomSlotRef}
+            className="absolute left-0 right-0 bottom-0 h-1/2 rounded-b-md pointer-events-auto"
+            style={isOverBottom ? { boxShadow: '0 0 0 2px rgba(255,255,255,0.9), 0 0 12px rgba(255,255,255,0.7)' } : undefined}
+          />
+        </>
+      )}
+      {hasOneSlot && (
+        <div
+          ref={setWholeSlotRef}
+          className="absolute inset-0 rounded-md pointer-events-auto"
+          style={isOverWhole ? { boxShadow: '0 0 0 2px rgba(255,255,255,0.9), 0 0 12px rgba(255,255,255,0.7)' } : undefined}
+        />
+      )}
+
+      {!isDragging && isExpanded && hasFourSlots && (
+        <>
+          {ulKey && card.slotCards?.[ulKey] && (
+            <div className="absolute" style={{ left: '20%', top: '-12%', transform: 'translateX(-50%) scale(0.85)', zIndex: 0, width: '3.5rem', height: '5rem' }}>
+              <div className={`w-full h-full rounded-md border-2 flex items-center justify-center bg-slate-800 shadow-xl ${getBorderColor(card.slotCards[ulKey]!.symbol)}`}>
+                <div className="w-full h-full flex items-center justify-center p-1">
+                  {cardsDatabase[card.slotCards[ulKey]!.symbol]?.image ? (
+                    <img src={`${BASE}${cardsDatabase[card.slotCards[ulKey]!.symbol].image.replace(/^\//, '')}`} alt={card.slotCards[ulKey]!.symbol} className="w-full h-full object-contain" />
+                  ) : (
+                    <span className="text-sm font-black text-white">{card.slotCards[ulKey]!.symbol}</span>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+          {urKey && card.slotCards?.[urKey] && (
+            <div className="absolute" style={{ left: '80%', top: '-12%', transform: 'translateX(-50%) scale(0.85)', zIndex: 0, width: '3.5rem', height: '5rem' }}>
+              <div className={`w-full h-full rounded-md border-2 flex items-center justify-center bg-slate-800 shadow-xl ${getBorderColor(card.slotCards[urKey]!.symbol)}`}>
+                <div className="w-full h-full flex items-center justify-center p-1">
+                  {cardsDatabase[card.slotCards[urKey]!.symbol]?.image ? (
+                    <img src={`${BASE}${cardsDatabase[card.slotCards[urKey]!.symbol].image.replace(/^\//, '')}`} alt={card.slotCards[urKey]!.symbol} className="w-full h-full object-contain" />
+                  ) : (
+                    <span className="text-sm font-black text-white">{card.slotCards[urKey]!.symbol}</span>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+          {llKey && card.slotCards?.[llKey] && (
+            <div className="absolute" style={{ left: '20%', top: '88%', transform: 'translateX(-50%) scale(0.85)', zIndex: 0, width: '3.5rem', height: '5rem' }}>
+              <div className={`w-full h-full rounded-md border-2 flex items-center justify-center bg-slate-800 shadow-xl ${getBorderColor(card.slotCards[llKey]!.symbol)}`}>
+                <div className="w-full h-full flex items-center justify-center p-1">
+                  {cardsDatabase[card.slotCards[llKey]!.symbol]?.image ? (
+                    <img src={`${BASE}${cardsDatabase[card.slotCards[llKey]!.symbol].image.replace(/^\//, '')}`} alt={card.slotCards[llKey]!.symbol} className="w-full h-full object-contain" />
+                  ) : (
+                    <span className="text-sm font-black text-white">{card.slotCards[llKey]!.symbol}</span>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+          {lrKey && card.slotCards?.[lrKey] && (
+            <div className="absolute" style={{ left: '80%', top: '88%', transform: 'translateX(-50%) scale(0.85)', zIndex: 0, width: '3.5rem', height: '5rem' }}>
+              <div className={`w-full h-full rounded-md border-2 flex items-center justify-center bg-slate-800 shadow-xl ${getBorderColor(card.slotCards[lrKey]!.symbol)}`}>
+                <div className="w-full h-full flex items-center justify-center p-1">
+                  {cardsDatabase[card.slotCards[lrKey]!.symbol]?.image ? (
+                    <img src={`${BASE}${cardsDatabase[card.slotCards[lrKey]!.symbol].image.replace(/^\//, '')}`} alt={card.slotCards[lrKey]!.symbol} className="w-full h-full object-contain" />
+                  ) : (
+                    <span className="text-sm font-black text-white">{card.slotCards[lrKey]!.symbol}</span>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+      {!isDragging && isExpanded && hasTwoSlots && (
+        <>
+          {topSlotKey && card.slotCards?.[topSlotKey] && (
+            <div className="absolute left-1/2" style={{ top: '-10%', transform: 'translateX(-50%) scale(0.9)', zIndex: 0, width: '3.5rem', height: '5rem' }}>
+              <div className={`w-full h-full rounded-md border-2 flex items-center justify-center bg-slate-800 shadow-xl ${getBorderColor(card.slotCards[topSlotKey]!.symbol)}`}>
+                <div className="w-full h-full flex items-center justify-center p-1">
+                  {cardsDatabase[card.slotCards[topSlotKey]!.symbol]?.image ? (
+                    <img src={`${BASE}${cardsDatabase[card.slotCards[topSlotKey]!.symbol].image.replace(/^\//, '')}`} alt={card.slotCards[topSlotKey]!.symbol} className="w-full h-full object-contain" />
+                  ) : (
+                    <span className="text-sm font-black text-white">{card.slotCards[topSlotKey]!.symbol}</span>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+          {bottomSlotKey && card.slotCards?.[bottomSlotKey] && (
+            <div className="absolute left-1/2" style={{ top: '86%', transform: 'translateX(-50%) scale(0.9)', zIndex: 0, width: '3.5rem', height: '5rem' }}>
+              <div className={`w-full h-full rounded-md border-2 flex items-center justify-center bg-slate-800 shadow-xl ${getBorderColor(card.slotCards[bottomSlotKey]!.symbol)}`}>
+                <div className="w-full h-full flex items-center justify-center p-1">
+                  {cardsDatabase[card.slotCards[bottomSlotKey]!.symbol]?.image ? (
+                    <img src={`${BASE}${cardsDatabase[card.slotCards[bottomSlotKey]!.symbol].image.replace(/^\//, '')}`} alt={card.slotCards[bottomSlotKey]!.symbol} className="w-full h-full object-contain" />
+                  ) : (
+                    <span className="text-sm font-black text-white">{card.slotCards[bottomSlotKey]!.symbol}</span>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+
+      {!isDragging && isExpanded && hasOneSlot && card.slotCards?.[slotKeys[0]] && (
+        <div className="absolute left-1/2" style={{ top: '-10%', transform: 'translateX(-50%) scale(0.9)', zIndex: 0, width: '3.5rem', height: '5rem' }}>
+          <div className={`w-full h-full rounded-md border-2 flex items-center justify-center bg-slate-800 shadow-xl ${getBorderColor(card.slotCards[slotKeys[0]]!.symbol)}`}>
+            <div className="w-full h-full flex items-center justify-center p-1">
+              {cardsDatabase[card.slotCards[slotKeys[0]]!.symbol]?.image ? (
+                <img src={`${BASE}${cardsDatabase[card.slotCards[slotKeys[0]]!.symbol].image.replace(/^\//, '')}`} alt={card.slotCards[slotKeys[0]]!.symbol} className="w-full h-full object-contain" />
+              ) : (
+                <span className="text-sm font-black text-white">{card.slotCards[slotKeys[0]]!.symbol}</span>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
       {cardData?.image ? (
         <img src={`${BASE}${cardData.image.replace(/^\//, '')}`} alt={card.symbol} className="w-full h-full object-contain p-1" />
       ) : (
@@ -288,18 +546,57 @@ interface TabletGameLayoutProps {
     isDiscarding: boolean;
     hasModifiedBoardThisTurn: boolean;
     bracketMode: { leftInsertPosition: number; pairIndex: number } | null;
+    tutorialActive?: boolean;
+    tutorialStep?: number;
   };
   actions: {
     checkMathEngine: () => void;
     handleEndTurn: () => void;
     handleDiscard: (id: string) => void;
     cancelBracketMode: () => void;
+    resetTutorial: () => void;
+    skipTutorial: () => void;
+    openLeaveGameConfirm?: () => void;
+    setIntegralVariable: (cardId: string, variable: 'x' | 'y') => void;
   };
+  tutorialReferenceBoard?: GameCard[];
 }
 
-export function TabletGameLayout({ currentPlayer, state, actions }: TabletGameLayoutProps) {
-  const { deck, discardPile, isDiscarding, hasModifiedBoardThisTurn, bracketMode } = state;
+function TutorialReferenceRow({ cards, palette }: { cards: GameCard[]; palette: ThemePalette }) {
+  return (
+    <div className="flex flex-wrap items-center justify-center gap-1 rounded-lg px-2 py-1" style={{ background: `${palette.bgDark}aa` }}>
+      {cards.map(card => {
+        const cardData = cardsDatabase[card.symbol];
+        return (
+          <div
+            key={card.id}
+            className={`relative w-9 h-12 rounded border-2 bg-slate-800 flex items-center justify-center ${getBorderColor(card.symbol)}`}
+          >
+            {cardData?.image ? (
+              <img
+                src={`${BASE}${cardData.image.replace(/^\//, '')}`}
+                alt={card.symbol}
+                className="w-full h-full object-contain p-0.5"
+              />
+            ) : (
+              <span className="text-[10px] font-black text-white">{card.symbol}</span>
+            )}
+            {card.exponent && (
+              <div className="absolute -top-2 -right-2 w-5 h-6 rounded border border-white/50 bg-slate-900 flex items-center justify-center">
+                <span className="text-[9px] font-black text-white">{card.exponent.symbol}</span>
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+export function TabletGameLayout({ currentPlayer, state, actions, tutorialReferenceBoard }: TabletGameLayoutProps) {
+  const { deck, discardPile, isDiscarding, hasModifiedBoardThisTurn, bracketMode, tutorialActive, tutorialStep } = state;
   const palette = getTabletPalette(currentPlayer.theme);
+  const canVerify = tutorialActive ? tutorialStep === 4 : !hasModifiedBoardThisTurn;
 
   const [isDraggingCard, setIsDraggingCard] = useState(false);
   useDndMonitor({
@@ -325,15 +622,37 @@ export function TabletGameLayout({ currentPlayer, state, actions }: TabletGameLa
         className="flex items-center p-4 border-b sticky top-0 z-50 justify-between backdrop-blur-md transition-colors duration-700"
         style={{ borderColor: palette.navBorder, background: palette.navBg }}
       >
-        <button className="text-white p-2 hover:bg-white/10 rounded-lg transition-colors">
-          <span className="material-symbols-outlined text-3xl">menu</span>
-        </button>
-        <span
-          className="text-base font-bold tracking-tight ml-2"
-          style={{ fontFamily: "'Merienda', cursive" }}
-        >
-          Math4fun
-        </span>
+        <div className="flex items-center gap-2">
+          {tutorialActive ? (
+            <>
+              <button
+                onClick={actions.resetTutorial}
+                className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-2 rounded-lg border border-white/20 hover:bg-white/10 transition-colors"
+              >
+                Reset
+              </button>
+              <button
+                onClick={actions.skipTutorial}
+                className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-2 rounded-lg border border-white/20 hover:bg-white/10 transition-colors"
+              >
+                Přeskočit
+              </button>
+            </>
+          ) : (
+            <button
+              className="text-white p-2 hover:bg-white/10 rounded-lg transition-colors"
+              onClick={actions.openLeaveGameConfirm}
+            >
+              <span className="material-symbols-outlined text-3xl">menu</span>
+            </button>
+          )}
+          <span
+            className="text-base font-bold tracking-tight ml-2"
+            style={{ fontFamily: "'Merienda', cursive" }}
+          >
+            Math4fun
+          </span>
+        </div>
         <div className="flex-1" />
         <h1 className="text-lg font-bold tracking-tight" style={{ fontFamily: "'Merienda', cursive" }}>
           {currentPlayer.name}
@@ -364,7 +683,11 @@ export function TabletGameLayout({ currentPlayer, state, actions }: TabletGameLa
             />
 
             {/* Board cards */}
-            <div className="z-10 flex items-stretch gap-0 flex-wrap justify-center w-full" style={{ minHeight: '5rem' }}>
+            <div className="z-10 flex flex-col items-center gap-2 w-full" style={{ minHeight: '5rem' }}>
+              {tutorialReferenceBoard && tutorialReferenceBoard.length > 0 && (
+                <TutorialReferenceRow cards={tutorialReferenceBoard} palette={palette} />
+              )}
+              <div className="flex items-stretch gap-0 flex-wrap justify-center w-full">
               {currentPlayer.board.length === 0 ? (
                 <span
                   className="uppercase tracking-[0.2em] text-xl pointer-events-none select-none italic self-center"
@@ -378,7 +701,12 @@ export function TabletGameLayout({ currentPlayer, state, actions }: TabletGameLa
                   {currentPlayer.board.map((card, index) => (
                     <React.Fragment key={card.id}>
                       <div className="flex flex-col items-center">
-                        <DraggableBoardCard card={card} palette={palette} hasModifiedBoardThisTurn={hasModifiedBoardThisTurn} />
+                        <DraggableBoardCard
+                          card={card}
+                          palette={palette}
+                          hasModifiedBoardThisTurn={hasModifiedBoardThisTurn}
+                          onIntegralVariableChange={actions.setIntegralVariable}
+                        />
                       </div>
                       <BoardDropZone
                         id={index < currentPlayer.board.length - 1
@@ -390,6 +718,7 @@ export function TabletGameLayout({ currentPlayer, state, actions }: TabletGameLa
                   ))}
                 </>
               )}
+              </div>
             </div>
 
             {/* Target R */}
@@ -408,13 +737,13 @@ export function TabletGameLayout({ currentPlayer, state, actions }: TabletGameLa
           <div className="flex gap-3 w-full">
             <button
               onClick={actions.checkMathEngine}
-              disabled={hasModifiedBoardThisTurn}
+              disabled={!canVerify}
               className="flex-1 font-bold py-4 rounded-xl shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               style={{
-                background: hasModifiedBoardThisTurn ? `${palette.primary}55` : palette.primary,
+                background: canVerify ? palette.primary : `${palette.primary}55`,
                 color: '#fff',
                 fontFamily: "'Merienda', cursive",
-                boxShadow: hasModifiedBoardThisTurn ? 'none' : `0 0 18px ${palette.glow}`,
+                boxShadow: canVerify ? `0 0 18px ${palette.glow}` : 'none',
               }}
             >
               <span className="material-symbols-outlined text-lg">verified</span>

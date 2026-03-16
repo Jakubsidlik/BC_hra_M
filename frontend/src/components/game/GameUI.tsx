@@ -6,6 +6,59 @@ import { cardsDatabase } from '@/data/cardsDB';
 import type { GameCard, Player } from '@/lib/effects';
 import { BoardArea } from './Cards';
 
+// --- TUTORIÁL OVERLAY ---
+export function TutorialOverlay({ active, step, onNext }: { active: boolean; step: number; onNext: () => void }) {
+  if (!active) return null;
+
+  const steps = [
+    {
+      title: 'Vítej v tutoriálu',
+      text: 'Projdeš si jednu krátkou ukázkovou hru. Cíl je sestavit výraz L = R a ověřit Q.E.D.'
+    },
+    {
+      title: 'Efekty karet',
+      text: 'Některé karty mají efekt. Při položení se nabízí volba: aktivovat efekt, nebo kartu jen přidat do výrazu L.'
+    },
+    {
+      title: 'Konec tahu a odhazování',
+      text: 'Klikni na Konec tahu. Máš více než 5 karet, proto jednu přebytečnou zahoď na odhazovací pole.'
+    },
+    {
+      title: 'Závorky a mocnina',
+      text: 'Podle horního vzoru opiš výraz (2*sin(π/2) + 3^2). Použij závorky, vynásobení a přetáhni kartu 2 na kartu 3 jako exponent.'
+    },
+    {
+      title: 'Ověření Q.E.D.',
+      text: 'Klikni na tlačítko Ověřit (Q.E.D.). Pokud je L = R, hra skončí a ty vyhraješ.'
+    },
+    {
+      title: 'Hotovo',
+      text: 'Skvělé! Zvládl jsi základní mechaniky. Můžeš začít běžnou hru.'
+    }
+  ];
+
+  const content = steps[step] || steps[steps.length - 1];
+  const showNext = step === 0 || step === 1;
+
+  return (
+    <div className="fixed left-1/2 top-6 z-[120] w-[92vw] max-w-xl -translate-x-1/2 rounded-2xl border border-white/10 bg-slate-950/85 p-5 text-slate-100 shadow-2xl backdrop-blur-md">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">Tutoriál</p>
+          <h3 className="text-2xl font-black italic text-white">{content.title}</h3>
+        </div>
+        <div className="text-xs text-slate-400">Krok {Math.min(step + 1, steps.length)} / {steps.length}</div>
+      </div>
+      <p className="mt-3 text-sm text-slate-200">{content.text}</p>
+      {showNext && (
+        <div className="mt-4 flex justify-end">
+          <Button size="sm" className="bg-emerald-600 hover:bg-emerald-500" onClick={onNext}>Začít</Button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // --- ROZHRANÍ PRO PROPS ---
 interface EffectDialogProps {
   open: boolean;
@@ -20,13 +73,13 @@ interface EffectDialogProps {
 }
 
 // --- 1. VÍTĚZNÁ OBRAZOVKA (Q.E.D) ---
-export function VictoryScreen({ winner, onReset }: { winner: Player | null, onReset: () => void }) {
+export function VictoryScreen({ winner, onReset, onShowDetails }: { winner: Player | null, onReset: () => void, onShowDetails: () => void }) {
   if (!winner) return null;
   return (
     <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center px-6 text-center select-none overflow-hidden min-h-[100dvh]" style={{ background: 'radial-gradient(circle at center 40%, #2e7a42 0%, #1a4225 50%, #141e17 90%)', backgroundColor: '#141e17', backgroundAttachment: 'fixed', backgroundSize: 'cover' }}>
       <div className="absolute inset-0 pointer-events-none overflow-hidden flex items-center justify-center opacity-30">
         <div className="absolute inset-0 flex flex-wrap content-start justify-center gap-4 -rotate-12 select-none pointer-events-none break-all text-2xl leading-relaxed tracking-widest scale-150 md:scale-125" style={{ color: '#399551', fontFamily: "'Merienda', cursive" }}>
-          {'∫εℕ⊈∑∮ℤ∪λℚπℝ⊕ξ∩∏ωδ '.repeat(35)}
+          {'∫εℕ⊈∑∮ℤ∪λℚπℝ⊕ξ∩∏ωδ '.repeat(300)}
         </div>
       </div>
       <div className="z-10 flex flex-col items-center max-w-sm animate-in zoom-in duration-500">
@@ -39,11 +92,145 @@ export function VictoryScreen({ winner, onReset }: { winner: Player | null, onRe
         </p>
         <div className="mt-16 w-full max-w-[280px] flex flex-col gap-4">
           <button onClick={onReset} className="w-full flex items-center justify-center gap-2 text-white font-bold py-4 px-8 rounded-xl transition-all shadow-lg active:scale-95" style={{ backgroundColor: '#399551' }}>
-            <span className="material-symbols-outlined">play_arrow</span> Další pokus
+            <span className="material-symbols-outlined">play_arrow</span> Další hra
           </button>
-          <button className="w-full flex items-center justify-center gap-2 text-slate-100 font-semibold py-4 px-8 rounded-xl transition-all border" style={{ backgroundColor: 'rgba(57, 149, 81, 0.4)', borderColor: 'rgba(57, 149, 81, 0.5)' }}>
+          <button onClick={onShowDetails} className="w-full flex items-center justify-center gap-2 text-slate-100 font-semibold py-4 px-8 rounded-xl transition-all border" style={{ backgroundColor: 'rgba(57, 149, 81, 0.4)', borderColor: 'rgba(57, 149, 81, 0.5)' }}>
             <span className="material-symbols-outlined">menu_book</span> Detail hry
           </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+type PlayerSummaryRow = {
+  id: number;
+  name: string;
+  targetR: string;
+  cardsToBoard: number;
+  cardsFromBoardToDiscard: number;
+  bracketPairsUsed: number;
+  maxDrawInTurn: number;
+  wrongQEDAttempts: number;
+  targetScore: number;
+};
+
+export function GameSummaryDialog({
+  open,
+  stats,
+  onBack,
+}: {
+  open: boolean;
+  stats: any;
+  onBack: () => void;
+}) {
+  const [view, setView] = React.useState<'table' | 'cards'>('table');
+  if (!open || !stats) return null;
+
+  const rows: PlayerSummaryRow[] = Object.values(stats.players || {});
+  const maxBrackets = Math.max(0, ...rows.map(r => r.bracketPairsUsed));
+  const maxDraw = Math.max(0, ...rows.map(r => r.maxDrawInTurn));
+  const maxToBoard = Math.max(0, ...rows.map(r => r.cardsToBoard));
+  const maxFromBoard = Math.max(0, ...rows.map(r => r.cardsFromBoardToDiscard));
+  const hardest = rows.reduce((a, b) => (a.targetScore >= b.targetScore ? a : b), rows[0]);
+  const easiest = rows.reduce((a, b) => (a.targetScore <= b.targetScore ? a : b), rows[0]);
+  const firstWrong = stats.firstWrongQED ? rows.find(r => r.id === stats.firstWrongQED.playerId) : null;
+
+  const copyTable = async () => {
+    const header = ['Hráč', 'R', 'Karty do L', 'Odhozeno z L', 'Závorky', 'Max dober v tahu', 'Špatné Q.E.D.'].join('\t');
+    const lines = rows.map(r => [
+      r.name,
+      r.targetR,
+      r.cardsToBoard,
+      r.cardsFromBoardToDiscard,
+      r.bracketPairsUsed,
+      r.maxDrawInTurn,
+      r.wrongQEDAttempts,
+    ].join('\t'));
+    const text = [header, ...lines].join('\n');
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[120] bg-slate-950/95 flex items-center justify-center p-6">
+      <div className="w-full max-w-5xl rounded-2xl border border-white/10 bg-slate-900/80 backdrop-blur-md p-6 text-slate-100">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h2 className="text-3xl font-black italic">Detail hry</h2>
+            <p className="text-sm text-slate-300">Přehled všech hráčů této hry.</p>
+          </div>
+          <div className="flex gap-2">
+            <Button variant={view === 'table' ? 'default' : 'ghost'} onClick={() => setView('table')}>Tabulka</Button>
+            <Button variant={view === 'cards' ? 'default' : 'ghost'} onClick={() => setView('cards')}>Seznam</Button>
+          </div>
+        </div>
+
+        <div className="mt-4 text-xs text-slate-300 space-y-1">
+          {firstWrong && (
+            <div>První špatný Q.E.D.: <span className="text-white font-bold">{firstWrong.name}</span></div>
+          )}
+          {hardest && easiest && (
+            <div>Nejtěžší R: <span className="text-white font-bold">{hardest.name}</span> ({hardest.targetR}) • Nejlehčí R: <span className="text-white font-bold">{easiest.name}</span> ({easiest.targetR})</div>
+          )}
+        </div>
+
+        {view === 'table' ? (
+          <div className="mt-4 overflow-x-auto">
+            <table className="min-w-full text-sm border border-white/10">
+              <thead className="bg-white/5">
+                <tr>
+                  <th className="px-3 py-2 text-left">Hráč</th>
+                  <th className="px-3 py-2 text-left">R</th>
+                  <th className="px-3 py-2 text-right">Karty do L</th>
+                  <th className="px-3 py-2 text-right">Odhozeno z L</th>
+                  <th className="px-3 py-2 text-right">Závorky</th>
+                  <th className="px-3 py-2 text-right">Max dober v tahu</th>
+                  <th className="px-3 py-2 text-right">Špatné Q.E.D.</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map(r => (
+                  <tr key={r.id} className="border-t border-white/5">
+                    <td className="px-3 py-2 font-semibold text-white">{r.name}</td>
+                    <td className="px-3 py-2">{r.targetR}</td>
+                    <td className={`px-3 py-2 text-right ${r.cardsToBoard === maxToBoard ? 'text-emerald-300 font-bold' : ''}`}>{r.cardsToBoard}</td>
+                    <td className={`px-3 py-2 text-right ${r.cardsFromBoardToDiscard === maxFromBoard ? 'text-emerald-300 font-bold' : ''}`}>{r.cardsFromBoardToDiscard}</td>
+                    <td className={`px-3 py-2 text-right ${r.bracketPairsUsed === maxBrackets ? 'text-emerald-300 font-bold' : ''}`}>{r.bracketPairsUsed}</td>
+                    <td className={`px-3 py-2 text-right ${r.maxDrawInTurn === maxDraw ? 'text-emerald-300 font-bold' : ''}`}>{r.maxDrawInTurn}</td>
+                    <td className="px-3 py-2 text-right">{r.wrongQEDAttempts}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+            {rows.map(r => (
+              <div key={r.id} className="rounded-xl border border-white/10 bg-black/20 p-4">
+                <div className="text-lg font-bold text-white">{r.name}</div>
+                <div className="text-sm text-slate-300">R: {r.targetR}</div>
+                <div className="mt-2 text-sm">Karty do L: <span className="text-white font-semibold">{r.cardsToBoard}</span></div>
+                <div className="text-sm">Odhozeno z L: <span className="text-white font-semibold">{r.cardsFromBoardToDiscard}</span></div>
+                <div className="text-sm">Závorky: <span className="text-white font-semibold">{r.bracketPairsUsed}</span></div>
+                <div className="text-sm">Max dober v tahu: <span className="text-white font-semibold">{r.maxDrawInTurn}</span></div>
+                <div className="text-sm">Špatné Q.E.D.: <span className="text-white font-semibold">{r.wrongQEDAttempts}</span></div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="mt-6 flex items-center justify-between">
+          <Button variant="ghost" className="text-slate-300 hover:text-white" onClick={onBack}>Zpět na výhru</Button>
+          <Button className="bg-emerald-600 hover:bg-emerald-500" onClick={copyTable}>Kopírovat tabulku</Button>
         </div>
       </div>
     </div>
@@ -474,6 +661,33 @@ export function ModuloDialog({
             Zrušit
           </Button>
         )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// --- DIALOG PRO OPUŠTĚNÍ HRY ---
+export function LeaveGameDialog({ open, onConfirm, onCancel }: { open: boolean; onConfirm: () => void; onCancel: () => void }) {
+  return (
+    <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) onCancel(); }}>
+      <DialogContent className="w-[92vw] max-w-[420px] p-6 border-0 shadow-2xl rounded-xl overflow-hidden"
+        style={{ background: 'rgb(30,41,59)', border: '4px solid rgba(255,255,255,0.08)' }}>
+        <DialogHeader>
+          <DialogTitle className="text-2xl text-white" style={{ fontFamily: "'Merienda', cursive" }}>
+            Opustit aktuální hru
+          </DialogTitle>
+          <DialogDescription className="text-slate-300">
+            Opravdu chceš opustit rozehranou hru? Pokrok se ztratí.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="mt-6 flex justify-end gap-3">
+          <Button variant="ghost" className="text-slate-300 hover:text-white" onClick={onCancel}>
+            Zůstat
+          </Button>
+          <Button className="bg-emerald-600 hover:bg-emerald-500" onClick={onConfirm}>
+            Opustit
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );

@@ -14,8 +14,11 @@ import {
   HandoffScreen, 
   MinigameDialog, 
   VictoryScreen,
+  GameSummaryDialog,
   DeckPreviewDialog,
-  ModuloDialog
+  ModuloDialog,
+  TutorialOverlay,
+  LeaveGameDialog
 } from '@/components/game/GameUI';
 import { SetupScreen } from '@/components/game/SetupScreen';
 import { MainMenu, RulesScreen, DifficultySelection } from '@/components/game/StartScreens';
@@ -37,7 +40,19 @@ export default function App() {
   // 3. VYKRESLOVÁNÍ OBRAZOVEK PODLE FÁZE HRY
   if (state.gamePhase === 'MENU') return <MainMenu onPlay={() => actions.setGamePhase('PICK_MODE')} onRules={() => actions.setGamePhase('RULES')} />;
   if (state.gamePhase === 'RULES') return <RulesScreen onBack={() => actions.setGamePhase('MENU')} />;
-  if (state.gamePhase === 'PICK_MODE') return <DifficultySelection onSelect={(m) => { actions.setDifficulty(m); actions.setGamePhase('SETUP'); }} onBack={() => actions.setGamePhase('MENU')} />;
+  if (state.gamePhase === 'PICK_MODE') return (
+    <DifficultySelection
+      onSelect={(m) => {
+        if (m === 'TUTORIAL') {
+          actions.handleStartTutorial();
+          return;
+        }
+        actions.setDifficulty(m);
+        actions.setGamePhase('SETUP');
+      }}
+      onBack={() => actions.setGamePhase('MENU')}
+    />
+  );
   if (state.gamePhase === 'SETUP') return <SetupScreen onStart={actions.handleStartGame} />;
 
   // 4. HLAVNÍ HRACÍ PLOCHA
@@ -66,7 +81,26 @@ export default function App() {
       />
       
       {/* --- OVERLAY VRSTVY (Vítězství, Předání, Minihry) --- */}
-      <VictoryScreen winner={state.winner} onReset={() => window.location.reload()} />
+      <VictoryScreen
+        winner={state.winner}
+        onReset={actions.returnToModeSelect}
+        onShowDetails={actions.openGameSummary}
+      />
+      <GameSummaryDialog
+        open={state.gameSummaryOpen}
+        stats={state.gameStats}
+        onBack={actions.closeGameSummary}
+      />
+      <TutorialOverlay
+        active={state.tutorialActive}
+        step={state.tutorialStep}
+        onNext={() => actions.setTutorialStep(state.tutorialStep + 1)}
+      />
+      <LeaveGameDialog
+        open={state.leaveGameConfirmOpen}
+        onConfirm={actions.confirmLeaveGame}
+        onCancel={actions.closeLeaveGameConfirm}
+      />
       <HandoffScreen 
         isHandoff={state.isHandoff} 
         players={state.players} 
@@ -144,7 +178,12 @@ export default function App() {
             handleEndTurn: actions.handleEndTurn,
             handleDiscard: actions.handleDiscard,
             cancelBracketMode: actions.cancelBracketMode,
+            resetTutorial: actions.resetTutorial,
+            skipTutorial: actions.skipTutorial,
+            openLeaveGameConfirm: actions.openLeaveGameConfirm,
+            setIntegralVariable: actions.setIntegralVariable,
           }}
+          tutorialReferenceBoard={state.tutorialReferenceBoard}
         />
       ) : deviceType === 'tablet' ? (
         <TabletGameLayout
@@ -155,7 +194,12 @@ export default function App() {
             handleEndTurn: actions.handleEndTurn,
             handleDiscard: actions.handleDiscard,
             cancelBracketMode: actions.cancelBracketMode,
+            resetTutorial: actions.resetTutorial,
+            skipTutorial: actions.skipTutorial,
+            openLeaveGameConfirm: actions.openLeaveGameConfirm,
+            setIntegralVariable: actions.setIntegralVariable,
           }}
+          tutorialReferenceBoard={state.tutorialReferenceBoard}
         />
       ) : (
         <DesktopGameLayout
@@ -166,7 +210,12 @@ export default function App() {
             handleEndTurn: actions.handleEndTurn,
             handleDiscard: actions.handleDiscard,
             cancelBracketMode: actions.cancelBracketMode,
+            resetTutorial: actions.resetTutorial,
+            skipTutorial: actions.skipTutorial,
+            openLeaveGameConfirm: actions.openLeaveGameConfirm,
+            setIntegralVariable: actions.setIntegralVariable,
           }}
+          tutorialReferenceBoard={state.tutorialReferenceBoard}
         />
       )}
 

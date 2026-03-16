@@ -9,6 +9,9 @@ export interface GameCard {
   type?: string; // Přidáno jako volitelné, pokud se s tím počítá jinde
   exponent?: GameCard | null;
   integralBounds?: { lower: number; upper: number }; // PŘIDÁNO: Pamatuje si meze integrálu
+  integralVariable?: 'x' | 'y';
+  slotCards?: Record<string, GameCard | null>;
+  locked?: boolean;
 }
 
 export interface PlayerStatus {
@@ -141,8 +144,11 @@ export const applyEffectLogic = (
       }
       break;
 
-    case "EFF_003": // e: Imunita proti efektům int a d/dx
-      activePlayer.status.immune = true;
+    case "EFF_003": // e: Okamžité nahrazení cíle R libovolného hráče novým losem
+      if (targetPlayer) {
+        targetPlayer.targetR = generatePersonalTargetR(currentDifficulty);
+        targetPlayer.status.notifications.push(`⚡ Hráč ${activePlayer.name} ti změnil cíl R na: ${targetPlayer.targetR}`);
+      }
       break;
 
     case "EFF_004": // y: Následující hráč musí odhodit všechny číslice
@@ -347,8 +353,15 @@ export const applyEffectLogic = (
       newPlayers.forEach((p: Player) => {
         p.status.frozen = false;
         p.status.operationLock = false;
+        p.status.numberLock = false;
         p.status.mustPlayOperation = false;
         p.status.playLimit = null;
+        p.status.infinitePlays = false;
+        p.status.extraDraw = 0;
+        p.status.drawReduction = 0;
+        p.status.noDrawNextTurn = false;
+        p.status.immune = false;
+        p.status.extraTurn = false;
       });
       newPlayers.forEach(p => {
         if (p.id !== activePlayer.id) {

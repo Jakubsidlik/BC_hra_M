@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import type { DragEndEvent } from '@dnd-kit/core';
 import { toast } from "sonner";
 
@@ -9,12 +9,52 @@ import {
   generatePersonalTargetR, 
   parseBoardToMathString,
   hasOperation,
+  getSpecialSlots,
+  createSlotCards,
   type DifficultyMode 
 } from '@/lib/gameHelpers';
 import type { GameCard, Player } from '@/lib/effects';
-import type { DropData } from '@/components/game/Cards';
+import type { DropData, SlotDropData } from '@/components/game/Cards';
 
 type RemoveResult = { removed: GameCard | null, newCards: GameCard[] };
+
+type PlayerSummaryStats = {
+  id: number;
+  name: string;
+  targetR: string;
+  targetScore: number;
+  cardsToBoard: number;
+  cardsFromBoardToDiscard: number;
+  bracketPairsUsed: number;
+  maxDrawInTurn: number;
+  wrongQEDAttempts: number;
+  currentTurnDraw: number;
+};
+
+type GameStats = {
+  players: Record<number, PlayerSummaryStats>;
+  firstWrongQED: { playerId: number } | null;
+};
+
+const createGameStats = (playerList: Player[]): GameStats => {
+  const players: Record<number, PlayerSummaryStats> = {};
+  playerList.forEach(player => {
+    const targetNumber = typeof player.targetR === 'number' ? player.targetR : Number(player.targetR);
+    players[player.id] = {
+      id: player.id,
+      name: player.name,
+      targetR: String(player.targetR),
+      targetScore: Number.isFinite(targetNumber) ? Math.abs(targetNumber) : 0,
+      cardsToBoard: 0,
+      cardsFromBoardToDiscard: 0,
+      bracketPairsUsed: 0,
+      maxDrawInTurn: 0,
+      wrongQEDAttempts: 0,
+      currentTurnDraw: 0,
+    };
+  });
+  return { players, firstWrongQED: null };
+};
 
 export function useGameEngine() {
   // --- STAVY JÁDRA ---
@@ -27,6 +67,17 @@ export function useGameEngine() {
   const [playDirection] = useState<1 | -1>(1);
   const [isHandoff, setIsHandoff] = useState(false);
   const [winner, setWinner] = useState<Player | null>(null);
+  const [gameSummaryOpen, setGameSummaryOpen] = useState(false);
+  const [gameStats, setGameStats] = useState<GameStats | null>(null);
+
+  // --- TUTORIAL ---
+  const [tutorialActive, setTutorialActive] = useState(false);
+  const [tutorialStep, setTutorialStep] = useState(0);
+  const [tutorialDiscardDone, setTutorialDiscardDone] = useState(false);
+  const [tutorialAllowedDiscardIds, setTutorialAllowedDiscardIds] = useState<string[]>([]);
+  const [tutorialReferenceBoard, setTutorialReferenceBoard] = useState<GameCard[]>([]);
+  const [tutorialBracketInfoShown, setTutorialBracketInfoShown] = useState(false);
+  const [leaveGameConfirmOpen, setLeaveGameConfirmOpen] = useState(false);
 
   // --- STAVY PRO UI A EFEKTY ---
   const [pendingEffect, setPendingEffect] = useState<{card: GameCard, targetId: string | null, insertPosition?: number} | null>(null);
@@ -42,6 +93,7 @@ export function useGameEngine() {
   // --- OMEZENÍ TAHU ---
   const [isDiscarding, setIsDiscarding] = useState(false);
   const [hasModifiedBoardThisTurn, setHasModifiedBoardThisTurn] = useState(false);
+  const [playsThisTurn, setPlaysThisTurn] = useState(0);
 
   // ==========================================
   // 1. REKURZIVNÍ LOGIKA (Kaskády)
@@ -78,11 +130,32 @@ export function useGameEngine() {
     return runFlatten(card);
   }, []);
 
+  const updatePlayerStats = useCallback((playerId: number, updater: (stats: PlayerSummaryStats) => PlayerSummaryStats) => {
+    setGameStats(prev => {
+      if (!prev) return prev;
+      const existing = prev.players[playerId];
+      if (!existing) return prev;
+      return {
+        ...prev,
+        players: {
+          ...prev.players,
+          [playerId]: updater(existing),
+        },
+      };
+    });
+  }, []);
+
+  const resetGameStats = useCallback((playerList: Player[]) => {
+    setGameStats(createGameStats(playerList));
+    setGameSummaryOpen(false);
+  }, []);
+
   // ==========================================
   // 2. LOGIKA TAHŮ A PŘIDÁVÁNÍ KARET
   // ==========================================
 
   const performDraw = useCallback((count: number, playerIndex: number) => {
+    let drawnCount = 0;
     setPlayers(prev => {
       const next = JSON.parse(JSON.stringify(prev));
       const p = next[playerIndex];
@@ -99,13 +172,26 @@ export function useGameEngine() {
           currentDiscard = [];
         }
         const drawn = currentDeck.pop();
-        if (drawn) p.hand.push({ ...drawn, id: `h-${drawn.symbol}-${Date.now()}-${Math.random().toString(36).substring(2,5)}` });
+        if (drawn) {
+          p.hand.push({ ...drawn, id: `h-${drawn.symbol}-${Date.now()}-${Math.random().toString(36).substring(2,5)}` });
+          drawnCount += 1;
+        }
       }
       setDeck(currentDeck);
       setDiscardPile(currentDiscard);
       return next;
     });
-  }, [deck, discardPile]);
+    if (drawnCount > 0) {
+      updatePlayerStats(playerIndex, stats => {
+        const currentTurnDraw = stats.currentTurnDraw + drawnCount;
+        return {
+          ...stats,
+          currentTurnDraw,
+          maxDrawInTurn: Math.max(stats.maxDrawInTurn, currentTurnDraw),
+        };
+      });
+    }
+  }, [deck, discardPile, updatePlayerStats]);
 
   const finalizeTurn = useCallback(() => {
     setIsDiscarding(false);
@@ -117,22 +203,39 @@ export function useGameEngine() {
         next[currentPlayerIndex].status.extraTurn = false;
         return next;
       });
+      updatePlayerStats(currentPlayerIndex, stats => ({
+        ...stats,
+        currentTurnDraw: 0,
+      }));
       setHasModifiedBoardThisTurn(false);
+      setPlaysThisTurn(0);
       performDraw(1, currentPlayerIndex);
       return;
     }
     setIsHandoff(true);
-  }, [players, currentPlayerIndex, performDraw]);
+  }, [players, currentPlayerIndex, performDraw, updatePlayerStats]);
 
   const handleDiscardExpression = () => {
     if (hasModifiedBoardThisTurn) return toast.error("Již jsi provedl akci za tento tah!");
+
+    const current = players[currentPlayerIndex];
+    const removableCards = current?.board.filter((card: GameCard) => !card.locked) || [];
+    const allCards = removableCards.flatMap((card: GameCard) => flattenCardTree(card));
+    if (allCards.length > 0) {
+      updatePlayerStats(currentPlayerIndex, stats => ({
+        ...stats,
+        cardsFromBoardToDiscard: stats.cardsFromBoardToDiscard + allCards.length,
+      }));
+    }
     
     setPlayers(prev => {
       const next = JSON.parse(JSON.stringify(prev));
       const p = next[currentPlayerIndex];
-      const allCards = p.board.flatMap((card: GameCard) => flattenCardTree(card));
-      setDiscardPile(old => [...old, ...allCards]);
-      p.board = [];
+      const lockedCards = p.board.filter((card: GameCard) => card.locked);
+      const removable = p.board.filter((card: GameCard) => !card.locked);
+      const removedCards = removable.flatMap((card: GameCard) => flattenCardTree(card));
+      setDiscardPile(old => [...old, ...removedCards]);
+      p.board = lockedCards;
       return next;
     });
     
@@ -141,6 +244,9 @@ export function useGameEngine() {
   };
 
   const handleEndTurn = () => {
+    if (tutorialActive && tutorialStep !== 2) {
+      return toast.error("V tutoriálu teď není čas ukončit tah.");
+    }
     const p = players[currentPlayerIndex];
     if (p.hand.length > 5) {
       setIsDiscarding(true);
@@ -151,6 +257,14 @@ export function useGameEngine() {
   };
 
   const handleDiscard = (cardId: string) => {
+    if (tutorialActive && tutorialStep !== 2) {
+      toast.error("V tutoriálu teď není dovoleno odhazovat.");
+      return;
+    }
+    if (tutorialActive && tutorialStep === 2 && tutorialAllowedDiscardIds.length > 0 && !tutorialAllowedDiscardIds.includes(cardId)) {
+      toast.error("V tutoriálu teď odhazuj jen přebytečné karty.");
+      return;
+    }
     setPlayers(prev => {
       const next = JSON.parse(JSON.stringify(prev));
       
@@ -175,10 +289,16 @@ export function useGameEngine() {
         // Kontrola nového počtu karet (po odebrání)
         if (p.hand.length <= 5) {
           setIsDiscarding(false);
-          // Přechod k dalšímu hráči
-          setTimeout(() => {
-            setIsHandoff(true);
-          }, 300);
+          if (tutorialActive) {
+            setTutorialDiscardDone(true);
+            setHasModifiedBoardThisTurn(false);
+            setPlaysThisTurn(0);
+          } else {
+            // Přechod k dalšímu hráči
+            setTimeout(() => {
+              setIsHandoff(true);
+            }, 300);
+          }
         }
       }
       
@@ -201,6 +321,11 @@ export function useGameEngine() {
     setCurrentPlayerIndex(nextIdx);
     setIsHandoff(false);
     setHasModifiedBoardThisTurn(false);
+    setPlaysThisTurn(0);
+    updatePlayerStats(nextIdx, stats => ({
+      ...stats,
+      currentTurnDraw: 0,
+    }));
 
     const p = players[nextIdx];
     const totalToDraw = Math.max(0, 1 + (p.status?.extraDraw || 0) - (p.status?.drawReduction || 0));
@@ -235,8 +360,20 @@ export function useGameEngine() {
   // ==========================================
 
   const checkMathEngine = async () => {
-    if (hasModifiedBoardThisTurn) return toast.error("V tomto tahu jsi již akci provedl!");
+    if (tutorialActive && tutorialStep !== 4) {
+      return toast.error("V tutoriálu teď ještě neověřuj Q.E.D.");
+    }
+    if (hasModifiedBoardThisTurn && !(tutorialActive && tutorialStep === 4)) {
+      return toast.error("V tomto tahu jsi již akci provedl!");
+    }
     const curr = players[currentPlayerIndex];
+    const missingSlots = curr.board.flatMap((card: GameCard) => {
+      const slots = getSpecialSlots(card.symbol);
+      return slots.filter(slot => !card.slotCards?.[slot.key]);
+    });
+    if (missingSlots.length > 0) {
+      return toast.error("Doplň čísla do okének speciálních karet.");
+    }
     const expression = parseBoardToMathString(curr.board);
     if (!expression.trim()) return toast.error("Plocha L je prázdná!");
     if (!hasOperation(curr.board)) return toast.error("Výraz L musí obsahovat alespoň jednu operaci!");
@@ -249,6 +386,13 @@ export function useGameEngine() {
     });
     if (hasSideBySideMulDiv) {
       toast.error("Dvě operace × nebo ÷ nesmí být vedle sebe!");
+      const boardCount = curr.board.flatMap((card: GameCard) => flattenCardTree(card)).length;
+      if (boardCount > 0) {
+        updatePlayerStats(currentPlayerIndex, stats => ({
+          ...stats,
+          cardsFromBoardToDiscard: stats.cardsFromBoardToDiscard + boardCount,
+        }));
+      }
       setPlayers(prev => {
         const next = JSON.parse(JSON.stringify(prev));
         setDiscardPile(old => [...old, ...next[currentPlayerIndex].board]);
@@ -266,12 +410,27 @@ export function useGameEngine() {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ expression, target_r: curr.targetR.toString(), modifiers: curr.status?.mathModifiers || [] })
       });
+      if (!resp.ok) {
+        const errorData = await resp.json();
+        toast.error(errorData?.error || "Výpočet se nepodařil.", { id: toastId });
+        return;
+      }
       const data = await resp.json();
       if (data.success && data.is_match) {
         toast.success("Q.E.D.!", { id: toastId });
         setWinner(curr);
       } else {
         toast.error("Chyba v důkazu!", { id: toastId });
+        const boardCount = curr.board.flatMap((card: GameCard) => flattenCardTree(card)).length;
+        updatePlayerStats(currentPlayerIndex, stats => ({
+          ...stats,
+          wrongQEDAttempts: stats.wrongQEDAttempts + 1,
+          cardsFromBoardToDiscard: stats.cardsFromBoardToDiscard + boardCount,
+        }));
+        setGameStats(prev => {
+          if (!prev || prev.firstWrongQED) return prev;
+          return { ...prev, firstWrongQED: { playerId: curr.id } };
+        });
         setPlayers(prev => {
           const next = JSON.parse(JSON.stringify(prev));
           setDiscardPile(old => [...old, ...next[currentPlayerIndex].board]);
@@ -280,7 +439,9 @@ export function useGameEngine() {
         });
         setHasModifiedBoardThisTurn(true);
       }
-    } catch { toast.error("Server offline.", { id: toastId }); }
+    } catch {
+      toast.error("Server offline.", { id: toastId });
+    }
   };
 
   // ==========================================
@@ -288,6 +449,8 @@ export function useGameEngine() {
   // ==========================================
 
   const addCardToGameState = useCallback((card: GameCard, targetId: string | null, insertPosition?: number) => {
+    const slotCards = card.slotCards ?? createSlotCards(card.symbol);
+    const cardWithSlots = slotCards ? { ...card, slotCards } : card;
     // Odebrat kartu z ruky a přidat na tabuli okamžitě
     setPlayers(prev => {
       const next = JSON.parse(JSON.stringify(prev));
@@ -300,7 +463,7 @@ export function useGameEngine() {
         // 2) Taženou kartou je číslo nebo proměnná (nikoliv operátor)
         const canAddExponent = (targetCard: GameCard): boolean => {
           const targetData = cardsDatabase[targetCard.symbol];
-          const cardData = cardsDatabase[card.symbol];
+          const cardData = cardsDatabase[cardWithSlots.symbol];
           const isCardNumOrVar = cardData?.type === 'number' || cardData?.type === 'variable';
           return (targetData?.canHaveExponent === true) && isCardNumOrVar;
         };
@@ -311,20 +474,55 @@ export function useGameEngine() {
         p.board = update(p.board);
       } else if (insertPosition !== undefined) {
         // Vložit kartu na specifickou pozici
-        p.board.splice(insertPosition, 0, card);
+        p.board.splice(insertPosition, 0, cardWithSlots);
       } else {
-        p.board.push(card);
+        p.board.push(cardWithSlots);
       }
       return next;
     });
 
+    updatePlayerStats(currentPlayerIndex, stats => ({
+      ...stats,
+      cardsToBoard: stats.cardsToBoard + 1,
+    }));
+
     setHasModifiedBoardThisTurn(true);
+    setPlaysThisTurn(prev => prev + 1);
     setPendingEffect(null);
+  }, [currentPlayerIndex, updatePlayerStats]);
+
+  const setIntegralVariable = useCallback((cardId: string, variable: 'x' | 'y') => {
+    setPlayers(prev => {
+      const next = JSON.parse(JSON.stringify(prev));
+      const update = (cards: GameCard[]): GameCard[] => cards.map(c => {
+        if (c.id === cardId) return { ...c, integralVariable: variable };
+        return c.exponent ? { ...c, exponent: update([c.exponent])[0] } : c;
+      });
+      if (next[currentPlayerIndex]) {
+        next[currentPlayerIndex].board = update(next[currentPlayerIndex].board);
+      }
+      return next;
+    });
   }, [currentPlayerIndex]);
 
   const handleDragEnd = useCallback((event: DragEndEvent) => {
     const { active, over } = event;
     if (!over) return;
+
+    if (tutorialActive) {
+      if (tutorialStep === 2) {
+        if (String(over.id) !== 'drop-discard') {
+          toast.error("V tutoriálu teď odhazuj karty.");
+          return;
+        }
+      } else if (tutorialStep !== 3) {
+        toast.error("V tutoriálu teď nemůžeš s kartami hýbat.");
+        return;
+      } else if (tutorialStep === 3 && String(over.id) === 'drop-discard') {
+        toast.error("V tutoriálu teď neodhazuj karty.");
+        return;
+      }
+    }
 
     // Pomocná funkce pro výpočet insertPosition ze zone ID
     const getInsertPosition = (overId: string): number | undefined => {
@@ -384,9 +582,18 @@ export function useGameEngine() {
           player.board.splice(insertPos + 1, 0, rB);
           return next;
         });
+        updatePlayerStats(currentPlayerIndex, stats => ({
+          ...stats,
+          bracketPairsUsed: stats.bracketPairsUsed + 1,
+        }));
         setBracketMode(null);
         setHasModifiedBoardThisTurn(true);
+        setPlaysThisTurn(prev => prev + 1);
         toast.success("Závorky umístěny!", { icon: '✓' });
+        if (tutorialActive && tutorialStep === 3 && !tutorialBracketInfoShown) {
+          setTutorialBracketInfoShown(true);
+          toast.info("Ve hře máš 3 páry závorek: (), [], {}. Můžeš použít libovolný typ.");
+        }
         return;
       }
       return; // Syntax karta bez validní drop zóny – ignoruj
@@ -399,6 +606,13 @@ export function useGameEngine() {
         handleDiscard(active.id as string);
       } else {
         if (hasModifiedBoardThisTurn) return toast.error("Již jsi provedl akci.");
+        const isLocked = (cards: GameCard[]): boolean => cards.some(c => {
+          if (c.id === active.id) return !!c.locked;
+          return c.exponent ? isLocked([c.exponent]) : false;
+        });
+        if (isLocked(players[currentPlayerIndex].board)) {
+          return toast.error("Tuto kartu nelze odhodit.");
+        }
         const { removed, newCards } = removeCardRecursively(players[currentPlayerIndex].board, active.id as string);
         if (removed) {
           setPlayers(prev => {
@@ -406,10 +620,59 @@ export function useGameEngine() {
             next[currentPlayerIndex].board = newCards;
             return next;
           });
-          setDiscardPile(old => [...old, ...flattenCardTree(removed)]);
+          const removedCards = flattenCardTree(removed);
+          setDiscardPile(old => [...old, ...removedCards]);
+          updatePlayerStats(currentPlayerIndex, stats => ({
+            ...stats,
+            cardsFromBoardToDiscard: stats.cardsFromBoardToDiscard + removedCards.length,
+          }));
           setHasModifiedBoardThisTurn(true);
         }
       }
+      return;
+    }
+
+    const slotData = over.data.current as SlotDropData | undefined;
+    if (slotData?.slotKey && slotData?.parentId) {
+      const slotCard = players[currentPlayerIndex].hand.find(c => c.id === active.id);
+      if (!slotCard) return;
+      if (hasModifiedBoardThisTurn) return toast.error("Za kolo smíš z ruky provést pouze 1 akci!");
+
+      const slotCardData = cardsDatabase[slotCard.symbol];
+      if (slotCardData?.type === 'operator' || slotCardData?.type === 'syntax') {
+        return toast.error("Do okénka lze vložit jen čísla nebo symboly.");
+      }
+      if (players[currentPlayerIndex].status?.numberLock) {
+        return toast.error("Tento tah nesmíš hrát číslo! (Zákaz čísel ∏)");
+      }
+
+      setPlayers(prev => {
+        const next = JSON.parse(JSON.stringify(prev));
+        const p = next[currentPlayerIndex];
+        p.hand = p.hand.filter((c: GameCard) => c.id !== slotCard.id);
+
+        const updateSlot = (cards: GameCard[]): GameCard[] => cards.map(c => {
+          if (c.id === slotData.parentId) {
+            const slotCards = c.slotCards ?? createSlotCards(c.symbol) ?? {};
+            const existing = slotCards[slotData.slotKey] || null;
+            slotCards[slotData.slotKey] = slotCard;
+            if (existing) p.hand.push(existing);
+            return { ...c, slotCards };
+          }
+          return c.exponent ? { ...c, exponent: updateSlot([c.exponent])[0] } : c;
+        });
+
+        p.board = updateSlot(p.board);
+        return next;
+      });
+
+      updatePlayerStats(currentPlayerIndex, stats => ({
+        ...stats,
+        cardsToBoard: stats.cardsToBoard + 1,
+      }));
+
+      setHasModifiedBoardThisTurn(true);
+      setPlaysThisTurn(prev => prev + 1);
       return;
     }
 
@@ -424,7 +687,11 @@ export function useGameEngine() {
     // Pokud uživatel už akci tento tah provedl, chceme zjistit, jestli jde JEN o přesazení karty uvnitř boardu
     // Pokud je karta POUZE na tabuli (není v ruce ani v syntax), má povoleno se přesouvat.
     const isOnlyOnBoard = !card && players[currentPlayerIndex].board.some(c => c.id === active.id);
-    if (hasModifiedBoardThisTurn && !isOnlyOnBoard) {
+    const pStatus = players[currentPlayerIndex].status;
+    if (pStatus?.playLimit !== null && pStatus?.playLimit !== undefined && playsThisTurn >= pStatus.playLimit) {
+      return toast.error("Tento tah už nesmíš vyložit další kartu!");
+    }
+    if (hasModifiedBoardThisTurn && !isOnlyOnBoard && !pStatus?.infinitePlays) {
       return toast.error("Za kolo smíš z ruky provést pouze 1 akci!");
     }
     
@@ -434,6 +701,10 @@ export function useGameEngine() {
     if (!cardToPlace) {
       toast.error("Chyba: Karta se nenašla. Zkus to znova.");
       return;
+    }
+
+    if (cardToPlace.locked) {
+      return toast.error("Tuto kartu nelze přesouvat.");
     }
     
     // Rozpoznání typu drop zóny
@@ -458,11 +729,10 @@ export function useGameEngine() {
 
     if (cardToPlace.symbol === '∫') {
       setIntegralSetup({ card: cardToPlace, targetId, insertPosition });
-    } else if (cardsDatabase[cardToPlace.symbol]?.hasEffect) {
+    } else if (cardsDatabase[cardToPlace.symbol]?.hasEffect && !tutorialActive) {
       setPendingEffect({ card: cardToPlace, targetId, insertPosition });
     } else {
       // --- ENFORCE RESTRICTION FLAGS ---
-      const pStatus = players[currentPlayerIndex].status;
       const cardData = cardsDatabase[cardToPlace.symbol];
 
       // EFF_016: operationLock — nesmí hrát operace
@@ -520,7 +790,7 @@ export function useGameEngine() {
         addCardToGameState(cardToPlace, targetId, insertPosition);
       }
     }
-  }, [currentPlayerIndex, players, isDiscarding, hasModifiedBoardThisTurn, addCardToGameState, bracketMode]);
+  }, [currentPlayerIndex, players, isDiscarding, hasModifiedBoardThisTurn, addCardToGameState, bracketMode, updatePlayerStats]);
 
   // ==========================================
   // 5. EFEKTY A CÍLENÍ
@@ -674,6 +944,7 @@ export function useGameEngine() {
 
   const handleStartGame = (configuredPlayers: {name: string, theme: string}[]) => {
     const initialDeck = generateFilteredDeck(difficulty);
+    const vsCards = ['int', 'd/dx', '∑', '∏', 'lim'];
     const newPlayers: Player[] = configuredPlayers.map((p, i) => ({
       id: i, name: p.name, theme: p.theme, hand: [], board: [],
       targetR: generatePersonalTargetR(difficulty),
@@ -685,6 +956,18 @@ export function useGameEngine() {
       ],
       status: { mathModifiers: [], extraTurn: false, frozen: false, extraDraw: 0, drawReduction: 0, notifications: [] }
     }));
+
+    if (difficulty === 'VŠ') {
+      newPlayers.forEach((player, idx) => {
+        const picked = vsCards[Math.floor(Math.random() * vsCards.length)];
+        player.board.push({
+          id: `vs-${idx}-${picked}-${Date.now()}`,
+          symbol: picked,
+          locked: true,
+          slotCards: createSlotCards(picked),
+        });
+      });
+    }
 
     // Deal 5 cards to each player
     const deckCopy = [...initialDeck];
@@ -705,8 +988,183 @@ export function useGameEngine() {
 
     setDeck(deckCopy);
     setPlayers(newPlayers);
+    resetGameStats(newPlayers);
     setGamePhase('PLAYING');
   };
+
+  const handleStartTutorial = () => {
+    const makeCard = (symbol: string, prefix: string) => ({
+      id: `${prefix}-${symbol}-${Date.now()}-${Math.random().toString(36).substring(2,6)}`,
+      symbol
+    });
+
+    const p1HandSymbols = ['2', '*', 'sin(π/2)', '+', '3', '2', '7', '8'];
+    const p1Hand = p1HandSymbols.map(sym => makeCard(sym, 't1'));
+        const referenceBoard: GameCard[] = [
+          makeCard('(', 'ref'),
+          makeCard('2', 'ref'),
+          makeCard('*', 'ref'),
+          makeCard('sin(π/2)', 'ref'),
+          makeCard('+', 'ref'),
+          { ...makeCard('3', 'ref'), exponent: makeCard('2', 'ref-exp') },
+          makeCard(')', 'ref'),
+        ];
+
+    const discardableIds = p1Hand.filter(c => ['7', '8'].includes(c.symbol)).map(c => c.id);
+
+    const newPlayers: Player[] = [
+      {
+        id: 0,
+        name: 'Matematik 1',
+        theme: 'bg-violet-600/60',
+        hand: p1Hand,
+        board: [],
+        targetR: 11,
+        syntax: [
+          { id: `t1-l1`, symbol: '(' }, { id: `t1-r1`, symbol: ')' },
+          { id: `t1-l2`, symbol: '[' }, { id: `t1-r2`, symbol: ']' },
+          { id: `t1-l3`, symbol: '{' }, { id: `t1-r3`, symbol: '}' },
+          { id: `t1-eq`, symbol: '=' }
+        ],
+        status: { mathModifiers: [], extraTurn: false, frozen: false, extraDraw: 0, drawReduction: 0, notifications: [] }
+      },
+      {
+        id: 1,
+        name: 'Matematik 2',
+        theme: 'bg-emerald-600/60',
+        hand: [],
+        board: [],
+        targetR: 0,
+        syntax: [
+          { id: `t2-l1`, symbol: '(' }, { id: `t2-r1`, symbol: ')' },
+          { id: `t2-l2`, symbol: '[' }, { id: `t2-r2`, symbol: ']' },
+          { id: `t2-l3`, symbol: '{' }, { id: `t2-r3`, symbol: '}' },
+          { id: `t2-eq`, symbol: '=' }
+        ],
+        status: { mathModifiers: [], extraTurn: false, frozen: false, extraDraw: 0, drawReduction: 0, notifications: [] }
+      }
+    ];
+
+    setDifficulty('ZŠ');
+    setDeck([]);
+    setDiscardPile([]);
+    setPlayers(newPlayers);
+    setCurrentPlayerIndex(0);
+    setIsHandoff(false);
+    setWinner(null);
+    setHasModifiedBoardThisTurn(false);
+    setPlaysThisTurn(0);
+    resetGameStats(newPlayers);
+
+    setTutorialAllowedDiscardIds(discardableIds);
+    setTutorialActive(true);
+    setTutorialStep(0);
+    setTutorialDiscardDone(false);
+    setTutorialReferenceBoard(referenceBoard);
+    setTutorialBracketInfoShown(false);
+
+    setGamePhase('PLAYING');
+  };
+
+  const resetTutorial = () => {
+    handleStartTutorial();
+  };
+
+  const skipTutorial = () => {
+    setTutorialActive(false);
+    setTutorialStep(0);
+    setTutorialDiscardDone(false);
+    setTutorialAllowedDiscardIds([]);
+    setTutorialReferenceBoard([]);
+    setTutorialBracketInfoShown(false);
+    setWinner(null);
+    setDeck([]);
+    setDiscardPile([]);
+    setPlayers([]);
+    setIsHandoff(false);
+    setHasModifiedBoardThisTurn(false);
+    setPlaysThisTurn(0);
+    setGameStats(null);
+    setGameSummaryOpen(false);
+    setGamePhase('PICK_MODE');
+  };
+
+  const returnToModeSelect = () => {
+    setTutorialActive(false);
+    setTutorialStep(0);
+    setTutorialDiscardDone(false);
+    setTutorialAllowedDiscardIds([]);
+    setTutorialReferenceBoard([]);
+    setTutorialBracketInfoShown(false);
+    setWinner(null);
+    setDeck([]);
+    setDiscardPile([]);
+    setPlayers([]);
+    setIsHandoff(false);
+    setHasModifiedBoardThisTurn(false);
+    setPlaysThisTurn(0);
+    setGameStats(null);
+    setGameSummaryOpen(false);
+    setGamePhase('PICK_MODE');
+  };
+
+  const openLeaveGameConfirm = () => {
+    setLeaveGameConfirmOpen(true);
+  };
+
+  const closeLeaveGameConfirm = () => {
+    setLeaveGameConfirmOpen(false);
+  };
+
+  const openGameSummary = () => {
+    setGameSummaryOpen(true);
+  };
+
+  const closeGameSummary = () => {
+    setGameSummaryOpen(false);
+  };
+
+  const confirmLeaveGame = () => {
+    setLeaveGameConfirmOpen(false);
+    returnToModeSelect();
+  };
+
+  const isTutorialExpressionReady = useCallback((board: GameCard[]) => {
+    const openSet = new Set(['(', '[', '{']);
+    const closeSet = new Set([')', ']', '}']);
+    const sequence = ['OPEN', '2', '*', 'sin(π/2)', '+', '3', 'CLOSE'];
+    let seqIndex = 0;
+    let exponentBase: GameCard | null = null;
+    for (const card of board) {
+      const expected = sequence[seqIndex];
+      const matches = (expected === 'OPEN' && openSet.has(card.symbol)) ||
+        (expected === 'CLOSE' && closeSet.has(card.symbol)) ||
+        card.symbol === expected;
+      if (matches) {
+        if (sequence[seqIndex] === '3') exponentBase = card;
+        seqIndex += 1;
+        if (seqIndex === sequence.length) break;
+      }
+    }
+    if (seqIndex !== sequence.length || !exponentBase) return false;
+    return exponentBase.exponent?.symbol === '2';
+  }, []);
+
+  useEffect(() => {
+    if (!tutorialActive) return;
+    const current = players[currentPlayerIndex];
+    if (!current) return;
+
+    if (tutorialStep === 2 && tutorialDiscardDone) {
+      setTutorialStep(3);
+    }
+    if (tutorialStep === 3 && isTutorialExpressionReady(current.board)) {
+      setTutorialStep(4);
+    }
+    if (tutorialStep === 4 && winner) {
+      setTutorialStep(5);
+    }
+  }, [tutorialActive, tutorialStep, tutorialDiscardDone, players, currentPlayerIndex, winner, isTutorialExpressionReady]);
 
   return {
     state: {
@@ -714,15 +1172,21 @@ export function useGameEngine() {
       isHandoff, winner, pendingEffect, effectStep, chosenEffectChoice,
       targetingMode, minigameMode, bracketMode, integralSetup,
       isDiscarding, hasModifiedBoardThisTurn, playDirection,
-      deckPreviewMode, moduloMode
+      deckPreviewMode, moduloMode,
+      tutorialActive, tutorialStep, tutorialReferenceBoard,
+      leaveGameConfirmOpen, gameSummaryOpen, gameStats
     },
     actions: {
-      setGamePhase, setDifficulty, handleStartGame, handleEndTurn, handleDiscard,
+      setGamePhase, setDifficulty, handleStartGame, handleStartTutorial, handleEndTurn, handleDiscard,
       nextTurn, checkMathEngine, handleEffectChoice, handleIntegralSubmit,
       handleDragEnd, cancelBracketMode, setMinigameMode, setBracketMode,
       setTargetingMode, setIntegralSetup, setPendingEffect, setEffectStep,
       setChosenEffectChoice, setPlayers, addCardToGameState, handleDiscardExpression,
-      handleDeckPreviewConfirm, handleModuloSelect, setDeckPreviewMode, setModuloMode
+      setIntegralVariable,
+      handleDeckPreviewConfirm, handleModuloSelect, setDeckPreviewMode, setModuloMode,
+      setTutorialStep, resetTutorial, skipTutorial, returnToModeSelect,
+      openLeaveGameConfirm, closeLeaveGameConfirm, confirmLeaveGame,
+      openGameSummary, closeGameSummary
     }
   };
 }
