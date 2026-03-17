@@ -3,6 +3,7 @@ import tailwindcss from "@tailwindcss/vite"
 import react from "@vitejs/plugin-react"
 import { defineConfig } from "vite"
 import { VitePWA } from "vite-plugin-pwa" // <--- TADY JE NOVÝ IMPORT
+import yaml from "@rollup/plugin-yaml"
 
 // https://vite.dev/config/
 const base = process.env.GITHUB_ACTIONS ? "/BC_hra_M/" : "/";
@@ -14,6 +15,7 @@ export default defineConfig({
   plugins: [
     react(), 
     tailwindcss(),
+    yaml(),
     // <--- TADY ZAČÍNÁ PWA NASTAVENÍ --->
     VitePWA({
       registerType: 'autoUpdate',
