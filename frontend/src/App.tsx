@@ -60,6 +60,25 @@ export default function App() {
   const currentPlayer = state.players[state.currentPlayerIndex];
   if (!currentPlayer) return null;
 
+  const showEffectDebug = import.meta.env.DEV;
+  const status = currentPlayer.status;
+  const effectDebugRows: string[] = [];
+
+  if ((status.extraDraw || 0) > 0) effectDebugRows.push(`extraDraw: ${status.extraDraw}`);
+  if ((status.drawReduction || 0) > 0) effectDebugRows.push(`drawReduction: ${status.drawReduction}`);
+  if (status.mustPlayOperation) effectDebugRows.push('mustPlayOperation: true');
+  if (status.operationLock) effectDebugRows.push('operationLock: true');
+  if (status.numberLock) effectDebugRows.push('numberLock: true');
+  if (status.playLimit !== null && status.playLimit !== undefined) effectDebugRows.push(`playLimit: ${status.playLimit}`);
+  if (status.infinitePlays) effectDebugRows.push('infinitePlays: true');
+  if (status.frozen) effectDebugRows.push('frozen: true');
+  if (status.playAnyAsZeroNextTurn) effectDebugRows.push('playAnyAsZeroNextTurn: true');
+  if (status.playAnyAsPlusNextTurn) effectDebugRows.push('playAnyAsPlusNextTurn: true');
+  if (status.playAnyAsZeroReady) effectDebugRows.push('playAnyAsZeroReady: true');
+  if (status.playAnyAsPlusReady) effectDebugRows.push('playAnyAsPlusReady: true');
+  if (status.mathModifiers?.length) effectDebugRows.push(`mathModifiers: ${status.mathModifiers.join(', ')}`);
+  if (status.notifications?.length) effectDebugRows.push(`notifications: ${status.notifications.length}`);
+
   return (
     <DndContext onDragEnd={actions.handleDragEnd} sensors={sensors} modifiers={[snapCenterToCursor]}>
       <Toaster
@@ -80,7 +99,7 @@ export default function App() {
           },
         }}
       />
-      
+
       {/* --- OVERLAY VRSTVY (Vítězství, Předání, Minihry) --- */}
       <VictoryScreen
         winner={state.winner}
@@ -120,23 +139,7 @@ export default function App() {
 
       <MinigameDialog 
         minigameMode={state.minigameMode} 
-        onPick={(id: string) => {
-          if (!state.minigameMode || !state.pendingEffect) return;
-          if (id !== 'CANCEL') {
-            const card = state.minigameMode.cards.find(c => c.id === id);
-            if (card) {
-               actions.setPlayers(prev => {
-                 const p = JSON.parse(JSON.stringify(prev));
-                 p[state.currentPlayerIndex].hand.push({
-                    ...card, id: `mini-${card.symbol}-${Date.now()}-${Math.random().toString(36).substring(2,6)}`
-                 });
-                 return p;
-               });
-            }
-          }
-          actions.addCardToGameState(state.pendingEffect.card, state.pendingEffect.targetId);
-          actions.setMinigameMode(null);
-        }} 
+        onPick={(id: string) => actions.handleMinigamePick(id)} 
       />
 
 
@@ -174,6 +177,8 @@ export default function App() {
         <MobileGameLayout
           currentPlayer={currentPlayer}
           state={state}
+          showEffectDebug={showEffectDebug}
+          debugEffectRows={effectDebugRows}
           actions={{
             checkMathEngine: actions.checkMathEngine,
             handleEndTurn: actions.handleEndTurn,
@@ -193,6 +198,8 @@ export default function App() {
         <TabletGameLayout
           currentPlayer={currentPlayer}
           state={state}
+          showEffectDebug={showEffectDebug}
+          debugEffectRows={effectDebugRows}
           actions={{
             checkMathEngine: actions.checkMathEngine,
             handleEndTurn: actions.handleEndTurn,
@@ -212,6 +219,8 @@ export default function App() {
         <DesktopGameLayout
           currentPlayer={currentPlayer}
           state={state}
+          showEffectDebug={showEffectDebug}
+          debugEffectRows={effectDebugRows}
           actions={{
             checkMathEngine: actions.checkMathEngine,
             handleEndTurn: actions.handleEndTurn,

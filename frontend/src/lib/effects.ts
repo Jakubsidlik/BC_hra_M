@@ -33,6 +33,10 @@ export interface PlayerStatus {
   numberLock?: boolean;
   exposedHand?: boolean;
   absoluteValue?: boolean;
+  playAnyAsZeroNextTurn?: boolean;
+  playAnyAsPlusNextTurn?: boolean;
+  playAnyAsZeroReady?: boolean;
+  playAnyAsPlusReady?: boolean;
   notifications: string[]; // PŘIDÁNO: Seznam zpráv od oponentů (krádeže, útoky)
 }
 
@@ -63,6 +67,10 @@ const ensureStatus = (player: Player) => {
       exposedHand: false,
       noDrawNextTurn: false,
       absoluteValue: false,
+      playAnyAsZeroNextTurn: false,
+      playAnyAsPlusNextTurn: false,
+      playAnyAsZeroReady: false,
+      playAnyAsPlusReady: false,
       mathModifiers: [],
       extraTurn: false,
       notifications: [] // PŘIDÁNO
@@ -335,6 +343,10 @@ export const applyEffectLogic = (
         p.status.noDrawNextTurn = false;
         p.status.immune = false;
         p.status.extraTurn = false;
+        p.status.playAnyAsZeroNextTurn = false;
+        p.status.playAnyAsPlusNextTurn = false;
+        p.status.playAnyAsZeroReady = false;
+        p.status.playAnyAsPlusReady = false;
       });
       newPlayers.forEach(p => {
         if (p.id !== activePlayer.id) {
@@ -362,6 +374,19 @@ export const applyEffectLogic = (
           p.status.notifications.push(` Hráč ${activePlayer.name} tě připravil o doberání 1 karty!`);
         }
       });
+      break;
+
+    case "EFF_027": // skalar: v příštím tahu může zahrát jakoukoliv kartu jako 0
+      activePlayer.status.playAnyAsZeroNextTurn = true;
+      activePlayer.status.notifications.push('🔵 V příštím tahu můžeš zahrát libovolnou kartu jako 0.');
+      break;
+
+    case "EFF_028": // vektor: UI výběr 1 ze 3 řeší useGameEngine (minihra)
+      break;
+
+    case "EFF_029": // abs: v příštím tahu může zahrát jakoukoliv kartu jako +
+      activePlayer.status.playAnyAsPlusNextTurn = true;
+      activePlayer.status.notifications.push('➕ V příštím tahu můžeš zahrát libovolnou kartu jako +.');
       break;
 
     default:

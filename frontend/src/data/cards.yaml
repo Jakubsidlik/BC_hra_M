@@ -2,7 +2,7 @@
   symbol: '0'
   type: number
   count: 4
-  image: /cards/0.svg
+  image: /svg/0.svg
   canHaveExponent: true
   hasEffect: true
   effects:
@@ -15,7 +15,7 @@
   symbol: '1'
   type: number
   count: 6
-  image: /cards/1.svg
+  image: /svg/1.svg
   canHaveExponent: true
   hasEffect: true
   effects:
@@ -28,7 +28,7 @@
   symbol: '2'
   type: number
   count: 10
-  image: /cards/2.svg
+  image: /svg/2.svg
   canHaveExponent: true
   hasEffect: true
   effects:
@@ -41,7 +41,7 @@
   symbol: '3'
   type: number
   count: 10
-  image: /cards/3.svg
+  image: /svg/3.svg
   canHaveExponent: true
   hasEffect: true
   effects:
@@ -54,7 +54,7 @@
   symbol: '4'
   type: number
   count: 10
-  image: /cards/4.svg
+  image: /svg/4.svg
   canHaveExponent: true
   hasEffect: true
   effects:
@@ -67,7 +67,7 @@
   symbol: '5'
   type: number
   count: 10
-  image: /cards/5.svg
+  image: /svg/5.svg
   canHaveExponent: true
   hasEffect: true
   effects:
@@ -80,7 +80,7 @@
   symbol: '6'
   type: number
   count: 10
-  image: /cards/6.svg
+  image: /svg/6.svg
   canHaveExponent: true
   hasEffect: true
   effects:
@@ -93,7 +93,7 @@
   symbol: '7'
   type: number
   count: 10
-  image: /cards/7.svg
+  image: /svg/7.svg
   canHaveExponent: true
   hasEffect: true
   effects:
@@ -106,7 +106,7 @@
   symbol: '8'
   type: number
   count: 10
-  image: /cards/8.svg
+  image: /svg/8.svg
   canHaveExponent: true
   hasEffect: true
   effects:
@@ -119,7 +119,7 @@
   symbol: '9'
   type: number
   count: 10
-  image: /cards/9.svg
+  image: /svg/9.svg
   canHaveExponent: true
   hasEffect: true
   effects:
@@ -132,7 +132,7 @@
   symbol: π
   type: number
   count: 5
-  image: /cards/pi.svg
+  image: /svg/pi.svg
   canHaveExponent: true
   hasEffect: true
   effects:
@@ -145,7 +145,7 @@ e:
   symbol: e
   type: number
   count: 5
-  image: /cards/e.svg
+  image: /svg/e.svg
   canHaveExponent: true
   hasEffect: true
   effects:
@@ -158,7 +158,7 @@ e:
   symbol: 'y'
   type: variable
   count: 10
-  image: /cards/y.svg
+  image: /svg/y.svg
   canHaveExponent: true
   hasEffect: true
   effects:
@@ -171,7 +171,7 @@ x:
   symbol: x
   type: variable
   count: 10
-  image: /cards/x.svg
+  image: /svg/x.svg
   canHaveExponent: true
   hasEffect: true
   effects:
@@ -184,7 +184,7 @@ x:
   symbol: +
   type: operator
   count: 15
-  image: /cards/plus.svg
+  image: /svg/plus.svg
   hasEffect: true
   effects:
     optionA:
@@ -196,7 +196,7 @@ x:
   symbol: '-'
   type: operator
   count: 15
-  image: /cards/minus.svg
+  image: /svg/minus.svg
   hasEffect: true
   effects:
     optionA:
@@ -208,7 +208,7 @@ x:
   symbol: '*'
   type: operator
   count: 15
-  image: /cards/multiply.svg
+  image: /svg/krat.svg
   hasEffect: true
   effects:
     optionA:
@@ -220,7 +220,7 @@ x:
   symbol: /
   type: operator
   count: 15
-  image: /cards/divide.svg
+  image: /svg/deleno.svg
   hasEffect: true
   effects:
     optionA:
@@ -232,7 +232,7 @@ a^b:
   symbol: a^b
   type: operator
   count: 4
-  image: /cards/power.svg
+  image: /svg/mocnina.svg
   slots:
     - single
   hasEffect: true
@@ -246,7 +246,7 @@ sqrt:
   symbol: sqrt
   type: operator
   count: 4
-  image: /cards/sqrt.svg
+  image: /svg/odmocneno.svg
   slots:
     - single
   hasEffect: true
@@ -260,7 +260,7 @@ mod:
   symbol: mod
   type: operator
   count: 4
-  image: /cards/mod.svg
+  image: /svg/mod.svg
   slots:
     - single
   hasEffect: true
@@ -274,7 +274,7 @@ n!:
   symbol: n!
   type: operator
   count: 2
-  image: /cards/factorial.svg
+  image: /svg/faktorial.svg
   hasEffect: true
   effects:
     optionA:
@@ -286,14 +286,12 @@ d/dx:
   symbol: d/dx
   type: operator
   count: 3
-  image: /cards/derivative.svg
-  slots:
-    - order
+  image: /svg/der.svg
 int:
   symbol: int
   type: operator
   count: 3
-  image: /cards/integral.svg
+  image: /svg/int.svg
   slots:
     - upper
     - lower
@@ -301,7 +299,7 @@ int:
   symbol: ∑
   type: operator
   count: 4
-  image: /cards/sum.svg
+  image: /svg/sum.svg
   slots:
     - upper
     - lower
@@ -309,7 +307,7 @@ log:
   symbol: log
   type: operator
   count: 2
-  image: /cards/log.svg
+  image: /svg/log.svg
   slots:
     - single
   hasEffect: true
@@ -319,11 +317,11 @@ log:
       name: Neomezené hraní
       description: Můžeš tento tah hrát libovolný počet karet.
       target: SELF
-sin(0):
-  symbol: sin(0)
+sin(2π):
+  symbol: sin(2π)
   type: number
   count: 1
-  image: /cards/sin.svg
+  image: /svg/sin2pi.svg
   hasEffect: true
   effects:
     optionA:
@@ -335,7 +333,7 @@ sin(π/6):
   symbol: sin(π/6)
   type: number
   count: 1
-  image: /cards/sin.svg
+  image: /svg/sinpi6.svg
   hasEffect: true
   effects:
     optionA:
@@ -347,7 +345,7 @@ sin(π/4):
   symbol: sin(π/4)
   type: number
   count: 1
-  image: /cards/sin.svg
+  image: /svg/sinpi4.svg
   hasEffect: true
   effects:
     optionA:
@@ -359,7 +357,7 @@ sin(π/3):
   symbol: sin(π/3)
   type: number
   count: 1
-  image: /cards/sin.svg
+  image: /svg/sinpi3.svg
   hasEffect: true
   effects:
     optionA:
@@ -371,7 +369,7 @@ sin(π/2):
   symbol: sin(π/2)
   type: number
   count: 1
-  image: /cards/sin.svg
+  image: /svg/sinpi2.svg
   hasEffect: true
   effects:
     optionA:
@@ -383,7 +381,7 @@ sin(π):
   symbol: sin(π)
   type: number
   count: 1
-  image: /cards/sin.svg
+  image: /svg/sinpi.svg
   hasEffect: true
   effects:
     optionA:
@@ -395,7 +393,7 @@ sin(3π/2):
   symbol: sin(3π/2)
   type: number
   count: 1
-  image: /cards/sin.svg
+  image: /svg/sin3pi2.svg
   hasEffect: true
   effects:
     optionA:
@@ -403,11 +401,11 @@ sin(3π/2):
       name: Předání po
       description: Všichni hráči si předají karty v ruce po směru.
       target: ALL
-cos(0):
-  symbol: cos(0)
+cos(2π):
+  symbol: cos(2π)
   type: number
   count: 1
-  image: /cards/cos.svg
+  image: /svg/cos2pi.svg
   hasEffect: true
   effects:
     optionA:
@@ -419,7 +417,7 @@ cos(π/6):
   symbol: cos(π/6)
   type: number
   count: 1
-  image: /cards/cos.svg
+  image: /svg/cospi6.svg
   hasEffect: true
   effects:
     optionA:
@@ -431,7 +429,7 @@ cos(π/4):
   symbol: cos(π/4)
   type: number
   count: 1
-  image: /cards/cos.svg
+  image: /svg/cospi4.svg
   hasEffect: true
   effects:
     optionA:
@@ -443,7 +441,7 @@ cos(π/3):
   symbol: cos(π/3)
   type: number
   count: 1
-  image: /cards/cos.svg
+  image: /svg/cospi3.svg
   hasEffect: true
   effects:
     optionA:
@@ -455,7 +453,7 @@ cos(π/2):
   symbol: cos(π/2)
   type: number
   count: 1
-  image: /cards/cos.svg
+  image: /svg/cospi2.svg
   hasEffect: true
   effects:
     optionA:
@@ -467,7 +465,7 @@ cos(π):
   symbol: cos(π)
   type: number
   count: 1
-  image: /cards/cos.svg
+  image: /svg/cospi.svg
   hasEffect: true
   effects:
     optionA:
@@ -479,7 +477,7 @@ cos(3π/2):
   symbol: cos(3π/2)
   type: number
   count: 1
-  image: /cards/cos.svg
+  image: /svg/cos3pi2.svg
   hasEffect: true
   effects:
     optionA:
@@ -491,7 +489,7 @@ tg(π/6):
   symbol: tg(π/6)
   type: number
   count: 1
-  image: /cards/tg.svg
+  image: /svg/tgpi6.svg
   hasEffect: true
   effects:
     optionA:
@@ -503,7 +501,7 @@ tg(π/4):
   symbol: tg(π/4)
   type: number
   count: 1
-  image: /cards/tg.svg
+  image: /svg/tgpi4.svg
   hasEffect: true
   effects:
     optionA:
@@ -515,7 +513,7 @@ tg(π/3):
   symbol: tg(π/3)
   type: number
   count: 1
-  image: /cards/tg.svg
+  image: /svg/tgpi3.svg
   hasEffect: true
   effects:
     optionA:
@@ -527,7 +525,7 @@ tg(π):
   symbol: tg(π)
   type: number
   count: 1
-  image: /cards/tg.svg
+  image: /svg/tgpi.svg
   hasEffect: true
   effects:
     optionA:
@@ -539,7 +537,7 @@ cotg(π/6):
   symbol: cotg(π/6)
   type: number
   count: 1
-  image: /cards/cotg.svg
+  image: /svg/cotgpi6.svg
   hasEffect: true
   effects:
     optionA:
@@ -551,7 +549,7 @@ cotg(π/4):
   symbol: cotg(π/4)
   type: number
   count: 1
-  image: /cards/cotg.svg
+  image: /svg/cotgpi4.svg
   hasEffect: true
   effects:
     optionA:
@@ -563,7 +561,7 @@ cotg(π/3):
   symbol: cotg(π/3)
   type: number
   count: 1
-  image: /cards/cotg.svg
+  image: /svg/cotgpi3.svg
   hasEffect: true
   effects:
     optionA:
@@ -575,7 +573,7 @@ cotg(π/2):
   symbol: cotg(π/2)
   type: number
   count: 1
-  image: /cards/cotg.svg
+  image: /svg/cotgpi2.svg
   hasEffect: true
   effects:
     optionA:
@@ -587,7 +585,7 @@ nCk:
   symbol: nCk
   type: operator
   count: 4
-  image: /cards/combination.svg
+  image: /svg/kombinace.svg
   slots:
     - upper
     - lower
@@ -602,7 +600,7 @@ nCk:
   symbol: ∏
   type: operator
   count: 2
-  image: /cards/product.svg
+  image: /svg/velkepi.svg
   slots:
     - upper
     - lower
@@ -610,14 +608,14 @@ lim:
   symbol: lim
   type: operator
   count: 2
-  image: /cards/limit.svg
+  image: /svg/lim.svg
   slots:
     - single
 det:
   symbol: det
   type: operator
   count: 2
-  image: /cards/determinant.svg
+  image: /svg/det.svg
   slots:
     - ul
     - ur
@@ -634,14 +632,95 @@ det:
   symbol: (
   type: syntax
   count: 0
-  image: /cards/bracket-left.svg
+  image: /svg/kulataleva.svg
 ):
   symbol: )
   type: syntax
   count: 0
-  image: /cards/bracket-right.svg
+  image: /svg/kulataprava.svg
 '=':
   symbol: '='
   type: syntax
   count: 0
-  image: /cards/equals.svg
+abs:
+  symbol: abs
+  type: operator
+  count: 4
+  image: /svg/abs.svg
+  slots:
+    - single
+  hasEffect: true
+  effects:
+    optionA:
+      id: EFF_029
+      name: Univerzální plus
+      description: V příštím tahu můžeš zahrát libovolnou kartu z ruky jako +.
+      target: SELF
+skalar:
+  symbol: skalar
+  type: operator
+  count: 4
+  image: /svg/skalar.svg
+  hasEffect: true
+  effects:
+    optionA:
+      id: EFF_027
+      name: Univerzální nula
+      description: V příštím tahu můžeš zahrát libovolnou kartu z ruky jako 0.
+      target: SELF
+vektor:
+  symbol: vektor
+  type: operator
+  count: 4
+  image: /svg/vektor.svg
+  hasEffect: true
+  effects:
+    optionA:
+      id: EFF_028
+      name: Velikost vektoru
+      description: Ihned dobereš 3 karty, 1 si necháš a 2 zahodíš.
+      target: SELF
+ln:
+  symbol: ln
+  type: operator
+  count: 2
+  image: /svg/ln.svg
+  slots:
+    - single
+log10:
+  symbol: log10
+  type: operator
+  count: 2
+  image: /svg/log10.svg
+  slots:
+    - single
+dxdy:
+  symbol: dxdy
+  type: syntax
+  count: 0
+  image: /svg/dxdy.svg
+'[':
+  symbol: '['
+  type: syntax
+  count: 0
+  image: /svg/hranataleva.svg
+']':
+  symbol: ']'
+  type: syntax
+  count: 0
+  image: /svg/hranataprava.svg
+'{':
+  symbol: '{'
+  type: syntax
+  count: 0
+  image: /svg/slozenaleva.svg
+'}':
+  symbol: '}'
+  type: syntax
+  count: 0
+  image: /svg/slozenaprava.svg
+zada:
+  symbol: zada
+  type: syntax
+  count: 0
+  image: /svg/zada.svg

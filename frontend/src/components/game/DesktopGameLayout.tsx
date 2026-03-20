@@ -55,9 +55,9 @@ function findIntegralVariable(cards: GameCard[]): 'x' | 'y' | null {
 
 // Desktop card dimensions (larger than mobile/tablet)
 const CARD_W = '8.35rem';
-const CARD_H = '12.5rem';
+const CARD_H = '12.81rem';
 const BOARD_CARD_W = '5.15rem';
-const BOARD_CARD_H = '7.75rem';
+const BOARD_CARD_H = '7.9rem';
 const VS_CARD_SYMBOLS = new Set(['int', 'd/dx', '∑', '∏', 'lim']);
 
 // ==========================================
@@ -70,6 +70,39 @@ interface DesktopHandCardProps {
   isDiscarding: boolean;
   onDiscard?: (id: string) => void;
   palette: ThemePalette;
+}
+
+function DesktopSlotValueCard({ slotCard }: { slotCard: GameCard }) {
+  const slotCardData = cardsDatabase[slotCard.symbol];
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+    id: slotCard.id,
+    data: slotCard,
+    disabled: !!slotCard.locked,
+  });
+
+  const style: React.CSSProperties = {
+    transform: transform ? CSS.Translate.toString(transform) : undefined,
+    zIndex: isDragging ? 99999 : undefined,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      {...listeners}
+      {...attributes}
+      style={style}
+      onPointerDown={(event) => event.stopPropagation()}
+      className={`w-full h-full rounded-md border-2 flex items-center justify-center bg-slate-800 shadow-xl cursor-grab active:cursor-grabbing ${getBorderColor(slotCard.symbol)} ${isDragging ? 'ring-2 ring-white/70 scale-105' : ''}`}
+    >
+      <div className="w-full h-full flex items-center justify-center p-1 pointer-events-none">
+        {slotCardData?.image ? (
+          <img src={`${BASE}${slotCardData.image.replace(/^\//, '')}`} alt={slotCard.symbol} className="w-full h-full object-cover" />
+        ) : (
+          <span className="text-xl font-black text-white">{slotCard.symbol}</span>
+        )}
+      </div>
+    </div>
+  );
 }
 
 function DesktopHandCard({ card, index, total, isDiscarding, onDiscard, palette }: DesktopHandCardProps) {
@@ -117,7 +150,7 @@ function DesktopHandCard({ card, index, total, isDiscarding, onDiscard, palette 
       {...attributes}
       onClick={() => isDiscarding && onDiscard && onDiscard(card.id)}
       style={style}
-      className={`rounded-md border-2 shadow-xl select-none flex flex-col p-1
+      className={`rounded-md border-2 shadow-xl select-none overflow-hidden
         transition-all duration-200 origin-bottom
         ${isDragging ? 'scale-110 ring-2 ring-white/30' : ''}
         ${isDiscarding
@@ -126,10 +159,9 @@ function DesktopHandCard({ card, index, total, isDiscarding, onDiscard, palette 
         ${borderColor}
       `}
     >
-      <span className="font-black text-xl text-white leading-none">{card.symbol}</span>
-      <div className="flex-1 flex items-center justify-center">
+      <div className="w-full h-full flex items-center justify-center">
         {cardData?.image ? (
-          <img src={`${BASE}${cardData.image.replace(/^\//, '')}`} alt={card.symbol} className="w-full h-full object-contain" />
+          <img src={`${BASE}${cardData.image.replace(/^\//, '')}`} alt={card.symbol} className="w-full h-full object-cover" />
         ) : (
           <span className="text-4xl font-black text-white">{card.symbol}</span>
         )}
@@ -290,7 +322,7 @@ function DraggableBoardCard({
             const nextVar = derivativeVar === 'x' ? 'y' : 'x';
             onDerivativeVariableChange?.(card.id, nextVar);
           }}
-          className="absolute right-1 top-1 rounded-full border border-white/30 bg-slate-900/90 px-1.5 py-0.5 text-[10px] font-black text-white"
+          className="absolute z-20 right-1 top-1 origin-top-right scale-[2] rounded-full border border-white/30 bg-slate-900/90 px-1.5 py-0.5 text-[10px] font-black text-white"
         >
           {derivativeLabel}
         </button>
@@ -303,7 +335,7 @@ function DraggableBoardCard({
             const nextVar = seriesVar === 'x' ? 'y' : 'x';
             onSeriesVariableChange?.(card.id, nextVar);
           }}
-          className="absolute right-1 top-1 rounded-full border border-white/30 bg-slate-900/90 px-1.5 py-0.5 text-[10px] font-black text-white"
+          className="absolute z-20 right-1 top-1 origin-top-right scale-[2] rounded-full border border-white/30 bg-slate-900/90 px-1.5 py-0.5 text-[10px] font-black text-white"
         >
           {seriesVar}
         </button>
@@ -316,7 +348,7 @@ function DraggableBoardCard({
             const nextVar = limitVar === 'x' ? 'y' : 'x';
             onLimitVariableChange?.(card.id, nextVar);
           }}
-          className="absolute right-1 top-1 rounded-full border border-white/30 bg-slate-900/90 px-1.5 py-0.5 text-[10px] font-black text-white"
+          className="absolute z-20 right-1 top-1 origin-top-right scale-[2] rounded-full border border-white/30 bg-slate-900/90 px-1.5 py-0.5 text-[10px] font-black text-white"
         >
           {limitVar}
         </button>
@@ -371,54 +403,22 @@ function DraggableBoardCard({
         <>
           {ulKey && card.slotCards?.[ulKey] && (
             <div className="absolute" style={{ left: '20%', top: '-12%', transform: 'translateX(-50%) scale(0.85)', zIndex: 0, width: BOARD_CARD_W, height: BOARD_CARD_H }}>
-              <div className={`w-full h-full rounded-md border-2 flex items-center justify-center bg-slate-800 shadow-xl ${getBorderColor(card.slotCards[ulKey]!.symbol)}`}>
-                <div className="w-full h-full flex items-center justify-center p-1">
-                  {cardsDatabase[card.slotCards[ulKey]!.symbol]?.image ? (
-                    <img src={`${BASE}${cardsDatabase[card.slotCards[ulKey]!.symbol].image.replace(/^\//, '')}`} alt={card.slotCards[ulKey]!.symbol} className="w-full h-full object-contain" />
-                  ) : (
-                    <span className="text-xl font-black text-white">{card.slotCards[ulKey]!.symbol}</span>
-                  )}
-                </div>
-              </div>
+              <DesktopSlotValueCard slotCard={card.slotCards[ulKey]!} />
             </div>
           )}
           {urKey && card.slotCards?.[urKey] && (
             <div className="absolute" style={{ left: '80%', top: '-12%', transform: 'translateX(-50%) scale(0.85)', zIndex: 0, width: BOARD_CARD_W, height: BOARD_CARD_H }}>
-              <div className={`w-full h-full rounded-md border-2 flex items-center justify-center bg-slate-800 shadow-xl ${getBorderColor(card.slotCards[urKey]!.symbol)}`}>
-                <div className="w-full h-full flex items-center justify-center p-1">
-                  {cardsDatabase[card.slotCards[urKey]!.symbol]?.image ? (
-                    <img src={`${BASE}${cardsDatabase[card.slotCards[urKey]!.symbol].image.replace(/^\//, '')}`} alt={card.slotCards[urKey]!.symbol} className="w-full h-full object-contain" />
-                  ) : (
-                    <span className="text-xl font-black text-white">{card.slotCards[urKey]!.symbol}</span>
-                  )}
-                </div>
-              </div>
+              <DesktopSlotValueCard slotCard={card.slotCards[urKey]!} />
             </div>
           )}
           {llKey && card.slotCards?.[llKey] && (
             <div className="absolute" style={{ left: '20%', top: '88%', transform: 'translateX(-50%) scale(0.85)', zIndex: 0, width: BOARD_CARD_W, height: BOARD_CARD_H }}>
-              <div className={`w-full h-full rounded-md border-2 flex items-center justify-center bg-slate-800 shadow-xl ${getBorderColor(card.slotCards[llKey]!.symbol)}`}>
-                <div className="w-full h-full flex items-center justify-center p-1">
-                  {cardsDatabase[card.slotCards[llKey]!.symbol]?.image ? (
-                    <img src={`${BASE}${cardsDatabase[card.slotCards[llKey]!.symbol].image.replace(/^\//, '')}`} alt={card.slotCards[llKey]!.symbol} className="w-full h-full object-contain" />
-                  ) : (
-                    <span className="text-xl font-black text-white">{card.slotCards[llKey]!.symbol}</span>
-                  )}
-                </div>
-              </div>
+              <DesktopSlotValueCard slotCard={card.slotCards[llKey]!} />
             </div>
           )}
           {lrKey && card.slotCards?.[lrKey] && (
             <div className="absolute" style={{ left: '80%', top: '88%', transform: 'translateX(-50%) scale(0.85)', zIndex: 0, width: BOARD_CARD_W, height: BOARD_CARD_H }}>
-              <div className={`w-full h-full rounded-md border-2 flex items-center justify-center bg-slate-800 shadow-xl ${getBorderColor(card.slotCards[lrKey]!.symbol)}`}>
-                <div className="w-full h-full flex items-center justify-center p-1">
-                  {cardsDatabase[card.slotCards[lrKey]!.symbol]?.image ? (
-                    <img src={`${BASE}${cardsDatabase[card.slotCards[lrKey]!.symbol].image.replace(/^\//, '')}`} alt={card.slotCards[lrKey]!.symbol} className="w-full h-full object-contain" />
-                  ) : (
-                    <span className="text-xl font-black text-white">{card.slotCards[lrKey]!.symbol}</span>
-                  )}
-                </div>
-              </div>
+              <DesktopSlotValueCard slotCard={card.slotCards[lrKey]!} />
             </div>
           )}
         </>
@@ -427,28 +427,12 @@ function DraggableBoardCard({
         <>
           {topSlotKey && card.slotCards?.[topSlotKey] && (
             <div className="absolute left-1/2" style={{ top: '-10%', transform: 'translateX(-50%) scale(0.9)', zIndex: 0, width: BOARD_CARD_W, height: BOARD_CARD_H }}>
-              <div className={`w-full h-full rounded-md border-2 flex items-center justify-center bg-slate-800 shadow-xl ${getBorderColor(card.slotCards[topSlotKey]!.symbol)}`}>
-                <div className="w-full h-full flex items-center justify-center p-1">
-                  {cardsDatabase[card.slotCards[topSlotKey]!.symbol]?.image ? (
-                    <img src={`${BASE}${cardsDatabase[card.slotCards[topSlotKey]!.symbol].image.replace(/^\//, '')}`} alt={card.slotCards[topSlotKey]!.symbol} className="w-full h-full object-contain" />
-                  ) : (
-                    <span className="text-xl font-black text-white">{card.slotCards[topSlotKey]!.symbol}</span>
-                  )}
-                </div>
-              </div>
+              <DesktopSlotValueCard slotCard={card.slotCards[topSlotKey]!} />
             </div>
           )}
           {bottomSlotKey && card.slotCards?.[bottomSlotKey] && (
             <div className="absolute left-1/2" style={{ top: '86%', transform: 'translateX(-50%) scale(0.9)', zIndex: 0, width: BOARD_CARD_W, height: BOARD_CARD_H }}>
-              <div className={`w-full h-full rounded-md border-2 flex items-center justify-center bg-slate-800 shadow-xl ${getBorderColor(card.slotCards[bottomSlotKey]!.symbol)}`}>
-                <div className="w-full h-full flex items-center justify-center p-1">
-                  {cardsDatabase[card.slotCards[bottomSlotKey]!.symbol]?.image ? (
-                    <img src={`${BASE}${cardsDatabase[card.slotCards[bottomSlotKey]!.symbol].image.replace(/^\//, '')}`} alt={card.slotCards[bottomSlotKey]!.symbol} className="w-full h-full object-contain" />
-                  ) : (
-                    <span className="text-xl font-black text-white">{card.slotCards[bottomSlotKey]!.symbol}</span>
-                  )}
-                </div>
-              </div>
+              <DesktopSlotValueCard slotCard={card.slotCards[bottomSlotKey]!} />
             </div>
           )}
         </>
@@ -456,19 +440,11 @@ function DraggableBoardCard({
 
       {!isDragging && isExpanded && hasOneSlot && card.slotCards?.[slotKeys[0]] && (
         <div className="absolute left-1/2" style={{ top: '-10%', transform: 'translateX(-50%) scale(0.9)', zIndex: 0, width: BOARD_CARD_W, height: BOARD_CARD_H }}>
-          <div className={`w-full h-full rounded-md border-2 flex items-center justify-center bg-slate-800 shadow-xl ${getBorderColor(card.slotCards[slotKeys[0]]!.symbol)}`}>
-            <div className="w-full h-full flex items-center justify-center p-1">
-              {cardsDatabase[card.slotCards[slotKeys[0]]!.symbol]?.image ? (
-                <img src={`${BASE}${cardsDatabase[card.slotCards[slotKeys[0]]!.symbol].image.replace(/^\//, '')}`} alt={card.slotCards[slotKeys[0]]!.symbol} className="w-full h-full object-contain" />
-              ) : (
-                <span className="text-xl font-black text-white">{card.slotCards[slotKeys[0]]!.symbol}</span>
-              )}
-            </div>
-          </div>
+          <DesktopSlotValueCard slotCard={card.slotCards[slotKeys[0]]!} />
         </div>
       )}
       {cardData?.image ? (
-        <img src={`${BASE}${cardData.image.replace(/^\//, '')}`} alt={card.symbol} className="w-full h-full object-contain p-1" />
+        <img src={`${BASE}${cardData.image.replace(/^\//, '')}`} alt={card.symbol} className="w-full h-full object-cover pointer-events-none" />
       ) : (
         <span className="text-3xl font-black text-white">{card.symbol}</span>
       )}
@@ -501,20 +477,24 @@ function BracketCard({ syntax, bracketMode, palette, onCancel }: {
 }) {
   const openSymbols = ['(', '[', '{'];
   const closeSymbols = [')', ']', '}'];
+  const firstOpen = syntax.find(c => openSymbols.includes(c.symbol));
+  const exhausted = !firstOpen;
+  const closeSymbol = bracketMode ? closeSymbols[bracketMode.pairIndex] : null;
+  const closeCard = closeSymbol ? syntax.find(c => c.symbol === closeSymbol) : null;
+  const closeCardData = closeSymbol ? cardsDatabase[closeSymbol] : null;
+  const draggableCard = bracketMode ? closeCard : firstOpen;
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+    id: draggableCard?.id ?? (bracketMode ? 'bracket-close-dummy' : 'bracket-exhausted'),
+    data: draggableCard ?? undefined,
+    disabled: bracketMode ? !closeCard : exhausted,
+  });
 
   if (bracketMode) {
-    const closeSymbol = closeSymbols[bracketMode.pairIndex];
-    const closeCard = syntax.find(c => c.symbol === closeSymbol);
-    const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
-      id: closeCard?.id ?? 'bracket-close-dummy',
-      data: closeCard,
-      disabled: !closeCard,
-    });
     return (
       <div className="flex flex-col items-center gap-1">
         <div
           ref={setNodeRef} {...listeners} {...attributes}
-          className="rounded-md border-2 border-yellow-400/80 shadow-sm flex flex-col items-center justify-center cursor-grab active:cursor-grabbing"
+          className="relative overflow-hidden rounded-md border-2 border-yellow-400/80 shadow-sm flex items-center justify-center cursor-grab active:cursor-grabbing"
           style={{
             width: CARD_W, height: CARD_H,
             backgroundColor: isDragging ? `${palette.bgDark}cc` : `${palette.bgMid}dd`,
@@ -523,8 +503,11 @@ function BracketCard({ syntax, bracketMode, palette, onCancel }: {
             zIndex: isDragging ? 99999 : undefined,
           }}
         >
-          <span className="text-3xl font-black text-yellow-300 leading-none">{closeSymbol}</span>
-          <span className="text-[9px] uppercase text-yellow-300/60 font-bold mt-1 tracking-tight">pravá závorka</span>
+          {closeCardData?.image ? (
+            <img src={`${BASE}${closeCardData.image.replace(/^\//, '')}`} alt={closeSymbol ?? undefined} className="w-full h-full object-cover" />
+          ) : (
+            <span className="text-3xl font-black text-yellow-300 leading-none">{closeSymbol}</span>
+          )}
         </div>
         <button onClick={onCancel} className="text-[9px] text-red-400/70 hover:text-red-400 uppercase tracking-tight">
           Zrušit
@@ -533,19 +516,12 @@ function BracketCard({ syntax, bracketMode, palette, onCancel }: {
     );
   }
 
-  const firstOpen = syntax.find(c => openSymbols.includes(c.symbol));
-  const exhausted = !firstOpen;
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
-    id: firstOpen?.id ?? 'bracket-exhausted',
-    data: firstOpen,
-    disabled: exhausted,
-  });
   return (
     <div
       ref={setNodeRef}
       {...(exhausted ? {} : listeners)}
       {...(exhausted ? {} : attributes)}
-      className={`rounded-md border-2 shadow-sm flex flex-col items-center justify-center transition-transform
+      className={`relative overflow-hidden rounded-md border-2 shadow-sm flex items-center justify-center transition-transform
         ${exhausted ? 'opacity-40 cursor-not-allowed' : 'cursor-grab active:cursor-grabbing hover:scale-105'}`}
       style={{
         width: CARD_W, height: CARD_H,
@@ -559,8 +535,11 @@ function BracketCard({ syntax, bracketMode, palette, onCancel }: {
       {exhausted
         ? <span className="text-[9px] uppercase tracking-tight text-white/30 font-bold text-center px-1">Závorky vyčerpány</span>
         : <>
-          <span className="text-lg font-black text-white leading-none">{firstOpen!.symbol}</span>
-          <span className="text-[9px] uppercase tracking-tight text-white/40 font-bold mt-1">Závorky</span>
+          {cardsDatabase[firstOpen!.symbol]?.image ? (
+            <img src={`${BASE}${cardsDatabase[firstOpen!.symbol].image.replace(/^\//, '')}`} alt={firstOpen!.symbol} className="w-full h-full object-cover" />
+          ) : (
+            <span className="text-lg font-black text-white leading-none">{firstOpen!.symbol}</span>
+          )}
         </>
       }
     </div>
@@ -572,6 +551,8 @@ function BracketCard({ syntax, bracketMode, palette, onCancel }: {
 // ==========================================
 interface DesktopGameLayoutProps {
   currentPlayer: Player;
+  showEffectDebug?: boolean;
+  debugEffectRows?: string[];
   state: {
     deck: GameCard[];
     discardPile: GameCard[];
@@ -611,7 +592,7 @@ function TutorialReferenceRow({ cards, palette }: { cards: GameCard[]; palette: 
               <img
                 src={`${BASE}${cardData.image.replace(/^\//, '')}`}
                 alt={card.symbol}
-                className="w-full h-full object-contain p-1"
+                className="w-full h-full object-cover"
               />
             ) : (
               <span className="text-sm font-black text-white">{card.symbol}</span>
@@ -628,7 +609,7 @@ function TutorialReferenceRow({ cards, palette }: { cards: GameCard[]; palette: 
   );
 }
 
-export function DesktopGameLayout({ currentPlayer, state, actions, tutorialReferenceBoard }: DesktopGameLayoutProps) {
+export function DesktopGameLayout({ currentPlayer, state, actions, tutorialReferenceBoard, showEffectDebug, debugEffectRows = [] }: DesktopGameLayoutProps) {
   const { deck, discardPile, isDiscarding, hasModifiedBoardThisTurn, bracketMode, tutorialActive, tutorialStep } = state;
   const palette = getDesktopPalette(currentPlayer.theme);
   const canVerify = tutorialActive ? tutorialStep === 4 : !hasModifiedBoardThisTurn;
@@ -682,12 +663,29 @@ export function DesktopGameLayout({ currentPlayer, state, actions, tutorialRefer
               </button>
             </>
           ) : (
-            <button
-              className="text-white p-2 hover:bg-white/10 rounded-lg transition-colors"
-              onClick={actions.openLeaveGameConfirm}
-            >
-              <span className="material-symbols-outlined text-3xl">menu</span>
-            </button>
+            <div className="relative group/menu">
+              <button
+                className="text-white p-2 hover:bg-white/10 rounded-lg transition-colors"
+                onClick={actions.openLeaveGameConfirm}
+              >
+                <span className="material-symbols-outlined text-3xl">menu</span>
+              </button>
+              {showEffectDebug && (
+                <div className="pointer-events-none absolute left-0 top-full mt-2 hidden w-80 max-w-[70vw] rounded-lg border border-emerald-400/30 bg-black/85 p-3 text-[11px] text-emerald-100 shadow-xl backdrop-blur-sm group-hover/menu:block">
+                  <div className="mb-1 font-black uppercase tracking-wide text-emerald-300">Aktivní efekty</div>
+                  <div className="mb-1 text-emerald-200">Hráč: {currentPlayer.name}</div>
+                  {debugEffectRows.length > 0 ? (
+                    <ul className="space-y-0.5">
+                      {debugEffectRows.map((line) => (
+                        <li key={line}>• {line}</li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <div className="text-emerald-200/80">Žádné aktivní efekty/statusy.</div>
+                  )}
+                </div>
+              )}
+            </div>
           )}
           <span
             className="text-base font-bold tracking-tight ml-2"
@@ -897,12 +895,13 @@ export function DesktopGameLayout({ currentPlayer, state, actions, tutorialRefer
                 className="rounded-md shadow-lg border-2 border-white/40 relative overflow-hidden flex flex-col items-center justify-center transition-colors duration-700"
                 style={{ width: CARD_W, height: CARD_H, backgroundColor: palette.primary }}
               >
-                <div
-                  className="absolute inset-0 opacity-20"
-                  style={{ background: 'repeating-linear-gradient(45deg,transparent,transparent 10px,white 10px,white 11px)' }}
+                <img
+                  src={`${BASE}svg/zada.svg`}
+                  alt="Rub karty"
+                  className="w-full h-full object-cover"
+                  draggable={false}
                 />
-                <span className="material-symbols-outlined text-3xl text-white relative z-10">style</span>
-                <span className="text-[11px] uppercase tracking-tighter text-white font-bold mt-2 relative z-10">
+                <span className="absolute bottom-2 rounded-full border border-white/30 bg-slate-900/90 px-2 py-0.5 text-[11px] uppercase tracking-tighter text-white font-bold">
                   Přidat ({deck.length})
                 </span>
               </div>

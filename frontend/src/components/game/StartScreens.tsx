@@ -364,14 +364,14 @@ export function RulesScreen({ onBack }: { onBack: () => void }) {
                 <div>
                   <p className="text-emerald-300 font-bold uppercase text-xs">sin</p>
                   <p>
-                    Předání po směru: sin(0), sin(π/2), sin(π), sin(3π/2).
+                    Předání po směru: sin(2π), sin(π/2), sin(π), sin(3π/2).
                     Ztráta dobírání: sin(π/6), sin(π/4), sin(π/3) — všichni soupeři doberou o 1 kartu méně v příštím tahu.
                   </p>
                 </div>
                 <div>
                   <p className="text-emerald-300 font-bold uppercase text-xs">cos</p>
                   <p>
-                    Předání proti směru: cos(0), cos(π/2), cos(π), cos(3π/2).
+                    Předání proti směru: cos(2π), cos(π/2), cos(π), cos(3π/2).
                     Ztráta dobírání: cos(π/6), cos(π/4), cos(π/3) — všichni soupeři doberou o 1 kartu méně v příštím tahu.
                   </p>
                 </div>

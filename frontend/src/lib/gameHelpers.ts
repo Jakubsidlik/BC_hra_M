@@ -47,36 +47,40 @@ export function generatePersonalTargetR(difficulty: DifficultyMode): string {
   const pick = (arr: string[]) => arr[Math.floor(Math.random() * arr.length)];
   const pickVar = () => pick(['x', 'y']);
   const pickConstant = () => pick(['π', 'e']);
+  const withNegativeChance = (value: string) => {
+    if (value === '0') return value;
+    return Math.random() < 0.2 ? `-${value}` : value;
+  };
 
   if (difficulty === 'ZŠ') {
     const category = randInt(1, 4);
     switch (category) {
-      case 1: return `${randInt(1, 9)}`;                           // jednociferné číslo
-      case 2: return `${randInt(10, 99)}`;                         // dvouciferné číslo
-      case 3: return `${randInt(100, 999)}`;                       // trojciferné číslo
-      case 4: return `${randInt(1, 9)}${pickVar()}`;               // jednociferné číslo a X/Y
+      case 1: return withNegativeChance(`${randInt(1, 9)}`);                           // jednociferné číslo
+      case 2: return withNegativeChance(`${randInt(10, 99)}`);                         // dvouciferné číslo
+      case 3: return withNegativeChance(`${randInt(100, 999)}`);                       // trojciferné číslo
+      case 4: return withNegativeChance(`${randInt(1, 9)}${pickVar()}`);               // jednociferné číslo a X/Y
     }
   }
 
   if (difficulty === 'SŠ') {
     const category = randInt(1, 6);
     switch (category) {
-      case 1: return `${randInt(10, 99)}`;                         // dvouciferné číslo
-      case 2: return `${randInt(100, 999)}`;                       // trojciferné číslo
-      case 3: return `${randInt(1, 9)}${pickVar()}`;               // jednociferné číslo a X/Y
-      case 4: return `${randInt(10, 99)}${pickVar()}`;             // dvouciferné číslo a X/Y
+      case 1: return withNegativeChance(`${randInt(10, 99)}`);                         // dvouciferné číslo
+      case 2: return withNegativeChance(`${randInt(100, 999)}`);                       // trojciferné číslo
+      case 3: return withNegativeChance(`${randInt(1, 9)}${pickVar()}`);               // jednociferné číslo a X/Y
+      case 4: return withNegativeChance(`${randInt(10, 99)}${pickVar()}`);             // dvouciferné číslo a X/Y
       case 5: {
         // kombinace čísla a konstanty
         const num = randInt(1, 20);
         const constant = pickConstant();
-        return `${num}${constant}`;
+        return withNegativeChance(`${num}${constant}`);
       }
       case 6: {
         // kombinace čísla, konstanty a X/Y
         const num = randInt(1, 10);
         const constant = pickConstant();
         const variable = pickVar();
-        return `${num}${constant}${variable}`;
+        return withNegativeChance(`${num}${constant}${variable}`);
       }
     }
   }
@@ -84,23 +88,23 @@ export function generatePersonalTargetR(difficulty: DifficultyMode): string {
   if (difficulty === 'VŠ') {
     const category = randInt(1, 4);
     switch (category) {
-      case 1: return `${randInt(10, 99)}`;                         // dvouciferné číslo
-      case 2: return `${randInt(10, 99)}${pickVar()}`;             // dvouciferné číslo a X/Y
+      case 1: return withNegativeChance(`${randInt(10, 99)}`);                         // dvouciferné číslo
+      case 2: return withNegativeChance(`${randInt(10, 99)}${pickVar()}`);             // dvouciferné číslo a X/Y
       case 3: {
         // kombinace čísla a konstanty
         const type = randInt(1, 3);
         if (type === 1) {
           // číslo * konstanta (např 8e, 2π)
-          return `${randInt(1, 20)}${pickConstant()}`;
+          return withNegativeChance(`${randInt(1, 20)}${pickConstant()}`);
         } else if (type === 2) {
           // jen konstanta
-          return pickConstant();
+          return withNegativeChance(pickConstant());
         } else {
           // konstanta * konstanta (π*e)
           const c1 = pickConstant();
           let c2 = pickConstant();
           while (c2 === c1) c2 = pickConstant();
-          return `${c1}${c2}`;
+          return withNegativeChance(`${c1}${c2}`);
         }
       }
       case 4: {
@@ -109,19 +113,19 @@ export function generatePersonalTargetR(difficulty: DifficultyMode): string {
         const variable = pickVar();
         if (type === 1) {
           // číslo * konstanta * X
-          return `${randInt(1, 10)}${pickConstant()}${variable}`;
+          return withNegativeChance(`${randInt(1, 10)}${pickConstant()}${variable}`);
         } else if (type === 2) {
           // konstanta * X
-          return `${pickConstant()}${variable}`;
+          return withNegativeChance(`${pickConstant()}${variable}`);
         } else if (type === 3) {
           // číslo * X
-          return `${randInt(1, 20)}${variable}`;
+          return withNegativeChance(`${randInt(1, 20)}${variable}`);
         } else {
           // konstanta * konstanta * X
           const c1 = pickConstant();
           let c2 = pickConstant();
           while (c2 === c1) c2 = pickConstant();
-          return `${c1}${c2}${variable}`;
+          return withNegativeChance(`${c1}${c2}${variable}`);
         }
       }
     }
@@ -140,12 +144,23 @@ export function parseBoardToMathString(board: GameCard[]): string {
     'e': 'E',
     'tg': 'tan',
     'cotg': '1/tan',
-    'ln': 'log', // SymPy log(x) je přirozený logaritmus
+    'ln': 'ln',
+    'log': 'log2',
+    'log10': 'log10',
     '√': 'sqrt',
-    'mod': '%'
+    'mod': '%',
+    'skalar': '*',
+    'vektor': 'v',
+    'abs': 'abs'
   };
 
-  let result = "";
+  const resultParts: string[] = [];
+  const closeBrackets = new Set([')', ']', '}']);
+  const matchingOpen: Record<string, string> = {
+    ')': '(',
+    ']': '[',
+    '}': '{',
+  };
 
   for (let i = 0; i < board.length; i++) {
     const card = board[i];
@@ -153,11 +168,11 @@ export function parseBoardToMathString(board: GameCard[]): string {
 
     if (i > 0) {
       const prevCard = board[i - 1];
-      const prevIsDigitOrVar = prevCard.symbol.match(/^[0-9]$/) || ['x', 'y', 'π', 'e'].includes(prevCard.symbol);
-      const currIsDigitOrVar = card.symbol.match(/^[0-9]$/) || ['x', 'y', 'π', 'e'].includes(card.symbol);
+      const prevIsDigitOrVar = prevCard.symbol.match(/^[0-9]$/) || ['x', 'y', 'vektor', 'π', 'e'].includes(prevCard.symbol);
+      const currIsDigitOrVar = card.symbol.match(/^[0-9]$/) || ['x', 'y', 'vektor', 'π', 'e'].includes(card.symbol);
       const prevIsCloseBracket = [')', ']', '}'].includes(prevCard.symbol);
       const currIsOpenBracket = ['(', '[', '{'].includes(card.symbol);
-      const functionPrefixes = ['sin', 'cos', 'tg', 'cotg', 'log', 'ln', 'sqrt', 'int', '∑', '∏', 'lim', 'd/dx'];
+      const functionPrefixes = ['sin', 'cos', 'tg', 'cotg', 'log', 'log10', 'ln', 'sqrt', 'abs', 'int', '∑', '∏', 'lim', 'd/dx'];
       const trigPrefixes = ['sin', 'cos', 'tg', 'cotg'];
       const currIsFunction = functionPrefixes.some(pf => card.symbol === pf || card.symbol.startsWith(pf + '('));
       const prevIsTrigFunction = trigPrefixes.some(pf => prevCard.symbol === pf || prevCard.symbol.startsWith(pf + '('));
@@ -179,8 +194,44 @@ export function parseBoardToMathString(board: GameCard[]): string {
         (prevIsCloseBracket && currIsDigitOrVar) ||
         (prevIsCloseBracket && currIsFunction)
       ) {
-        result += "*";
+        resultParts.push("*");
       }
+    }
+
+    if (card.symbol === 'a^b') {
+      const exponentCard = card.slotCards?.single;
+      const exponentStr = exponentCard ? parseBoardToMathString([exponentCard]) : '1';
+      if (resultParts.length === 0) {
+        continue;
+      }
+
+      const lastPart = resultParts[resultParts.length - 1];
+      if (closeBrackets.has(lastPart)) {
+        const expectedOpen = matchingOpen[lastPart];
+        let balance = 0;
+        let openIndex = -1;
+        for (let j = resultParts.length - 1; j >= 0; j--) {
+          const part = resultParts[j];
+          if (part === lastPart) {
+            balance += 1;
+          } else if (part === expectedOpen) {
+            balance -= 1;
+            if (balance === 0) {
+              openIndex = j;
+              break;
+            }
+          }
+        }
+
+        if (openIndex >= 0) {
+          const baseExpr = resultParts.slice(openIndex).join('');
+          resultParts.splice(openIndex, resultParts.length - openIndex, `(${baseExpr})**(${exponentStr})`);
+        }
+      } else {
+        const baseExpr = resultParts.pop() ?? '1';
+        resultParts.push(`(${baseExpr})**(${exponentStr})`);
+      }
+      continue;
     }
 
     // Specifické překlady pro SymPy u goniometrie (radian pouze, případně starý "deg, rad" zápis)
@@ -220,30 +271,30 @@ export function parseBoardToMathString(board: GameCard[]): string {
         const variable = card.integralVariable === 'y' ? 'y' : 'x';
         const lower = card.slotCards?.lower ? parseBoardToMathString([card.slotCards.lower]) : '0';
         const upper = card.slotCards?.upper ? parseBoardToMathString([card.slotCards.upper]) : '1';
-        result += `Integral(${inner}, (${variable}, ${lower}, ${upper}))`;
+        resultParts.push(`Integral(${inner}, (${variable}, ${lower}, ${upper}))`);
       } else if (card.symbol === '∑') {
         const variable = card.seriesVariable === 'y' ? 'y' : 'x';
         const lower = card.slotCards?.lower ? parseBoardToMathString([card.slotCards.lower]) : '1';
         const upper = card.slotCards?.upper ? parseBoardToMathString([card.slotCards.upper]) : '1';
-        result += `Sum(${inner}, (${variable}, ${lower}, ${upper}))`;
+        resultParts.push(`Sum(${inner}, (${variable}, ${lower}, ${upper}))`);
       } else if (card.symbol === '∏') {
         const variable = card.seriesVariable === 'y' ? 'y' : 'x';
         const lower = card.slotCards?.lower ? parseBoardToMathString([card.slotCards.lower]) : '1';
         const upper = card.slotCards?.upper ? parseBoardToMathString([card.slotCards.upper]) : '1';
-        result += `Product(${inner}, (${variable}, ${lower}, ${upper}))`;
+        resultParts.push(`Product(${inner}, (${variable}, ${lower}, ${upper}))`);
       } else if (card.symbol === 'd/dx') {
         const variable = card.derivativeVariable === 'y' ? 'y' : 'x';
         const order = card.slotCards?.order ? parseBoardToMathString([card.slotCards.order]) : '1';
-        result += `Derivative(${inner}, ${variable}, ${order})`;
+        resultParts.push(`Derivative(${inner}, ${variable}, ${order})`);
       } else if (card.symbol === 'lim') {
         const variable = card.limitVariable === 'y' ? 'y' : 'x';
         const target = card.slotCards?.single ? parseBoardToMathString([card.slotCards.single]) : '0';
-        result += `Limit(${inner}, ${variable}, ${target})`;
+        resultParts.push(`Limit(${inner}, ${variable}, ${target})`);
       }
       
       // DŮLEŽITÉ: Po prefixové funkci už zbytek v tomto cyklu nezpracováváme,
       // protože je "uvnitř" té funkce.
-      return result; 
+      return resultParts.join(''); 
     }
 
     // 2. ZPRACOVÁNÍ MOCNIN (Recursive)
@@ -253,10 +304,10 @@ export function parseBoardToMathString(board: GameCard[]): string {
       sym = `(${base})**(${expStr})`; // Používáme Python **
     }
 
-    result += sym;
+    resultParts.push(sym);
   }
 
-  return result;
+  return resultParts.join('');
 }
 
 
@@ -265,8 +316,8 @@ export function hasOperation(board: GameCard[]): boolean {
   // Všechny operace s efekty: +, -, *, /, a^b, sqrt, mod, n!, d/dx, int, ∑, log, nCk, ∏, lim, det
   // Goniometrické funkce jako sin, cos, tg, cotg už se sem neřadí, pohlíží se na ně jako na entity vyhodnotitelné samostatně/čísla.
   const operations = [
-    '+', '-', '*', '/', 'a^b', 'sqrt', 'mod', 'n!', 'd/dx', 'int',
-    '∑', 'log', 'ln', 'nCk', '∏', 'lim', 'det',
+    '+', '-', '*', '/', 'a^b', 'sqrt', 'abs', 'skalar', 'mod', 'n!', 'd/dx', 'int',
+    '∑', 'log', 'log10', 'ln', 'nCk', '∏', 'lim', 'det',
     '∫', // alternativní symbol pro integrál
   ];
   const hasExplicitOp = board.some(card => operations.includes(card.symbol) || card.exponent);
@@ -277,11 +328,11 @@ export function hasOperation(board: GameCard[]): boolean {
     const prevCard = board[i - 1];
     const card = board[i];
     
-    const prevIsDigitOrVar = prevCard.symbol.match(/^[0-9]$/) || ['x', 'y', 'π', 'e'].includes(prevCard.symbol);
-    const currIsDigitOrVar = card.symbol.match(/^[0-9]$/) || ['x', 'y', 'π', 'e'].includes(card.symbol);
+    const prevIsDigitOrVar = prevCard.symbol.match(/^[0-9]$/) || ['x', 'y', 'vektor', 'π', 'e'].includes(prevCard.symbol);
+    const currIsDigitOrVar = card.symbol.match(/^[0-9]$/) || ['x', 'y', 'vektor', 'π', 'e'].includes(card.symbol);
     const prevIsCloseBracket = [')', ']', '}'].includes(prevCard.symbol);
     const currIsOpenBracket = ['(', '[', '{'].includes(card.symbol);
-    const functionPrefixes = ['sin', 'cos', 'tg', 'cotg', 'log', 'ln', 'sqrt', 'int', '∑', '∏', 'lim', 'd/dx'];
+    const functionPrefixes = ['sin', 'cos', 'tg', 'cotg', 'log', 'log10', 'ln', 'sqrt', 'abs', 'int', '∑', '∏', 'lim', 'd/dx'];
     const currIsFunction = functionPrefixes.some(pf => card.symbol === pf || card.symbol.startsWith(pf + '('));
 
     if (
@@ -314,15 +365,15 @@ export function getBorderColor(symbol: string): string {
   if (!isNaN(Number(symbol)) || ['π', 'e'].includes(symbol) || ['sin', 'cos', 'tg', 'cotg'].some(pf => symbol.startsWith(pf + '('))) return 'border-blue-500';
   
   // Proměnné: šedé
-  if (['x', 'y', 'n'].includes(symbol)) return 'border-slate-400';
+  if (['x', 'y', 'n', 'vektor'].includes(symbol)) return 'border-slate-400';
   
   // Syntaxe (závorky, rovná se): černé
-  if (['(', ')', '='].includes(symbol)) return 'border-black';
+  if (['(', ')', '[', ']', '{', '}', '=', 'dxdy', 'zada'].includes(symbol)) return 'border-black';
   
   // Operace: oranžové
   const operators = [
-    '+', '-', '*', '/', 'a^b', 'sqrt', 'mod', 'n!', 
-    'd/dx', 'int', '∑', 'log', 'ln', 
+    '+', '-', '*', '/', 'a^b', 'sqrt', 'abs', 'skalar', 'mod', 'n!', 
+    'd/dx', 'int', '∑', 'log', 'log10', 'ln', 
     'nCk', '∏', 'lim', 'det'
   ];
   if (operators.includes(symbol)) return 'border-orange-500';
@@ -344,8 +395,8 @@ export function generateFilteredDeck(difficulty: DifficultyMode): GameCard[] {
     // ZŠ vyloučí: vysokoškolský obsah + pokročilé SŠ operace
     'ZŠ': [
       'π', 'e', 'mod', 'n!', 
-      'd/dx', 'int', '∑', 'log', 'sin', 'cos', 'tg', 'cotg', 
-      'nCk', '∏', 'lim', 'det'
+      'd/dx', 'int', '∑', 'log', 'log10', 'ln', 'sin', 'cos', 'tg', 'cotg', 
+      'nCk', '∏', 'lim', 'det', 'skalar', 'vektor', 'abs'
     ],
     // SŠ vyloučí: pouze vysokoškolský obsah
     'SŠ': [
