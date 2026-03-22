@@ -14,15 +14,12 @@ interface BeforeInstallPromptEvent extends Event {
  */
 export function usePWAInstall() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-  const [isInstalled, setIsInstalled] = useState(false);
+  const [isInstalled, setIsInstalled] = useState(() => {
+    const navigatorWithStandalone = window.navigator as Navigator & { standalone?: boolean };
+    return window.matchMedia('(display-mode: standalone)').matches || navigatorWithStandalone.standalone === true;
+  });
 
   useEffect(() => {
-    // Zjistit, jestli je aplikace již nainstalována (standalone mód)
-    const isStandalone =
-      window.matchMedia('(display-mode: standalone)').matches ||
-      (window.navigator as any).standalone === true;
-    setIsInstalled(isStandalone);
-
     const handler = (e: Event) => {
       e.preventDefault(); // Zabránit automatickému banneru prohlížeče
       setDeferredPrompt(e as BeforeInstallPromptEvent);

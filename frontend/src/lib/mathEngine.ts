@@ -4,6 +4,17 @@ import { create, all } from 'mathjs';
 
 const math = create(all, {});
 
+type NerdamerExpr = {
+    text: () => string;
+    evaluate: () => NerdamerExpr;
+    expand: () => NerdamerExpr;
+};
+
+const errorMessage = (error: unknown): string => {
+    if (error instanceof Error) return error.message;
+    return String(error);
+};
+
 /**
  * Převede specifický "SymPy" zápis z useGameEngine.ts na formát pro Nerdamer.
  */
@@ -14,6 +25,15 @@ function translateToNerdamer(expr: string): string {
     result = result.replace(/\*\*/g, '^');
 
     // 2. SymPy formáty funkcí (vygenerovaných z parseBoardToMathString)
+    // ln(x) -> log(x) [přirozený logaritmus]
+    result = result.replace(/ln\(([^()]+)\)/g, 'log($1)');
+
+    // log2(x) -> log(x, 2)
+    result = result.replace(/log2\(([^()]+)\)/g, 'log($1,2)');
+
+    // log10(x) -> log(x, 10)
+    result = result.replace(/log10\(([^()]+)\)/g, 'log($1,10)');
+
     // Integral(inner, (var, lower, upper)) -> defint(inner, lower, upper, var)
     result = result.replace(/Integral\((.*?),\s*\((.*?),\s*(.*?),\s*(.*?)\)\)/g, 'defint($1, $3, $4, $2)');
 
@@ -42,22 +62,22 @@ export function evaluateExpression(expression: string, target_r: string, modifie
     try {
         // 1. Převedeme Python SymPy syntaxi (pokud tam je) na Nerdamer syntaxi
         const cleanedL = translateToNerdamer(expression);
-        let cleanedR = translateToNerdamer(target_r);
+        const cleanedR = translateToNerdamer(target_r);
 
         // 2. Vytvoříme symbolické výrazy pomocí Nerdamer
-        let L: any;
-        let R: any;
+        let L: NerdamerExpr;
+        let R: NerdamerExpr;
 
         try {
-            L = nerdamer(cleanedL);
-        } catch (e: any) {
-            throw new Error(`Chyba syntaxe ve výrazu L. Nechybí někde závorka? (${e.message || e})`);
+            L = nerdamer(cleanedL) as unknown as NerdamerExpr;
+        } catch (e: unknown) {
+            throw new Error(`Chyba syntaxe ve výrazu L. Nechybí někde závorka? (${errorMessage(e)})`);
         }
 
         try {
-            R = nerdamer(cleanedR);
-        } catch (e: any) {
-            throw new Error(`Chyba syntaxe ve výrazu R. (${e.message || e})`);
+            R = nerdamer(cleanedR) as unknown as NerdamerExpr;
+        } catch (e: unknown) {
+            throw new Error(`Chyba syntaxe ve výrazu R. (${errorMessage(e)})`);
         }
 
         let specialMsg = "";
@@ -121,7 +141,7 @@ export function evaluateExpression(expression: string, target_r: string, modifie
                     }
                 }
             }
-        } catch (e) {
+        } catch {
             // 4b. Numerický fallback přes mathjs, pokud nerdamer selže při složitějších operacích
             try {
                 const valL = math.evaluate(L.text());
@@ -129,7 +149,7 @@ export function evaluateExpression(expression: string, target_r: string, modifie
                 if (Math.abs(valL - valR) < 1e-12) {
                     isMatch = true;
                 }
-            } catch (err) {
+            } catch {
                 isMatch = false;
             }
         }
@@ -141,11 +161,11 @@ export function evaluateExpression(expression: string, target_r: string, modifie
             new_r: R.text(),
             message: specialMsg.trim()
         };
-    } catch (error: any) {
+    } catch (error: unknown) {
         // Zachytí ZeroDivisionError atp. (v JS to často vrací Infinity, ale mathjs nebo nerdamer může hodit error)
         return {
             success: false,
-            error: error.message || "Fatální chyba v lokálním enginu."
+            error: errorMessage(error) || "Fatální chyba v lokálním enginu."
         };
     }
 }

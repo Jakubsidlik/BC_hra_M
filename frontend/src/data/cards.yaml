@@ -1,0 +1,726 @@
+'0':
+  symbol: '0'
+  type: number
+  count: 4
+  image: /svg/0.svg
+  canHaveExponent: true
+  hasEffect: true
+  effects:
+    optionA:
+      id: EFF_001
+      name: Bonus karty
+      description: Dobrání 1 karty navíc v příštím tahu.
+      target: SELF
+'1':
+  symbol: '1'
+  type: number
+  count: 6
+  image: /svg/1.svg
+  canHaveExponent: true
+  hasEffect: true
+  effects:
+    optionA:
+      id: EFF_001
+      name: Bonus karty
+      description: Dobrání 1 karty navíc v příštím tahu.
+      target: SELF
+'2':
+  symbol: '2'
+  type: number
+  count: 10
+  image: /svg/2.svg
+  canHaveExponent: true
+  hasEffect: true
+  effects:
+    optionA:
+      id: EFF_001
+      name: Bonus karty
+      description: Dobrání 1 karty navíc v příštím tahu.
+      target: SELF
+'3':
+  symbol: '3'
+  type: number
+  count: 10
+  image: /svg/3.svg
+  canHaveExponent: true
+  hasEffect: true
+  effects:
+    optionA:
+      id: EFF_001
+      name: Bonus karty
+      description: Dobrání 1 karty navíc v příštím tahu.
+      target: SELF
+'4':
+  symbol: '4'
+  type: number
+  count: 10
+  image: /svg/4.svg
+  canHaveExponent: true
+  hasEffect: true
+  effects:
+    optionA:
+      id: EFF_001
+      name: Bonus karty
+      description: Dobrání 1 karty navíc v příštím tahu.
+      target: SELF
+'5':
+  symbol: '5'
+  type: number
+  count: 10
+  image: /svg/5.svg
+  canHaveExponent: true
+  hasEffect: true
+  effects:
+    optionA:
+      id: EFF_001
+      name: Bonus karty
+      description: Dobrání 1 karty navíc v příštím tahu.
+      target: SELF
+'6':
+  symbol: '6'
+  type: number
+  count: 10
+  image: /svg/6.svg
+  canHaveExponent: true
+  hasEffect: true
+  effects:
+    optionA:
+      id: EFF_001
+      name: Bonus karty
+      description: Dobrání 1 karty navíc v příštím tahu.
+      target: SELF
+'7':
+  symbol: '7'
+  type: number
+  count: 10
+  image: /svg/7.svg
+  canHaveExponent: true
+  hasEffect: true
+  effects:
+    optionA:
+      id: EFF_001
+      name: Bonus karty
+      description: Dobrání 1 karty navíc v příštím tahu.
+      target: SELF
+'8':
+  symbol: '8'
+  type: number
+  count: 10
+  image: /svg/8.svg
+  canHaveExponent: true
+  hasEffect: true
+  effects:
+    optionA:
+      id: EFF_001
+      name: Bonus karty
+      description: Dobrání 1 karty navíc v příštím tahu.
+      target: SELF
+'9':
+  symbol: '9'
+  type: number
+  count: 10
+  image: /svg/9.svg
+  canHaveExponent: true
+  hasEffect: true
+  effects:
+    optionA:
+      id: EFF_001
+      name: Bonus karty
+      description: Dobrání 1 karty navíc v příštím tahu.
+      target: SELF
+π:
+  symbol: π
+  type: number
+  count: 5
+  image: /svg/pi.svg
+  canHaveExponent: true
+  hasEffect: true
+  effects:
+    optionA:
+      id: EFF_002
+      name: Výměna L
+      description: Možnost výměny 1 karty z vlastního řetězce L za kartu z L oponenta.
+      target: OPPONENT
+e:
+  symbol: e
+  type: number
+  count: 5
+  image: /svg/e.svg
+  canHaveExponent: true
+  hasEffect: true
+  effects:
+    optionA:
+      id: EFF_003
+      name: Přepis R
+      description: Okamžité nahrazení celého cíle R libovolného hráče novým losem.
+      target: ANY
+'y':
+  symbol: 'y'
+  type: variable
+  count: 10
+  image: /svg/y.svg
+  canHaveExponent: true
+  hasEffect: true
+  effects:
+    optionA:
+      id: EFF_004
+      name: Zničení čísel
+      description: Následující hráč musí z ruky odhodit všechny číslice.
+      target: OPPONENT
+x:
+  symbol: x
+  type: variable
+  count: 10
+  image: /svg/x.svg
+  canHaveExponent: true
+  hasEffect: true
+  effects:
+    optionA:
+      id: EFF_005
+      name: Zničení operací
+      description: Následující hráč musí z ruky odhodit všechny operace.
+      target: OPPONENT
++:
+  symbol: +
+  type: operator
+  count: 15
+  image: /svg/plus.svg
+  hasEffect: true
+  effects:
+    optionA:
+      id: EFF_006
+      name: Povinná operace
+      description: Následující hráč musí v příštím tahu použít libovolnou operaci.
+      target: OPPONENT
+'-':
+  symbol: '-'
+  type: operator
+  count: 15
+  image: /svg/minus.svg
+  hasEffect: true
+  effects:
+    optionA:
+      id: EFF_007
+      name: Odstranění karty
+      description: Odstranění 1 libovolné karty z ruky zvoleného oponenta.
+      target: OPPONENT
+'*':
+  symbol: '*'
+  type: operator
+  count: 15
+  image: /svg/krat.svg
+  hasEffect: true
+  effects:
+    optionA:
+      id: EFF_008
+      name: Zdvojnásobení
+      description: Zdvojnásobení počtu dobíraných karet v příštím tahu.
+      target: SELF
+/:
+  symbol: /
+  type: operator
+  count: 15
+  image: /svg/deleno.svg
+  hasEffect: true
+  effects:
+    optionA:
+      id: EFF_009
+      name: Náhled balíčku
+      description: Náhled na 3 vrchní karty balíčku a jejich libovolné přerovnání.
+      target: SELF
+a^b:
+  symbol: a^b
+  type: operator
+  count: 4
+  image: /svg/mocnina.svg
+  slots:
+    - single
+  hasEffect: true
+  effects:
+    optionA:
+      id: EFF_010
+      name: Přeskočení tahu
+      description: Následující hráč přeskakuje svůj tah.
+      target: OPPONENT
+sqrt:
+  symbol: sqrt
+  type: operator
+  count: 4
+  image: /svg/odmocneno.svg
+  slots:
+    - single
+  hasEffect: true
+  effects:
+    optionA:
+      id: EFF_011
+      name: Obnovení ruky
+      description: Odhození celého obsahu ruky a dobrání nových karet.
+      target: OPPONENT
+mod:
+  symbol: mod
+  type: operator
+  count: 4
+  image: /svg/mod.svg
+  slots:
+    - single
+  hasEffect: true
+  effects:
+    optionA:
+      id: EFF_012
+      name: Modulo R
+      description: Hodnota R zvoleného hráče se mění na R mod (libovolné číslo z ruky).
+      target: OPPONENT
+n!:
+  symbol: n!
+  type: operator
+  count: 2
+  image: /svg/faktorial.svg
+  hasEffect: true
+  effects:
+    optionA:
+      id: EFF_013
+      name: Omezení hraní
+      description: Následující hráč nesmí v příštím tahu vyložit více než 1 kartu.
+      target: OPPONENT
+d/dx:
+  symbol: d/dx
+  type: operator
+  count: 3
+  image: /svg/der.svg
+int:
+  symbol: int
+  type: operator
+  count: 3
+  image: /svg/int.svg
+  slots:
+    - upper
+    - lower
+∑:
+  symbol: ∑
+  type: operator
+  count: 4
+  image: /svg/sum.svg
+  slots:
+    - upper
+    - lower
+log:
+  symbol: log
+  type: operator
+  count: 2
+  image: /svg/log.svg
+  slots:
+    - single
+  hasEffect: true
+  effects:
+    optionA:
+      id: EFF_017
+      name: Neomezené hraní
+      description: Můžeš tento tah hrát libovolný počet karet.
+      target: SELF
+sin(2π):
+  symbol: sin(2π)
+  type: number
+  count: 1
+  image: /svg/sin2pi.svg
+  hasEffect: true
+  effects:
+    optionA:
+      id: EFF_018
+      name: Předání po
+      description: Všichni hráči si předají karty v ruce po směru.
+      target: ALL
+sin(π/6):
+  symbol: sin(π/6)
+  type: number
+  count: 1
+  image: /svg/sinpi6.svg
+  hasEffect: true
+  effects:
+    optionA:
+      id: EFF_026
+      name: Ztráta karty
+      description: Všichni soupeři si v příštím tahu doberou o 1 kartu méně.
+      target: ALL
+sin(π/4):
+  symbol: sin(π/4)
+  type: number
+  count: 1
+  image: /svg/sinpi4.svg
+  hasEffect: true
+  effects:
+    optionA:
+      id: EFF_026
+      name: Ztráta karty
+      description: Všichni soupeři si v příštím tahu doberou o 1 kartu méně.
+      target: ALL
+sin(π/3):
+  symbol: sin(π/3)
+  type: number
+  count: 1
+  image: /svg/sinpi3.svg
+  hasEffect: true
+  effects:
+    optionA:
+      id: EFF_026
+      name: Ztráta karty
+      description: Všichni soupeři si v příštím tahu doberou o 1 kartu méně.
+      target: ALL
+sin(π/2):
+  symbol: sin(π/2)
+  type: number
+  count: 1
+  image: /svg/sinpi2.svg
+  hasEffect: true
+  effects:
+    optionA:
+      id: EFF_018
+      name: Předání po
+      description: Všichni hráči si předají karty v ruce po směru.
+      target: ALL
+sin(π):
+  symbol: sin(π)
+  type: number
+  count: 1
+  image: /svg/sinpi.svg
+  hasEffect: true
+  effects:
+    optionA:
+      id: EFF_018
+      name: Předání po
+      description: Všichni hráči si předají karty v ruce po směru.
+      target: ALL
+sin(3π/2):
+  symbol: sin(3π/2)
+  type: number
+  count: 1
+  image: /svg/sin3pi2.svg
+  hasEffect: true
+  effects:
+    optionA:
+      id: EFF_018
+      name: Předání po
+      description: Všichni hráči si předají karty v ruce po směru.
+      target: ALL
+cos(2π):
+  symbol: cos(2π)
+  type: number
+  count: 1
+  image: /svg/cos2pi.svg
+  hasEffect: true
+  effects:
+    optionA:
+      id: EFF_019
+      name: Předání proti
+      description: Všichni hráči si předají karty v ruce proti směru.
+      target: ALL
+cos(π/6):
+  symbol: cos(π/6)
+  type: number
+  count: 1
+  image: /svg/cospi6.svg
+  hasEffect: true
+  effects:
+    optionA:
+      id: EFF_026
+      name: Ztráta karty
+      description: Všichni soupeři si v příštím tahu doberou o 1 kartu méně.
+      target: ALL
+cos(π/4):
+  symbol: cos(π/4)
+  type: number
+  count: 1
+  image: /svg/cospi4.svg
+  hasEffect: true
+  effects:
+    optionA:
+      id: EFF_026
+      name: Ztráta karty
+      description: Všichni soupeři si v příštím tahu doberou o 1 kartu méně.
+      target: ALL
+cos(π/3):
+  symbol: cos(π/3)
+  type: number
+  count: 1
+  image: /svg/cospi3.svg
+  hasEffect: true
+  effects:
+    optionA:
+      id: EFF_026
+      name: Ztráta karty
+      description: Všichni soupeři si v příštím tahu doberou o 1 kartu méně.
+      target: ALL
+cos(π/2):
+  symbol: cos(π/2)
+  type: number
+  count: 1
+  image: /svg/cospi2.svg
+  hasEffect: true
+  effects:
+    optionA:
+      id: EFF_019
+      name: Předání proti
+      description: Všichni hráči si předají karty v ruce proti směru.
+      target: ALL
+cos(π):
+  symbol: cos(π)
+  type: number
+  count: 1
+  image: /svg/cospi.svg
+  hasEffect: true
+  effects:
+    optionA:
+      id: EFF_019
+      name: Předání proti
+      description: Všichni hráči si předají karty v ruce proti směru.
+      target: ALL
+cos(3π/2):
+  symbol: cos(3π/2)
+  type: number
+  count: 1
+  image: /svg/cos3pi2.svg
+  hasEffect: true
+  effects:
+    optionA:
+      id: EFF_019
+      name: Předání proti
+      description: Všichni hráči si předají karty v ruce proti směru.
+      target: ALL
+tg(π/6):
+  symbol: tg(π/6)
+  type: number
+  count: 1
+  image: /svg/tgpi6.svg
+  hasEffect: true
+  effects:
+    optionA:
+      id: EFF_026
+      name: Ztráta karty
+      description: Všichni soupeři si v příštím tahu doberou o 1 kartu méně.
+      target: ALL
+tg(π/4):
+  symbol: tg(π/4)
+  type: number
+  count: 1
+  image: /svg/tgpi4.svg
+  hasEffect: true
+  effects:
+    optionA:
+      id: EFF_020
+      name: Předání po (tg)
+      description: Všichni hráči si předají karty v ruce po směru.
+      target: ALL
+tg(π/3):
+  symbol: tg(π/3)
+  type: number
+  count: 1
+  image: /svg/tgpi3.svg
+  hasEffect: true
+  effects:
+    optionA:
+      id: EFF_026
+      name: Ztráta karty
+      description: Všichni soupeři si v příštím tahu doberou o 1 kartu méně.
+      target: ALL
+tg(π):
+  symbol: tg(π)
+  type: number
+  count: 1
+  image: /svg/tgpi.svg
+  hasEffect: true
+  effects:
+    optionA:
+      id: EFF_020
+      name: Předání po (tg)
+      description: Všichni hráči si předají karty v ruce po směru.
+      target: ALL
+cotg(π/6):
+  symbol: cotg(π/6)
+  type: number
+  count: 1
+  image: /svg/cotgpi6.svg
+  hasEffect: true
+  effects:
+    optionA:
+      id: EFF_026
+      name: Ztráta karty
+      description: Všichni soupeři si v příštím tahu doberou o 1 kartu méně.
+      target: ALL
+cotg(π/4):
+  symbol: cotg(π/4)
+  type: number
+  count: 1
+  image: /svg/cotgpi4.svg
+  hasEffect: true
+  effects:
+    optionA:
+      id: EFF_021
+      name: Předání proti (cotg)
+      description: Všichni hráči si předají karty v ruce proti směru.
+      target: ALL
+cotg(π/3):
+  symbol: cotg(π/3)
+  type: number
+  count: 1
+  image: /svg/cotgpi3.svg
+  hasEffect: true
+  effects:
+    optionA:
+      id: EFF_026
+      name: Ztráta karty
+      description: Všichni soupeři si v příštím tahu doberou o 1 kartu méně.
+      target: ALL
+cotg(π/2):
+  symbol: cotg(π/2)
+  type: number
+  count: 1
+  image: /svg/cotgpi2.svg
+  hasEffect: true
+  effects:
+    optionA:
+      id: EFF_021
+      name: Předání proti (cotg)
+      description: Všichni hráči si předají karty v ruce proti směru.
+      target: ALL
+nCk:
+  symbol: nCk
+  type: operator
+  count: 4
+  image: /svg/kombinace.svg
+  slots:
+    - upper
+    - lower
+  hasEffect: true
+  effects:
+    optionA:
+      id: EFF_022
+      name: Prohození cifer
+      description: Prohození cifer v R cílového oponenta.
+      target: OPPONENT
+∏:
+  symbol: ∏
+  type: operator
+  count: 2
+  image: /svg/velkepi.svg
+  slots:
+    - upper
+    - lower
+lim:
+  symbol: lim
+  type: operator
+  count: 2
+  image: /svg/lim.svg
+  slots:
+    - single
+det:
+  symbol: det
+  type: operator
+  count: 2
+  image: /svg/det.svg
+  slots:
+    - ul
+    - ur
+    - ll
+    - lr
+  hasEffect: true
+  effects:
+    optionA:
+      id: EFF_024
+      name: Zrušení efektů
+      description: Zrušení všech aktivních efektů vyložených karet u všech hráčů.
+      target: ALL
+(:
+  symbol: (
+  type: syntax
+  count: 0
+  image: /svg/kulataleva.svg
+):
+  symbol: )
+  type: syntax
+  count: 0
+  image: /svg/kulataprava.svg
+'=':
+  symbol: '='
+  type: syntax
+  count: 0
+abs:
+  symbol: abs
+  type: operator
+  count: 4
+  image: /svg/abs.svg
+  slots:
+    - single
+  hasEffect: true
+  effects:
+    optionA:
+      id: EFF_029
+      name: Univerzální plus
+      description: V příštím tahu můžeš zahrát libovolnou kartu z ruky jako +.
+      target: SELF
+skalar:
+  symbol: skalar
+  type: operator
+  count: 4
+  image: /svg/skalar.svg
+  hasEffect: true
+  effects:
+    optionA:
+      id: EFF_027
+      name: Univerzální nula
+      description: V příštím tahu můžeš zahrát libovolnou kartu z ruky jako 0.
+      target: SELF
+vektor:
+  symbol: vektor
+  type: operator
+  count: 4
+  image: /svg/vektor.svg
+  hasEffect: true
+  effects:
+    optionA:
+      id: EFF_028
+      name: Velikost vektoru
+      description: Ihned dobereš 3 karty, 1 si necháš a 2 zahodíš.
+      target: SELF
+ln:
+  symbol: ln
+  type: operator
+  count: 2
+  image: /svg/ln.svg
+  slots:
+    - single
+log10:
+  symbol: log10
+  type: operator
+  count: 2
+  image: /svg/log10.svg
+  slots:
+    - single
+dxdy:
+  symbol: dxdy
+  type: syntax
+  count: 0
+  image: /svg/dxdy.svg
+'[':
+  symbol: '['
+  type: syntax
+  count: 0
+  image: /svg/hranataleva.svg
+']':
+  symbol: ']'
+  type: syntax
+  count: 0
+  image: /svg/hranataprava.svg
+'{':
+  symbol: '{'
+  type: syntax
+  count: 0
+  image: /svg/slozenaleva.svg
+'}':
+  symbol: '}'
+  type: syntax
+  count: 0
+  image: /svg/slozenaprava.svg
+zada:
+  symbol: zada
+  type: syntax
+  count: 0
+  image: /svg/zada.svg

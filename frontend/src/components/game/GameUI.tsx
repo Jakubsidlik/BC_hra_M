@@ -21,11 +21,11 @@ export function TutorialOverlay({ active, step, onNext }: { active: boolean; ste
     },
     {
       title: 'Konec tahu a odhazování',
-      text: 'Klikni na Konec tahu. Máš více než 5 karet, proto odhoď přebytečné karty na odhazovací pole (ať ti zůstane 6).'
+      text: 'Klikni na Konec tahu. Máš více než 4 karty, proto odhoď přebytečné karty na odhazovací pole (ať ti zůstanou 4).'
     },
     {
       title: 'Závorky a mocnina',
-      text: 'Podle horního vzoru opiš výraz (2*sin(π/2) + 3^2). Použij závorky, vynásobení a přetáhni kartu 2 na kartu 3 jako exponent.'
+      text: 'Do ruky se ti teď přidaly karty 2 a a^b. V každém kole vylož jen 1 kartu, pak klikni na Konec tahu a dober 1 kartu. Opakuj to, dokud nepostavíš výraz (2*sin(π/2) + 3^2): polož 3, za ni a^b a pak přetáhni 2 do okénka karty a^b.'
     },
     {
       title: 'Ověření Q.E.D.',
@@ -115,13 +115,41 @@ type PlayerSummaryRow = {
   targetScore: number;
 };
 
+type GameSummaryStats = {
+  players: Record<number, PlayerSummaryRow>;
+  firstWrongQED: { playerId: number } | null;
+};
+
+type TargetingModeState = {
+  effectId: string;
+  targetPlayerId?: number;
+};
+
+type PendingEffectState = {
+  card: GameCard;
+  targetId: string | null;
+  insertPosition?: number;
+};
+
+type MinigameModeState = {
+  effectId: string;
+  cards: GameCard[];
+  targetPlayerId?: number;
+};
+
+type BracketModeState = {
+  step: 'LEFT' | 'RIGHT';
+  leftIndex: number | null;
+  pairIndex?: number;
+};
+
 export function GameSummaryDialog({
   open,
   stats,
   onBack,
 }: {
   open: boolean;
-  stats: any;
+  stats: GameSummaryStats | null;
   onBack: () => void;
 }) {
   const [view, setView] = React.useState<'table' | 'cards'>('table');
@@ -134,7 +162,8 @@ export function GameSummaryDialog({
   const maxFromBoard = Math.max(0, ...rows.map(r => r.cardsFromBoardToDiscard));
   const hardest = rows.reduce((a, b) => (a.targetScore >= b.targetScore ? a : b), rows[0]);
   const easiest = rows.reduce((a, b) => (a.targetScore <= b.targetScore ? a : b), rows[0]);
-  const firstWrong = stats.firstWrongQED ? rows.find(r => r.id === stats.firstWrongQED.playerId) : null;
+  const firstWrongPlayerId = stats.firstWrongQED?.playerId;
+  const firstWrong = typeof firstWrongPlayerId === 'number' ? rows.find(r => r.id === firstWrongPlayerId) : null;
 
   const copyTable = async () => {
     const header = ['Hráč', 'R', 'Karty do L', 'Odhozeno z L', 'Závorky', 'Max dober v tahu', 'Špatné Q.E.D.'].join('\t');
@@ -266,7 +295,19 @@ export function HandoffScreen({ isHandoff, players, nextIndex, onReveal }: { isH
 }
 
 // --- 3. ZAMĚŘOVACÍ REŽIM (Interakce s plochou soupeře) ---
-export function TargetingOverlay({ targetingMode, pendingEffect, players, handleBoardCardClick, onCancel }: any) {
+export function TargetingOverlay({
+  targetingMode,
+  pendingEffect,
+  players,
+  handleBoardCardClick,
+  onCancel,
+}: {
+  targetingMode: TargetingModeState | null;
+  pendingEffect: PendingEffectState | null;
+  players: Player[];
+  handleBoardCardClick: (id: string) => void;
+  onCancel: () => void;
+}) {
   if (!targetingMode || !pendingEffect) return null;
 
   const targetPlayer = players.find((p: Player) => p.id === targetingMode.targetPlayerId);
@@ -441,12 +482,13 @@ export function EffectDialog({
 }
 
 // --- 5. MINIHRY S BALÍČKEM (Vize a Rekurze) ---
-export function MinigameDialog({ minigameMode, onPick }: { minigameMode: any, onPick: (id: string) => void }) {
+export function MinigameDialog({ minigameMode, onPick }: { minigameMode: MinigameModeState | null, onPick: (id: string) => void }) {
   if (!minigameMode) return null;
 
   const config: Record<string, { title: string; desc: string; color: string }> = {
     'EFF_015': { title: "Vize budoucnosti", desc: "Získej jednu kartu. Zbytek určí příští tahy v balíčku.", color: "text-blue-400" },
-    'EFF_017': { title: "Rekurze odhazovacího pole", desc: "Vytáhni zapomenutou vědomost zpět do své ruky.", color: "text-purple-400" }
+    'EFF_017': { title: "Rekurze odhazovacího pole", desc: "Vytáhni zapomenutou vědomost zpět do své ruky.", color: "text-purple-400" },
+    'EFF_028': { title: "Velikost vektoru", desc: "Vyber 1 ze 3 dobraných karet. Zbylé 2 se zahodí.", color: "text-cyan-400" }
   };
 
   const current = config[minigameMode.effectId] || { title: "Výběr karty", desc: "", color: "text-emerald-400" };
@@ -487,7 +529,19 @@ export function MinigameDialog({ minigameMode, onPick }: { minigameMode: any, on
 }
 
 // --- 6. REŽIM ZÁVOREK (Syntaxe nade vše) ---
-export function BracketOverlay({ bracketMode, players, currentPlayerId, handleBracketClick, onCancel }: any) {
+export function BracketOverlay({
+  bracketMode,
+  players,
+  currentPlayerId,
+  handleBracketClick,
+  onCancel,
+}: {
+  bracketMode: BracketModeState | null;
+  players: Player[];
+  currentPlayerId: number;
+  handleBracketClick: (id: string) => void;
+  onCancel: () => void;
+}) {
   if (!bracketMode) return null;
 
   const currentPlayer = players.find((p: Player) => p.id === currentPlayerId);
@@ -637,7 +691,7 @@ export function ModuloDialog({
           <p className="text-red-400 text-center py-4">Nemáš v ruce žádné číslice! Efekt se zrušuje.</p>
         ) : (
           <div className="grid grid-cols-3 gap-3">
-            {numberCards.map((card): any => {
+            {numberCards.map((card) => {
               const cardNum = parseInt(card.symbol, 10);
               return (
                 <Button

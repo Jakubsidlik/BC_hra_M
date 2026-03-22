@@ -141,7 +141,7 @@ export function HandCard({ card, index, total, isDiscarding, onDiscard }: HandCa
           <img
             src={`${BASE}${cardData.image.replace(/^\//, '')}`}
             alt={card.symbol}
-            className="w-full h-full object-contain drop-shadow-[0_0_5px_rgba(255,255,255,0.4)]"
+            className="w-full h-full object-cover drop-shadow-[0_0_5px_rgba(255,255,255,0.4)]"
           />
         ) : (
           <span className="text-3xl font-chalk text-white drop-shadow-md">{card.symbol}</span>
@@ -319,7 +319,7 @@ export function BoardCard({ card, isTargeting, onCardClick, onIntegralVariableCh
                     <img
                       src={`${BASE}${cardsDatabase[card.slotCards[ulKey]!.symbol].image.replace(/^\//, '')}`}
                       alt={card.slotCards[ulKey]!.symbol}
-                      className="w-full h-full object-contain pointer-events-none"
+                      className="w-full h-full object-cover pointer-events-none"
                     />
                   ) : (
                     <span className="text-4xl md:text-5xl font-chalk text-white pointer-events-none">
@@ -338,7 +338,7 @@ export function BoardCard({ card, isTargeting, onCardClick, onIntegralVariableCh
                     <img
                       src={`${BASE}${cardsDatabase[card.slotCards[urKey]!.symbol].image.replace(/^\//, '')}`}
                       alt={card.slotCards[urKey]!.symbol}
-                      className="w-full h-full object-contain pointer-events-none"
+                      className="w-full h-full object-cover pointer-events-none"
                     />
                   ) : (
                     <span className="text-4xl md:text-5xl font-chalk text-white pointer-events-none">
@@ -357,7 +357,7 @@ export function BoardCard({ card, isTargeting, onCardClick, onIntegralVariableCh
                     <img
                       src={`${BASE}${cardsDatabase[card.slotCards[llKey]!.symbol].image.replace(/^\//, '')}`}
                       alt={card.slotCards[llKey]!.symbol}
-                      className="w-full h-full object-contain pointer-events-none"
+                      className="w-full h-full object-cover pointer-events-none"
                     />
                   ) : (
                     <span className="text-4xl md:text-5xl font-chalk text-white pointer-events-none">
@@ -376,7 +376,7 @@ export function BoardCard({ card, isTargeting, onCardClick, onIntegralVariableCh
                     <img
                       src={`${BASE}${cardsDatabase[card.slotCards[lrKey]!.symbol].image.replace(/^\//, '')}`}
                       alt={card.slotCards[lrKey]!.symbol}
-                      className="w-full h-full object-contain pointer-events-none"
+                      className="w-full h-full object-cover pointer-events-none"
                     />
                   ) : (
                     <span className="text-4xl md:text-5xl font-chalk text-white pointer-events-none">
@@ -399,7 +399,7 @@ export function BoardCard({ card, isTargeting, onCardClick, onIntegralVariableCh
                     <img
                       src={`${BASE}${cardsDatabase[card.slotCards[topSlotKey]!.symbol].image.replace(/^\//, '')}`}
                       alt={card.slotCards[topSlotKey]!.symbol}
-                      className="w-full h-full object-contain pointer-events-none"
+                      className="w-full h-full object-cover pointer-events-none"
                     />
                   ) : (
                     <span className="text-4xl md:text-5xl font-chalk text-white pointer-events-none">
@@ -418,7 +418,7 @@ export function BoardCard({ card, isTargeting, onCardClick, onIntegralVariableCh
                     <img
                       src={`${BASE}${cardsDatabase[card.slotCards[bottomSlotKey]!.symbol].image.replace(/^\//, '')}`}
                       alt={card.slotCards[bottomSlotKey]!.symbol}
-                      className="w-full h-full object-contain pointer-events-none"
+                      className="w-full h-full object-cover pointer-events-none"
                     />
                   ) : (
                     <span className="text-4xl md:text-5xl font-chalk text-white pointer-events-none">
@@ -440,7 +440,7 @@ export function BoardCard({ card, isTargeting, onCardClick, onIntegralVariableCh
                 <img
                   src={`${BASE}${cardsDatabase[card.slotCards[slotKeys[0]]!.symbol].image.replace(/^\//, '')}`}
                   alt={card.slotCards[slotKeys[0]]!.symbol}
-                  className="w-full h-full object-contain pointer-events-none"
+                  className="w-full h-full object-cover pointer-events-none"
                 />
               ) : (
                 <span className="text-4xl md:text-5xl font-chalk text-white pointer-events-none">
@@ -464,7 +464,7 @@ export function BoardCard({ card, isTargeting, onCardClick, onIntegralVariableCh
             <div className="w-full h-full scale-90 pointer-events-none">
               <div className={`w-full h-full bg-slate-800 rounded-lg border-2 ${getBorderColor(card.exponent.symbol)} flex items-center justify-center p-1`}>
                 {cardsDatabase[card.exponent.symbol]?.image ? (
-                  <img src={`${BASE}${cardsDatabase[card.exponent.symbol].image.replace(/^\//, '')}`} className="w-full h-full object-contain" alt="exp" />
+                  <img src={`${BASE}${cardsDatabase[card.exponent.symbol].image.replace(/^\//, '')}`} className="w-full h-full object-cover" alt="exp" />
                 ) : (
                   <span className="text-xl font-chalk text-slate-200">{card.exponent.symbol}</span>
                 )}
@@ -518,7 +518,7 @@ export function BoardCard({ card, isTargeting, onCardClick, onIntegralVariableCh
             <img
               src={`${BASE}${cardData.image.replace(/^\//, '')}`}
               alt={cardData.symbol}
-              className="w-full h-full object-contain pointer-events-none drop-shadow-[0_0_4px_rgba(255,255,255,0.6)]"
+              className="w-full h-full object-cover pointer-events-none drop-shadow-[0_0_4px_rgba(255,255,255,0.6)]"
             />
           ) : (
             <span className="text-4xl md:text-5xl font-chalk text-white pointer-events-none">
