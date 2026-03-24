@@ -149,8 +149,8 @@ function findIntegralVariable(cards: GameCard[]): 'x' | 'y' | null {
 // Mobile board sizing
 const BOARD_CARD_W = '2.625rem';
 const BOARD_CARD_H = '4.03rem';
-const VS_CARD_W = '2.75rem';
-const VS_CARD_H = '4.22rem';
+const VS_CARD_W = '3.94rem';
+const VS_CARD_H = '6.05rem';
 const DRAG_CARD_W = '3.5rem';
 const DRAG_CARD_H = '5.37rem';
 const FULL_CARD_W = '5.5rem';
@@ -166,10 +166,12 @@ interface MiniHandCardProps {
   total: number;
   isDiscarding: boolean;
   onDiscard?: (id: string) => void;
+  onSelect?: (id: string) => void;
+  isSelected?: boolean;
   palette: ThemePalette;
 }
 
-function MiniHandCard({ card, index, total, isDiscarding, onDiscard, palette }: MiniHandCardProps) {
+function MiniHandCard({ card, index, total, isDiscarding, onDiscard, onSelect, isSelected = false, palette }: MiniHandCardProps) {
   const cardData = cardsDatabase[card.symbol];
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: card.id,
@@ -185,7 +187,7 @@ function MiniHandCard({ card, index, total, isDiscarding, onDiscard, palette }: 
   const style: React.CSSProperties = {
     transform: transform
       ? CSS.Translate.toString(transform)
-      : `rotate(${rotation}deg) translateY(${translateY}px) translateX(${translateX}px)`,
+      : `rotate(${rotation}deg) translateY(${translateY}px) translateX(${translateX}px) scale(${isSelected ? 1.5 : 1})`,
     zIndex: isDragging ? 99999 : 10 + index,
     position: 'absolute',
     width: FULL_CARD_W,
@@ -205,7 +207,14 @@ function MiniHandCard({ card, index, total, isDiscarding, onDiscard, palette }: 
       ref={setNodeRef}
       {...listeners}
       {...attributes}
-      onClick={() => isDiscarding && onDiscard && onDiscard(card.id)}
+      onClick={(event) => {
+        event.stopPropagation();
+        if (isDiscarding && onDiscard) {
+          onDiscard(card.id);
+          return;
+        }
+        onSelect?.(card.id);
+      }}
       style={style}
       className={`rounded-xl border-2 shadow-xl select-none overflow-hidden
         transition-all duration-200 origin-bottom
@@ -224,7 +233,7 @@ function MiniHandCard({ card, index, total, isDiscarding, onDiscard, palette }: 
             className="w-full h-full object-cover"
           />
         ) : (
-          <span className="text-4xl font-black text-white">{card.symbol}</span>
+          <span className="text-4xl font-chalk text-white">{card.symbol}</span>
         )}
       </div>
     </div>
@@ -293,7 +302,7 @@ function MobileSlotValueCard({ slotCard }: { slotCard: GameCard }) {
         {slotCardData?.image ? (
           <img src={`${BASE}${slotCardData.image.replace(/^\//, '')}`} alt={slotCard.symbol} className="w-full h-full object-cover" />
         ) : (
-          <span className="text-[10px] font-black text-white">{slotCard.symbol}</span>
+          <span className="text-[10px] font-chalk text-white">{slotCard.symbol}</span>
         )}
       </div>
     </div>
@@ -504,7 +513,7 @@ function DraggableBoardCard({
                   {cardsDatabase[card.slotCards[ulKey]!.symbol]?.image ? (
                     <img src={`${BASE}${cardsDatabase[card.slotCards[ulKey]!.symbol].image.replace(/^\//, '')}`} alt={card.slotCards[ulKey]!.symbol} className="w-full h-full object-cover" />
                   ) : (
-                    <span className="text-[10px] font-black text-white">{card.slotCards[ulKey]!.symbol}</span>
+                    <span className="text-[10px] font-chalk text-white">{card.slotCards[ulKey]!.symbol}</span>
                   )}
                 </div>
               </div>
@@ -517,7 +526,7 @@ function DraggableBoardCard({
                   {cardsDatabase[card.slotCards[urKey]!.symbol]?.image ? (
                     <img src={`${BASE}${cardsDatabase[card.slotCards[urKey]!.symbol].image.replace(/^\//, '')}`} alt={card.slotCards[urKey]!.symbol} className="w-full h-full object-cover" />
                   ) : (
-                    <span className="text-[10px] font-black text-white">{card.slotCards[urKey]!.symbol}</span>
+                    <span className="text-[10px] font-chalk text-white">{card.slotCards[urKey]!.symbol}</span>
                   )}
                 </div>
               </div>
@@ -530,7 +539,7 @@ function DraggableBoardCard({
                   {cardsDatabase[card.slotCards[llKey]!.symbol]?.image ? (
                     <img src={`${BASE}${cardsDatabase[card.slotCards[llKey]!.symbol].image.replace(/^\//, '')}`} alt={card.slotCards[llKey]!.symbol} className="w-full h-full object-cover" />
                   ) : (
-                    <span className="text-[10px] font-black text-white">{card.slotCards[llKey]!.symbol}</span>
+                    <span className="text-[10px] font-chalk text-white">{card.slotCards[llKey]!.symbol}</span>
                   )}
                 </div>
               </div>
@@ -543,7 +552,7 @@ function DraggableBoardCard({
                   {cardsDatabase[card.slotCards[lrKey]!.symbol]?.image ? (
                     <img src={`${BASE}${cardsDatabase[card.slotCards[lrKey]!.symbol].image.replace(/^\//, '')}`} alt={card.slotCards[lrKey]!.symbol} className="w-full h-full object-cover" />
                   ) : (
-                    <span className="text-[10px] font-black text-white">{card.slotCards[lrKey]!.symbol}</span>
+                    <span className="text-[10px] font-chalk text-white">{card.slotCards[lrKey]!.symbol}</span>
                   )}
                 </div>
               </div>
@@ -574,7 +583,7 @@ function DraggableBoardCard({
       {cardData?.image ? (
         <img src={`${BASE}${cardData.image.replace(/^\//, '')}`} alt={card.symbol} className="w-full h-full object-cover pointer-events-none" />
       ) : (
-        <span className="text-2xl font-black text-white">{card.symbol}</span>
+        <span className="text-2xl font-chalk text-white">{card.symbol}</span>
       )}
     </div>
   );
@@ -644,7 +653,7 @@ function BracketCard({ syntax, bracketMode, palette, onCancel }: BracketCardProp
           {closeCardData?.image ? (
             <img src={`${BASE}${closeCardData.image.replace(/^\//, '')}`} alt={closeSymbol ?? undefined} className="w-full h-full object-cover" />
           ) : (
-            <span className="text-3xl font-black text-yellow-300 leading-none">{closeSymbol}</span>
+            <span className="text-3xl font-chalk text-yellow-300 leading-none">{closeSymbol}</span>
           )}
         </div>
         <button
@@ -683,7 +692,7 @@ function BracketCard({ syntax, bracketMode, palette, onCancel }: BracketCardProp
           {cardsDatabase[firstOpen!.symbol]?.image ? (
             <img src={`${BASE}${cardsDatabase[firstOpen!.symbol].image.replace(/^\//, '')}`} alt={firstOpen!.symbol} className="w-full h-full object-cover" />
           ) : (
-            <span className="text-2xl font-black text-white leading-none">{firstOpen!.symbol}</span>
+            <span className="text-2xl font-chalk text-white leading-none">{firstOpen!.symbol}</span>
           )}
         </>
       )}
@@ -740,11 +749,11 @@ function TutorialReferenceRow({ cards, palette }: { cards: GameCard[]; palette: 
                 className="w-full h-full object-cover"
               />
             ) : (
-              <span className="text-[9px] font-black text-white">{card.symbol}</span>
+              <span className="text-[9px] font-chalk text-white">{card.symbol}</span>
             )}
             {card.exponent && (
               <div className="absolute -top-2 -right-2 w-4 h-5 rounded border border-white/50 bg-slate-900 flex items-center justify-center">
-                <span className="text-[8px] font-black text-white">{card.exponent.symbol}</span>
+                <span className="text-[8px] font-chalk text-white">{card.exponent.symbol}</span>
               </div>
             )}
           </div>
@@ -768,8 +777,12 @@ export function MobileGameLayout({ currentPlayer, state, actions, tutorialRefere
   const totalBoardCards = beforeCards.length + afterCards.length;
 
   const [isDraggingCard, setIsDraggingCard] = useState(false);
+  const [selectedHandCardId, setSelectedHandCardId] = useState<string | null>(null);
   useDndMonitor({
-    onDragStart: () => setIsDraggingCard(true),
+    onDragStart: () => {
+      setIsDraggingCard(true);
+      setSelectedHandCardId(null);
+    },
     onDragEnd: () => setIsDraggingCard(false),
     onDragCancel: () => setIsDraggingCard(false),
   });
@@ -779,6 +792,7 @@ export function MobileGameLayout({ currentPlayer, state, actions, tutorialRefere
   return (
     <div
       className="min-h-screen flex flex-col transition-colors duration-700"
+      onClick={() => setSelectedHandCardId(null)}
       style={{
         background: `linear-gradient(to bottom, ${palette.bgDark} 0%, ${palette.bgMid} 100%)`,
         fontFamily: "'Merienda', cursive",
@@ -1066,6 +1080,8 @@ export function MobileGameLayout({ currentPlayer, state, actions, tutorialRefere
               total={handCards.length}
               isDiscarding={isDiscarding}
               onDiscard={actions.handleDiscard}
+              onSelect={(id) => setSelectedHandCardId(prev => (prev === id ? null : id))}
+              isSelected={selectedHandCardId === card.id}
               palette={palette}
             />
           ))}

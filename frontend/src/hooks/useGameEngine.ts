@@ -304,6 +304,11 @@ export function useGameEngine() {
   };
 
   const handleEndTurn = () => {
+    if (bracketMode) {
+      setBracketMode(null);
+      toast.info("Nedokončená závorka byla vrácena do sady závorek.");
+    }
+
     if (tutorialActive && tutorialStep !== 2 && tutorialStep !== 3) {
       return toast.error("V tutoriálu teď není čas ukončit tah.");
     }
@@ -338,7 +343,7 @@ export function useGameEngine() {
         return next;
       });
     }
-    const handLimit = tutorialActive && tutorialStep === 2 ? 4 : 5;
+    const handLimit = tutorialActive && tutorialStep === 2 ? 3 : 5;
     if (p.hand.length > handLimit) {
       setIsDiscarding(true);
       toast.warning(`Limit ruky překročen! Musíš zahodit ${p.hand.length - handLimit} karet.`);
@@ -348,8 +353,12 @@ export function useGameEngine() {
   };
 
   const handleDiscard = useCallback((cardId: string) => {
-    if (tutorialActive && tutorialStep !== 2) {
+    if (tutorialActive && tutorialStep !== 2 && tutorialStep !== 3) {
       toast.error("V tutoriálu teď není dovoleno odhazovat.");
+      return;
+    }
+    if (tutorialActive && tutorialStep === 3 && !isDiscarding) {
+      toast.error("V tutoriálu teď neodhazuj karty.");
       return;
     }
     if (tutorialActive && tutorialStep === 2 && tutorialAllowedDiscardIds.length > 0 && !tutorialAllowedDiscardIds.includes(cardId)) {
@@ -378,7 +387,7 @@ export function useGameEngine() {
         const p = next[activePlayerIdx];
 
         // Kontrola nového počtu karet (po odebrání)
-        const handLimit = tutorialActive && tutorialStep === 2 ? 4 : 5;
+        const handLimit = tutorialActive && tutorialStep === 2 ? 3 : 5;
         if (p.hand.length <= handLimit) {
           setIsDiscarding(false);
           if (tutorialActive) {
@@ -386,11 +395,18 @@ export function useGameEngine() {
               const firstPlayerId = next[0]?.id;
               const firstPlayerIndex = next.findIndex((player: Player) => player.id === firstPlayerId);
               if (firstPlayerIndex > -1) {
-                next[firstPlayerIndex].hand.push(
-                  createTutorialStepCard('2', 't1-step3'),
-                  createTutorialStepCard('2', 't1-step3'),
-                  createTutorialStepCard('a^b', 't1-step3')
-                );
+                const firstPlayerHand = next[firstPlayerIndex].hand;
+                const currentTwoCount = firstPlayerHand.filter((card: GameCard) => card.symbol === '2').length;
+                const hasPowerCard = firstPlayerHand.some((card: GameCard) => card.symbol === 'a^b');
+
+                if (currentTwoCount < 2) {
+                  for (let i = 0; i < 2 - currentTwoCount; i++) {
+                    firstPlayerHand.push(createTutorialStepCard('2', 't1-step3'));
+                  }
+                }
+                if (!hasPowerCard) {
+                  firstPlayerHand.push(createTutorialStepCard('a^b', 't1-step3'));
+                }
               }
               setTutorialTwosAdded(true);
               setTutorialStep(3);
@@ -409,9 +425,11 @@ export function useGameEngine() {
 
       return next;
     });
-  }, [applyPendingHandSwap, tutorialActive, tutorialAllowedDiscardIds, tutorialStep, tutorialTwosAdded]);
+  }, [applyPendingHandSwap, tutorialActive, tutorialAllowedDiscardIds, tutorialStep, tutorialTwosAdded, isDiscarding]);
 
   const nextTurn = () => {
+    setBracketMode(null);
+
     let nextIdx = (currentPlayerIndex + playDirection + players.length) % players.length;
     if (players[nextIdx].status?.frozen) {
       toast.info(`${players[nextIdx].name} vynechává.`, { icon: '❄️' });
@@ -729,6 +747,8 @@ export function useGameEngine() {
     const { active, over } = event;
     if (!over) return;
 
+    const activeHandCard = players[currentPlayerIndex].hand.find(c => c.id === active.id);
+
     if (tutorialActive) {
       if (tutorialStep === 2) {
         if (String(over.id) !== 'drop-discard') {
@@ -738,9 +758,17 @@ export function useGameEngine() {
       } else if (tutorialStep !== 3) {
         toast.error("V tutoriálu teď nemůžeš s kartami hýbat.");
         return;
-      } else if (tutorialStep === 3 && String(over.id) === 'drop-discard') {
+      } else if (tutorialStep === 3 && String(over.id) === 'drop-discard' && !isDiscarding) {
         toast.error("V tutoriálu teď neodhazuj karty.");
         return;
+      }
+
+      if (tutorialStep === 3 && activeHandCard && String(over.id) !== 'drop-discard') {
+        const allowedSymbols = new Set(['2', '+', '3', 'a^b']);
+        if (!allowedSymbols.has(activeHandCard.symbol)) {
+          toast.error("V tutoriálu teď používej jen karty 2, +, 3 a a^b.");
+          return;
+        }
       }
     }
 
@@ -1407,38 +1435,63 @@ export function useGameEngine() {
     const initialDeck = generateFilteredDeck(difficulty);
     const vsCards = ['int', 'd/dx', '∑', '∏', 'lim'];
 
-    const isPrime = (value: number): boolean => {
-      if (value < 2) return false;
-      if (value === 2) return true;
-      if (value % 2 === 0) return false;
-      const max = Math.floor(Math.sqrt(value));
-      for (let i = 3; i <= max; i += 2) {
-        if (value % i === 0) return false;
+    const hasAtLeastThreePrimeFactors = (value: number): boolean => {
+      let remainder = value;
+      let factorCount = 0;
+      for (let divisor = 2; divisor * divisor <= remainder; divisor += divisor === 2 ? 1 : 2) {
+        while (remainder % divisor === 0) {
+          factorCount += 1;
+          remainder = Math.floor(remainder / divisor);
+          if (factorCount >= 3) return true;
+        }
       }
-      return true;
+      if (remainder > 1) factorCount += 1;
+      return factorCount >= 3;
     };
 
-    const withNegativeChance = (value: string): string => {
-      if (value === '0') return value;
-      return Math.random() < 0.2 ? `-${value}` : value;
+    const buildProductTargetPool = (): number[] => {
+      const pool = new Set<number>();
+      const easyPrimes = [2, 3, 5, 7, 11, 13];
+
+      // Preferujeme "studentsky čitelné" výsledky ze součinů malých prvočísel.
+      for (const p1 of easyPrimes) {
+        for (const p2 of easyPrimes) {
+          for (const p3 of easyPrimes) {
+            const candidate = p1 * p2 * p3;
+            if (candidate >= 10 && candidate <= 999 && hasAtLeastThreePrimeFactors(candidate)) {
+              pool.add(candidate);
+            }
+          }
+        }
+      }
+
+      // Doplň zásobník do 100 hodnot z celého intervalu 10..999.
+      for (let candidate = 10; candidate <= 999 && pool.size < 100; candidate++) {
+        if (hasAtLeastThreePrimeFactors(candidate)) {
+          pool.add(candidate);
+        }
+      }
+
+      return [...pool].sort((a, b) => a - b).slice(0, 100);
     };
 
     const generateNumericTargetR = (): string => {
       const isThreeDigit = Math.random() < 0.5;
       const min = isThreeDigit ? 100 : 10;
       const max = isThreeDigit ? 999 : 99;
-      return withNegativeChance(`${Math.floor(Math.random() * (max - min + 1)) + min}`);
+      return `${Math.floor(Math.random() * (max - min + 1)) + min}`;
     };
 
+    const generateLimitTargetR = (): string => {
+      return `${Math.floor(Math.random() * (99 - (-99) + 1)) - 99}`;
+    };
+
+    const productTargetPool = buildProductTargetPool();
+
     const generateCompositeTargetR = (): string => {
-      for (let attempt = 0; attempt < 100; attempt++) {
-        const isThreeDigit = Math.random() < 0.5;
-        const min = isThreeDigit ? 100 : 12;
-        const max = isThreeDigit ? 999 : 99;
-        const candidate = Math.floor(Math.random() * (max - min + 1)) + min;
-        if (!isPrime(candidate)) return withNegativeChance(`${candidate}`);
-      }
-      return withNegativeChance('12');
+      if (productTargetPool.length === 0) return '12';
+      const randomIndex = Math.floor(Math.random() * productTargetPool.length);
+      return `${productTargetPool[randomIndex]}`;
     };
 
     const newPlayers: Player[] = configuredPlayers.map((p, i) => ({
@@ -1467,6 +1520,8 @@ export function useGameEngine() {
           player.targetR = generateCompositeTargetR();
         } else if (picked === '∑') {
           player.targetR = generateNumericTargetR();
+        } else if (picked === 'lim') {
+          player.targetR = generateLimitTargetR();
         } else {
           player.targetR = generatePersonalTargetR('VŠ');
         }
@@ -1503,7 +1558,7 @@ export function useGameEngine() {
       symbol
     });
 
-    const requiredSymbolsBeforeStep3 = ['*', 'sin(π/2)', '+', '3'];
+    const requiredSymbolsBeforeStep3 = ['2', '+', '3'];
     const randomNumberPool = Object.keys(cardsDatabase).filter(symbol => {
       const card = cardsDatabase[symbol];
       return card?.type === 'number' && symbol !== '2' && !requiredSymbolsBeforeStep3.includes(symbol);
@@ -1528,8 +1583,6 @@ export function useGameEngine() {
     const referenceBoard: GameCard[] = [
       makeCard('(', 'ref'),
       makeCard('2', 'ref'),
-      makeCard('*', 'ref'),
-      makeCard('sin(π/2)', 'ref'),
       makeCard('+', 'ref'),
       makeCard('3', 'ref'),
       referencePowCard,
@@ -1665,31 +1718,27 @@ export function useGameEngine() {
     const isClose = (card?: GameCard) => !!card && closeSet.has(card.symbol);
 
     const directExponentPattern =
-      board.length === 7 &&
+      board.length === 5 &&
       isOpen(board[0]) &&
       board[1]?.symbol === '2' &&
-      board[2]?.symbol === '*' &&
-      board[3]?.symbol === 'sin(π/2)' &&
-      board[4]?.symbol === '+' &&
-      board[5]?.symbol === '3' &&
-      board[5]?.exponent?.symbol === '2' &&
-      isClose(board[6]);
+      board[2]?.symbol === '+' &&
+      board[3]?.symbol === '3' &&
+      board[3]?.exponent?.symbol === '2' &&
+      isClose(board[4]);
 
     if (directExponentPattern) return true;
 
-    const powerCard = board[6];
+    const powerCard = board[4];
     const powerExponent = powerCard?.slotCards?.single;
     const powerCardPattern =
-      board.length === 8 &&
+      board.length === 6 &&
       isOpen(board[0]) &&
       board[1]?.symbol === '2' &&
-      board[2]?.symbol === '*' &&
-      board[3]?.symbol === 'sin(π/2)' &&
-      board[4]?.symbol === '+' &&
-      board[5]?.symbol === '3' &&
+      board[2]?.symbol === '+' &&
+      board[3]?.symbol === '3' &&
       powerCard?.symbol === 'a^b' &&
       powerExponent?.symbol === '2' &&
-      isClose(board[7]);
+      isClose(board[5]);
 
     return powerCardPattern;
   }, []);
