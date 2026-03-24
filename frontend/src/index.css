@@ -2,15 +2,26 @@
 
 /* 1. DEFINICE KŘÍDOVÉHO FONTU */
 @font-face {
+  font-family: 'Merienda3';
+  src: url('/fonts/Merienda3.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
   font-family: 'Chalkduster';
-  src: url('/fonts/Chalkduster.ttf') format('truetype');
+  src:
+    url('/fonts/Chalkduster.ttf') format('truetype'),
+    local('Chalkduster'),
+    local('Chalkduster Regular'),
+    url('/fonts/Merienda3.ttf') format('truetype');
   font-weight: normal;
   font-style: normal;
 }
 
 /* 2. TAILWIND V4 TÉMA */
 @theme {
-  --font-chalk: 'Chalkduster', cursive;
+  --font-chalk: 'Chalkduster', 'Merienda3', cursive;
 
   /* Mapování barev pro shadcn komponenty */
   --color-background: var(--background);
@@ -61,7 +72,7 @@
   body {
     background-color: var(--background);
     color: var(--foreground);
-    font-family: 'Chalkduster', cursive;
+    font-family: 'Merienda', cursive;
     overflow-x: hidden;
   }
 }

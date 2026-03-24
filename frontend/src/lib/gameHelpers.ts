@@ -88,23 +88,23 @@ export function generatePersonalTargetR(difficulty: DifficultyMode): string {
   if (difficulty === 'VŠ') {
     const category = randInt(1, 4);
     switch (category) {
-      case 1: return withNegativeChance(`${randInt(10, 99)}`);                         // dvouciferné číslo
-      case 2: return withNegativeChance(`${randInt(10, 99)}${pickVar()}`);             // dvouciferné číslo a X/Y
+      case 1: return `${randInt(10, 99)}`;                                              // dvouciferné číslo
+      case 2: return `${randInt(10, 99)}${pickVar()}`;                                  // dvouciferné číslo a X/Y
       case 3: {
         // kombinace čísla a konstanty
         const type = randInt(1, 3);
         if (type === 1) {
           // číslo * konstanta (např 8e, 2π)
-          return withNegativeChance(`${randInt(1, 20)}${pickConstant()}`);
+          return `${randInt(1, 20)}${pickConstant()}`;
         } else if (type === 2) {
           // jen konstanta
-          return withNegativeChance(pickConstant());
+          return pickConstant();
         } else {
           // konstanta * konstanta (π*e)
           const c1 = pickConstant();
           let c2 = pickConstant();
           while (c2 === c1) c2 = pickConstant();
-          return withNegativeChance(`${c1}${c2}`);
+          return `${c1}${c2}`;
         }
       }
       case 4: {
@@ -113,19 +113,19 @@ export function generatePersonalTargetR(difficulty: DifficultyMode): string {
         const variable = pickVar();
         if (type === 1) {
           // číslo * konstanta * X
-          return withNegativeChance(`${randInt(1, 10)}${pickConstant()}${variable}`);
+          return `${randInt(1, 10)}${pickConstant()}${variable}`;
         } else if (type === 2) {
           // konstanta * X
-          return withNegativeChance(`${pickConstant()}${variable}`);
+          return `${pickConstant()}${variable}`;
         } else if (type === 3) {
           // číslo * X
-          return withNegativeChance(`${randInt(1, 20)}${variable}`);
+          return `${randInt(1, 20)}${variable}`;
         } else {
           // konstanta * konstanta * X
           const c1 = pickConstant();
           let c2 = pickConstant();
           while (c2 === c1) c2 = pickConstant();
-          return withNegativeChance(`${c1}${c2}${variable}`);
+          return `${c1}${c2}${variable}`;
         }
       }
     }

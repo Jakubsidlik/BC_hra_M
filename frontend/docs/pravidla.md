@@ -5,84 +5,66 @@
 ---
 
 ## 1. Představení
-Math4fun je karetní herní systém zaměřený na skladbu matematických výrazů pro 2–8 hráčů. Hráči z karet staví levou stranu rovnice (L) a snaží se ji dostat na předepsaný cíl (R).
+Math4fun je karetní herní systém zaměřený na skladbu matematických výrazů pro **2–8 hráčů**. Hra vyžaduje numerickou přesnost, strategické plánování tahů oponentů a práci s efekty karet.
 
 ## 2. Cíl hry
-Cílem hry je konstrukce formálně správné rovnosti **L = R**.
-- **L (Levá strana):** Řetězec čísel, proměnných a operátorů skládáný na tabuli.
-- **R (Pravá strana):** Cílová hodnota vygenerovaná na začátku hry podle obtížnosti.
+Cílem je konstrukce formálně správné rovnosti **L = R**.
+- **L (tabule):** hráčem vytvořený řetězec hodnot, operací, závorek a proměnných
+- **R (výsledek):** cílová hodnota určená na začátku hry dle obtížnosti
 
-## 3. Typy karet a operace
-- **Čísla a konstanty:** 0 až 9, π, e
-- **Proměnné:** x, y
-- **Aritmetické operátory ZŠ:** Součet (+), Rozdíl (-), Součin (*), Podíl (:)
-- **Pokročilé funkce SŠ:** Mocnina (a^b), Odmocnina, Logaritmy, Faktoriál (n!), Goniometrie (sin, cos, tg, cotg), Kombinatorika.
-- **Analytické operátory VŠ:** Derivace, Integrál, Diskrétní sumace, Sekvenční produkt, Limita, Determinant.
+## 3. Příprava hry
+1. Každý hráč obdrží fixní sadu: **3 páry závorek** `()`, `[]`, `{}` a kartu `=`.
+2. Tyto fixní karty netvoří součást dobíracího balíčku.
+3. Hráči zvolí obtížnost (ZŠ, SŠ, VŠ) a určí cílovou hodnotu **R**.
+4. Zamíchá se hlavní balíček a každý hráč si dobere **5 karet**.
+5. Zahajující hráč začne hru dobráním **šesté karty**.
 
-> **Poznámka:** Některé karty mají herní efekty (bonusy, blokace, výměny). Efekty VŠ karet "Integrál", "Derivace", "Sumace" a "Sekvenční produkt" jsou v běžných módech vypnuté a slouží jen jako operátory.
+## 4. Průběh hry
+Hráči se střídají po směru hodinových ručiček. Ve svém tahu hráč využije jednu z akcí:
 
-## 4. Vizuál a Ikony (Efekty)
-*Barva okraje karty: Modrá = číslo, Oranžová = operace, Černá = závorka, Šedá = proměnná.*
+- **Přidání:** vložit novou kartu z ruky do výrazu na tabuli
+- **Odebrání:** vzít jednu kartu z výrazu do odhazovacího balíčku či zpět do ruky
+- **Reset:** vyhodit celý výraz na tabuli do odhazovacího balíčku
+- **Q.E.D.:** prohlásit, že rovnost `L = R` platí, a zahájit ověření
 
-Během hry rozlišujeme následující typy cílů pro efekty:
-- 👤 **Hlava:** Platí pro hráče samotného.
-- ➔👤 **Postava:** Cílí na následujícího hráče.
-- ✨👤 **Zářící Postava:** Cílí na libovolného hráče podle vaší volby.
-- 👥 **Více postav:** Platí pro všechny kromě aktivního hráče.
+Hráč má během svého tahu právo přeskládat již vyložené karty ve svém výrazu. Toto přeskládání se nepočítá jako tah.
 
-## 5. Příprava hry
-1. Každý hráč obdrží do základu 3 páry závorek `()`, `[]`, `{}` a 1 operátor ekvivalence `=`.
-2. Určí se hodnota **R** dle zvolené obtížnosti (ZŠ, SŠ, VŠ).
-3. Každý si dobere 5 počátečních karet.
-4. Zahajující hráč začíná dobráním své šesté karty.
-5. *V režimu VŠ dostane každý hráč navíc na tabuli jednu speciální kartu (Integrál/Derivaci/atd.), která nejde odhodit.*
+## 5. Ověření Q.E.D. a konec hry
+Pokud hráč prohlásí Q.E.D., následuje kontrola:
 
-## 6. Průběh tahu
-Matematik má v každém kole možnost provést **jednu akci** (pokud efekt právě vyložené karty neříká jinak):
+- **Oponentský posudek:** první soupeř po levici i pravici provede kontrolu výpočtu
+- **Správné řešení:** hráč je vítěz a hra končí
+- **Chybný důkaz:** hráč odstraní všechny karty ze své tabule do odhazovacího balíčku a hra pokračuje
 
-- **Přidání:** Vložit kartu z ruky do tabule (L) a postupně poskládat výraz.
-- **Odebrání / Výměna:** Odebrat vlastní kartu z tabule do odhozu *nebo* přeskládat stávající pořadí na tabuli.
-- **Restart:** Vyhodit z tabule celý výraz L a začít v příštím kole znovu s čistým štítem.
+## 6. Uspořádání, omezení a syntax
+- Každý výraz na tabuli musí obsahovat alespoň **jednu operaci**
+- Výpočty probíhají v oboru **reálných čísel**
+- Není potřeba karta násobení, pokud je vedle sebe hodnota a závorka nebo dvě závorky
 
-Další podmínky:
-- Na konci tahu musí mít hráč v ruce **maximálně 5 karet**, jinak přechází do režimu odhazování nadbytečných karet.
-- Karty, co mají obsažený speciální efekt, vždy po vyložení nabídnou volbu: buď "Aktivovat efekt" a kartu odhodit, *nebo* kartu položit a navázat na plochu.
+## 7. Rozlišení karet
+- **Hodnoty:** `0–9`, `π`, `e`, goniometrie (`sin`, `cos`, `tan`, `cotg`)
+- **Proměnné:** `x`, `y`
+- **Závorky:** `()`, `[]`, `{}`
+- **Operace:** dle úrovně obtížnosti (ZŠ, SŠ, VŠ)
 
-## 7. Závorky, exponenty a speciální sloty
-1. Závorky se na desku umísťují ve dvou krocích: nejdřív levá, potom pravá. Uvnitř musí být alespoň jedno číslo nebo proměnná.
-2. Některé karty automaticky vyžadují zadání **exponentu** (např. *a^b* nebo *odmocnina*). Exponent lze tvořit pouze číslem nebo proměnnou.
-3. Speciální vysokoškolské karty mají tzv. sloty (okénka pro doplnění mezí integrálů aj.). Do okének lze vkládat pouze číselné hodnoty.
+### Rozlišení cílů efektu
+- **Na sebe** – platí pro hráče samotného
+- **Následující hráč**
+- **Libovolný hráč**
+- **Všichni hráči / všichni soupeři** (dle popisu karty)
 
-## 8. Ukončení a vyhlášení Q.E.D.
-Když se hráči na levé straně rovnice podaří sestavit výraz s hodnotou stejnou jako je cíl vpravo (L = R), prohlásí **Q.E.D.** (přes tlačítko ve hře).
+## 8. Doporučené obtížnosti
+- **ZŠ:** `1–9`, `10–99`, `100–999`, `x–9x`, `y–9y`
+- **SŠ:** `10–99`, `100–999`, `x–99x`, `y–99y`, kombinace hodnot, kombinace hodnot a proměnné
+- **VŠ:** `10–99`, `100–999`; navíc pro derivaci a integrál `x–99x`, `y–99y`
 
-- ✅ **Správné řešení:** Pokud se matematická hodnota shoduje, hráč se stává vítězem a hra končí.
-- ❌ **Chybný důkaz:** Pokud se objeví matematická chyba a výraz se nerovná cíli, hráč je penalizován. Musí odstranit všechny karty ze své plochy L do odhozu a hra pokračuje.
+> Při zvolení VŠ obtížnosti si hráč vylosuje operaci z VŠ balíčku, kterou položí na tabuli. Tuto kartu musí využít a nelze ji odebrat ani nahradit.
 
----
+## 9. Obsah balení
+- **Hodnoty (142 ks):** `0–9` (90 ks), `π` (5 ks), `e` (5 ks), `x` (10 ks), `y` (10 ks), goniometrické funkce (22 ks)
+- **Operace ZŠ (96 ks):** `+` (20 ks), `-` (20 ks), `*` (20 ks), `:` (20 ks), `^` (8 ks), `√` (8 ks)
+- **Operace SŠ (40 ks):** `log` (6 ks), `!` (4 ks), kombinace (4 ks), `| |` (6 ks), velikost vektoru (4 ks), modulo (6 ks), `det` (4 ks), skalární součin (6 ks)
+- **Operace VŠ (30 ks):** derivace (6 ks), `∫` (6 ks), `∑` (6 ks), `∏` (6 ks), limita (6 ks)
+- **Fixní karty (56 ks):** `=` (8 ks), karta goniometrické tabulky (1 ks), levé závorky (24 ks), pravé závorky (24 ks)
 
-### Krátký přehled efektů jednotlivých karet
-
-**Čísla a symboly:**
-*   `0-9` - Dobrání 1 karty navíc v příštím tahu
-*   `π` - Výměna 1 karty z tvé plochy L za vybranou kartu z L oponenta
-*   `e` - Okamžité nahrazení cíle R libovolného hráče novým losem.
-*   `y` / `x` - Následující hráč odhodí všechny číslice (`y`) / operace (`x`) z ruky.
-
-**Základní operace:**
-*   `+` - Následující hráč musí v příštím tahu použít operaci.
-*   `-` - Odebere náhodnou kartu z ruky vybraného oponenta.
-*   `*` - V příštím tahu dobíráš o 2 karty navíc.
-*   `/` - Vidíš 3 vrchní karty balíčku a přerovnáš jejich pořadí.
-
-**Pokročilé efekty:**
-*   `a^b` - Následující hráč přeskakuje tah.
-*   `sqrt` - Vybraný oponent odhodí celou ruku a dobere stejný počet nových karet.
-*   `mod` - Cíl R cílového hráče se změní na zbytek po dělení číslem, které vyberete z ruky.
-*   `n!` - Omezení: Následující hráč smí vyložit max. 1 kartu v příštím tahu.
-*   `det` - Zruší všechny aktivní efekty u všech hráčů pro toto kolo.
-*   `log` - V tomto tahu může aktivní hráč vyložit teoreticky nekonečno karet.
-*   `nCk` - Prohodí cifry v cílové hodnotě R oponenta.
-
-**Goniometrie (Ztráty a posuny):**
-*   `sin / cos / tg / cotg` : Podle úhlu u goniometrie dochází k předání si ruky s celým stolem (po směru u hodnot typu `0, π/2...` nebo proti směru). Nebo nutí všechny oponenty ztratit dobrání 1 karty (úhly typu `π/6, π/4`).
+**Celkem hra obsahuje 365 karet.**
