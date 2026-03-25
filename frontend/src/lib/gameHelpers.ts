@@ -1,7 +1,7 @@
 import type { GameCard } from './effects';
 import { cardsDatabase } from '../data/cardsDB';
 
-export type SpecialSlotKey = 'lower' | 'upper' | 'order' | 'single' | 'ul' | 'ur' | 'll' | 'lr';
+export type SpecialSlotKey = 'lower' | 'upper' | 'order' | 'single' | 'ul' | 'ur' | 'll' | 'lr' | 'a' | 'b';
 
 export interface SpecialSlotConfig {
   key: SpecialSlotKey;
@@ -18,6 +18,8 @@ const SLOT_LABELS: Record<SpecialSlotKey, string> = {
   ur: 'Horní pravý',
   ll: 'Dolní levý',
   lr: 'Dolní pravý',
+  a: 'Hodnota a',
+  b: 'Hodnota b',
 };
 
 export function getSpecialSlots(symbol: string): SpecialSlotConfig[] {
@@ -144,14 +146,18 @@ export function parseBoardToMathString(board: GameCard[]): string {
     'e': 'E',
     'tg': 'tan',
     'cotg': '1/tan',
-    'ln': 'ln',
+    'ln': 'log3',
     'log': 'log2',
     'log10': 'log10',
     '√': 'sqrt',
-    'mod': '%',
-    'skalar': '*',
-    'vektor': 'v',
-    'abs': 'abs'
+    'mod': '%'
+  };
+
+  const getSlotExpression = (card: GameCard, keys: string[], fallback: string): string => {
+    const slotCard = keys
+      .map(key => card.slotCards?.[key])
+      .find((value): value is GameCard => !!value);
+    return slotCard ? parseBoardToMathString([slotCard]) : fallback;
   };
 
   const resultParts: string[] = [];
@@ -164,15 +170,47 @@ export function parseBoardToMathString(board: GameCard[]): string {
 
   for (let i = 0; i < board.length; i++) {
     const card = board[i];
+    if (card.absoluteBoundary === 'left') {
+      let depth = 0;
+      let rightIndex = -1;
+      for (let j = i + 1; j < board.length; j++) {
+        const candidate = board[j];
+        if (candidate.absoluteBoundary === 'left') {
+          depth += 1;
+          continue;
+        }
+        if (candidate.absoluteBoundary === 'right') {
+          if (depth === 0) {
+            rightIndex = j;
+            break;
+          }
+          depth -= 1;
+        }
+      }
+
+      if (rightIndex === -1) {
+        continue;
+      }
+
+      const inner = parseBoardToMathString(board.slice(i + 1, rightIndex)) || '0';
+      resultParts.push(`Abs(${inner})`);
+      i = rightIndex;
+      continue;
+    }
+
+    if (card.absoluteBoundary === 'right') {
+      continue;
+    }
+
     let sym = symbolMap[card.symbol] || card.symbol;
 
     if (i > 0) {
       const prevCard = board[i - 1];
-      const prevIsDigitOrVar = prevCard.symbol.match(/^[0-9]$/) || ['x', 'y', 'vektor', 'π', 'e'].includes(prevCard.symbol);
-      const currIsDigitOrVar = card.symbol.match(/^[0-9]$/) || ['x', 'y', 'vektor', 'π', 'e'].includes(card.symbol);
+      const prevIsDigitOrVar = prevCard.symbol.match(/^[0-9]$/) || ['x', 'y', 'π', 'e'].includes(prevCard.symbol);
+      const currIsDigitOrVar = card.symbol.match(/^[0-9]$/) || ['x', 'y', 'π', 'e'].includes(card.symbol);
       const prevIsCloseBracket = [')', ']', '}'].includes(prevCard.symbol);
       const currIsOpenBracket = ['(', '[', '{'].includes(card.symbol);
-      const functionPrefixes = ['sin', 'cos', 'tg', 'cotg', 'log', 'log10', 'ln', 'sqrt', 'abs', 'int', '∑', '∏', 'lim', 'd/dx'];
+      const functionPrefixes = ['sin', 'cos', 'tg', 'cotg', 'log', 'log10', 'ln', 'sqrt', 'int', '∑', '∏', 'lim', 'd/dx'];
       const trigPrefixes = ['sin', 'cos', 'tg', 'cotg'];
       const currIsFunction = functionPrefixes.some(pf => card.symbol === pf || card.symbol.startsWith(pf + '('));
       const prevIsTrigFunction = trigPrefixes.some(pf => prevCard.symbol === pf || prevCard.symbol.startsWith(pf + '('));
@@ -231,6 +269,20 @@ export function parseBoardToMathString(board: GameCard[]): string {
         const baseExpr = resultParts.pop() ?? '1';
         resultParts.push(`(${baseExpr})**(${exponentStr})`);
       }
+      continue;
+    }
+
+    if (card.symbol === 'vektor') {
+      const a = getSlotExpression(card, ['a', 'upper', 'lower'], '0');
+      const b = getSlotExpression(card, ['b', 'lower', 'upper'], '0');
+      resultParts.push(`sqrt((${a})**2 + (${b})**2)`);
+      continue;
+    }
+
+    if (card.symbol === 'skalar') {
+      const a = getSlotExpression(card, ['a', 'upper', 'lower'], '0');
+      const b = getSlotExpression(card, ['b', 'lower', 'upper'], '0');
+      resultParts.push(`((${a})*(${a})) + ((${b})*(${b}))`);
       continue;
     }
 
@@ -376,6 +428,7 @@ export function getBorderColor(symbol: string): string {
     'd/dx', 'int', '∑', 'log', 'log10', 'ln', 
     'nCk', '∏', 'lim', 'det'
   ];
+  if (symbol === '|') return 'border-orange-500';
   if (operators.includes(symbol)) return 'border-orange-500';
   
   // Fallback
@@ -398,9 +451,9 @@ export function generateFilteredDeck(difficulty: DifficultyMode): GameCard[] {
       'd/dx', 'int', '∑', 'log', 'log10', 'ln', 'sin', 'cos', 'tg', 'cotg', 
       'nCk', '∏', 'lim', 'det', 'skalar', 'vektor', 'abs'
     ],
-    // SŠ vyloučí: pouze vysokoškolský obsah
+    // SŠ vyloučí: vysokoškolský obsah + modulo
     'SŠ': [
-      'd/dx', 'int', '∑', '∏', 'lim', 'det'
+      'd/dx', 'int', '∑', '∏', 'lim', 'det', 'mod'
     ],
     // VŠ: bez vyloučení
     'VŠ': []

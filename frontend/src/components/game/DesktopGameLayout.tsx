@@ -130,7 +130,7 @@ function DesktopHandCard({ card, index, total, isDiscarding, onDiscard, onSelect
   const style: React.CSSProperties = {
     transform: transform
       ? CSS.Translate.toString(transform)
-      : `rotate(${rotation}deg) translateX(${translateXVal}px) translateY(${translateYVal}px) scale(${isSelected ? 1.5 : 1})`,
+      : `rotate(${rotation}deg) translateX(${translateXVal}px) translateY(${translateYVal}px) scale(${isSelected ? 1.7 : 1})`,
     zIndex: isDragging ? 99999 : 10 + index,
     position: 'absolute',
     width: CARD_W,
@@ -573,6 +573,7 @@ interface DesktopGameLayoutProps {
   };
   actions: {
     checkMathEngine: () => void;
+    handleDiscardExpression: () => void;
     handleEndTurn: () => void;
     handleDiscard: (id: string) => void;
     cancelBracketMode: () => void;
@@ -619,9 +620,9 @@ function TutorialReferenceRow({ cards, palette }: { cards: GameCard[]; palette: 
 }
 
 export function DesktopGameLayout({ currentPlayer, state, actions, tutorialReferenceBoard, showEffectDebug, debugEffectRows = [] }: DesktopGameLayoutProps) {
-  const { deck, discardPile, isDiscarding, hasModifiedBoardThisTurn, bracketMode, tutorialActive, tutorialStep } = state;
+  const { deck, discardPile, isDiscarding, hasModifiedBoardThisTurn, bracketMode, tutorialActive } = state;
   const palette = getDesktopPalette(currentPlayer.theme);
-  const canVerify = tutorialActive ? tutorialStep === 4 : !hasModifiedBoardThisTurn;
+  const canVerify = true;
   const integralVar = findIntegralVariable(currentPlayer.board);
   const hasVsLockedCard = currentPlayer.board.some(card => card.locked && VS_CARD_SYMBOLS.has(card.symbol));
   const integralCard = currentPlayer.board.find(card => card.symbol === 'int');
@@ -677,28 +678,43 @@ export function DesktopGameLayout({ currentPlayer, state, actions, tutorialRefer
               </button>
             </>
           ) : (
-            <div className="relative group/menu">
-              <button
-                className="text-white p-2 hover:bg-white/10 rounded-lg transition-colors"
-                onClick={actions.openLeaveGameConfirm}
-              >
-                <span className="material-symbols-outlined text-3xl">menu</span>
-              </button>
-              {showEffectDebug && (
-                <div className="pointer-events-none absolute left-0 top-full mt-2 hidden w-80 max-w-[70vw] rounded-lg border border-emerald-400/30 bg-black/85 p-3 text-[11px] text-emerald-100 shadow-xl backdrop-blur-sm group-hover/menu:block">
-                  <div className="mb-1 font-black uppercase tracking-wide text-emerald-300">Aktivní efekty</div>
-                  <div className="mb-1 text-emerald-200">Hráč: {currentPlayer.name}</div>
-                  {debugEffectRows.length > 0 ? (
-                    <ul className="space-y-0.5">
-                      {debugEffectRows.map((line) => (
-                        <li key={line}>• {line}</li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <div className="text-emerald-200/80">Žádné aktivní efekty/statusy.</div>
-                  )}
+            <div className="flex items-center gap-2">
+              <div className="relative group/clear">
+                <button
+                  className="text-white p-2 hover:bg-white/10 rounded-lg transition-colors"
+                  onClick={actions.handleDiscardExpression}
+                  title="Vymazat tabuli L (spotřebuje tah)"
+                >
+                  <span className="material-symbols-outlined text-3xl">ink_eraser</span>
+                </button>
+                <div className="pointer-events-none absolute left-0 top-full mt-2 hidden w-72 max-w-[70vw] rounded-lg border border-red-400/30 bg-black/85 p-3 text-[11px] text-red-100 shadow-xl backdrop-blur-sm group-hover/clear:block">
+                  Vymaže tvoji tabuli L a spotřebuje akci v tomto tahu.
                 </div>
-              )}
+              </div>
+
+              <div className="relative group/menu">
+                <button
+                  className="text-white p-2 hover:bg-white/10 rounded-lg transition-colors"
+                  onClick={actions.openLeaveGameConfirm}
+                >
+                  <span className="material-symbols-outlined text-3xl">menu</span>
+                </button>
+                {showEffectDebug && (
+                  <div className="pointer-events-none absolute left-0 top-full mt-2 hidden w-80 max-w-[70vw] rounded-lg border border-emerald-400/30 bg-black/85 p-3 text-[11px] text-emerald-100 shadow-xl backdrop-blur-sm group-hover/menu:block">
+                    <div className="mb-1 font-black uppercase tracking-wide text-emerald-300">Aktivní efekty</div>
+                    <div className="mb-1 text-emerald-200">Hráč: {currentPlayer.name}</div>
+                    {debugEffectRows.length > 0 ? (
+                      <ul className="space-y-0.5">
+                        {debugEffectRows.map((line) => (
+                          <li key={line}>• {line}</li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <div className="text-emerald-200/80">Žádné aktivní efekty/statusy.</div>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           )}
           <span

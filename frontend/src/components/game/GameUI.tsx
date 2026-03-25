@@ -21,11 +21,11 @@ export function TutorialOverlay({ active, step, onNext }: { active: boolean; ste
     },
     {
       title: 'Konec tahu a odhazování',
-      text: 'Klikni na Konec tahu. Máš více než 3 karty, proto odhoď přebytečné karty na odhazovací pole (ať ti zůstanou 3).'
+      text: 'Klikni na Konec tahu. Máš více než 5 karet, proto odhoď přebytečné karty na odhazovací pole (ať ti zůstane 5 nebo méně).'
     },
     {
       title: 'Závorky a mocnina',
-      text: 'Do ruky se ti teď přidaly karty 2 a a^b. V každém kole vylož jen 1 kartu, pak klikni na Konec tahu. Postav výraz (2 + 3^2): polož 3, za ni a^b a pak přetáhni 2 do okénka karty a^b. Pokud překročíš limit 5 karet v ruce, nejdřív odhoď přebytek.'
+      text: 'Do ruky se ti teď přidaly karty 2 a a^b. V každém kole vylož jen 1 kartu, pak klikni na Konec tahu (dobereš 1 náhodnou kartu). Postav výraz (2 + 3^2): polož 3, za ni a^b a pak přetáhni 2 do okénka karty a^b. Pokud překročíš limit 5 karet v ruce, nejdřív odhoď přebytek.'
     },
     {
       title: 'Ověření Q.E.D.',
@@ -512,7 +512,7 @@ export function MinigameDialog({ minigameMode, onPick }: { minigameMode: Minigam
               <div
                 key={card.id}
                 onClick={() => onPick(card.id)}
-                className="w-28 h-40 bg-white border-4 border-slate-300 rounded-2xl flex items-center justify-center shadow-2xl cursor-pointer hover:scale-110 hover:border-emerald-500 hover:rotate-2 transition-all group"
+                className="w-28 h-40 bg-white border-2 border-slate-300 rounded-xl flex items-center justify-center shadow-2xl cursor-pointer hover:scale-110 hover:border-emerald-500 hover:rotate-2 transition-all group"
               >
                 <span className="text-5xl font-black text-slate-800 font-chalk group-hover:scale-110 transition-transform">{card.symbol}</span>
               </div>

@@ -1,5 +1,6 @@
 
-import { DndContext, useSensor, useSensors, MouseSensor, TouchSensor } from '@dnd-kit/core';
+import { useMemo, useState } from 'react';
+import { DndContext, useSensor, useSensors, MouseSensor, TouchSensor, pointerWithin, type DragStartEvent, type DragEndEvent } from '@dnd-kit/core';
 import { snapCenterToCursor } from '@dnd-kit/modifiers';
 import { Toaster } from "sonner";
 
@@ -34,9 +35,27 @@ export default function App() {
   const deviceType = useDeviceType();
 
   // 2. SENZORY PRO DOTYK A MYŠ (Optimalizace pro mobil i PC)
-  const mouseSensor = useSensor(MouseSensor, { activationConstraint: { distance: 10 } });
-  const touchSensor = useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } });
+  const mouseSensor = useSensor(MouseSensor, { activationConstraint: { distance: 6 } });
+  const touchSensor = useSensor(TouchSensor, { activationConstraint: { delay: 120, tolerance: 8 } });
   const sensors = useSensors(mouseSensor, touchSensor);
+  const [isMouseDrag, setIsMouseDrag] = useState(false);
+  const activeModifiers = useMemo(() => (isMouseDrag ? [snapCenterToCursor] : []), [isMouseDrag]);
+
+  const handleDragStart = (event: DragStartEvent) => {
+    const activator = event.activatorEvent;
+    const pointerType = 'pointerType' in activator ? activator.pointerType : undefined;
+    const mouseDriven = pointerType === 'mouse' || activator instanceof MouseEvent;
+    setIsMouseDrag(mouseDriven);
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    setIsMouseDrag(false);
+    actions.handleDragEnd(event);
+  };
+
+  const handleDragCancel = () => {
+    setIsMouseDrag(false);
+  };
 
   // 3. VYKRESLOVÁNÍ OBRAZOVEK PODLE FÁZE HRY
   if (state.gamePhase === 'MENU') return <MainMenu onPlay={() => actions.setGamePhase('PICK_MODE')} onRules={() => actions.setGamePhase('RULES')} />;
@@ -73,14 +92,19 @@ export default function App() {
   if (status.infinitePlays) effectDebugRows.push('infinitePlays: true');
   if (status.frozen) effectDebugRows.push('frozen: true');
   if (status.playAnyAsZeroNextTurn) effectDebugRows.push('playAnyAsZeroNextTurn: true');
-  if (status.playAnyAsPlusNextTurn) effectDebugRows.push('playAnyAsPlusNextTurn: true');
   if (status.playAnyAsZeroReady) effectDebugRows.push('playAnyAsZeroReady: true');
-  if (status.playAnyAsPlusReady) effectDebugRows.push('playAnyAsPlusReady: true');
   if (status.mathModifiers?.length) effectDebugRows.push(`mathModifiers: ${status.mathModifiers.join(', ')}`);
   if (status.notifications?.length) effectDebugRows.push(`notifications: ${status.notifications.length}`);
 
   return (
-    <DndContext onDragEnd={actions.handleDragEnd} sensors={sensors} modifiers={[snapCenterToCursor]}>
+    <DndContext
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+      onDragCancel={handleDragCancel}
+      collisionDetection={pointerWithin}
+      sensors={sensors}
+      modifiers={activeModifiers}
+    >
       <Toaster
         position="top-center"
         toastOptions={{
@@ -181,6 +205,7 @@ export default function App() {
           debugEffectRows={effectDebugRows}
           actions={{
             checkMathEngine: actions.checkMathEngine,
+            handleDiscardExpression: actions.handleDiscardExpression,
             handleEndTurn: actions.handleEndTurn,
             handleDiscard: actions.handleDiscard,
             cancelBracketMode: actions.cancelBracketMode,
@@ -202,6 +227,7 @@ export default function App() {
           debugEffectRows={effectDebugRows}
           actions={{
             checkMathEngine: actions.checkMathEngine,
+            handleDiscardExpression: actions.handleDiscardExpression,
             handleEndTurn: actions.handleEndTurn,
             handleDiscard: actions.handleDiscard,
             cancelBracketMode: actions.cancelBracketMode,
@@ -223,6 +249,7 @@ export default function App() {
           debugEffectRows={effectDebugRows}
           actions={{
             checkMathEngine: actions.checkMathEngine,
+            handleDiscardExpression: actions.handleDiscardExpression,
             handleEndTurn: actions.handleEndTurn,
             handleDiscard: actions.handleDiscard,
             cancelBracketMode: actions.cancelBracketMode,

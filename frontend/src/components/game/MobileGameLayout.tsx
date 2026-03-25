@@ -187,7 +187,7 @@ function MiniHandCard({ card, index, total, isDiscarding, onDiscard, onSelect, i
   const style: React.CSSProperties = {
     transform: transform
       ? CSS.Translate.toString(transform)
-      : `rotate(${rotation}deg) translateY(${translateY}px) translateX(${translateX}px) scale(${isSelected ? 1.5 : 1})`,
+      : `rotate(${rotation}deg) translateY(${translateY}px) translateX(${translateX}px) scale(${isSelected ? 1.7 : 1})`,
     zIndex: isDragging ? 99999 : 10 + index,
     position: 'absolute',
     width: FULL_CARD_W,
@@ -718,6 +718,7 @@ interface MobileGameLayoutProps {
   };
   actions: {
     checkMathEngine: () => void;
+    handleDiscardExpression: () => void;
     handleEndTurn: () => void;
     handleDiscard: (id: string) => void;
     cancelBracketMode: () => void;
@@ -764,9 +765,9 @@ function TutorialReferenceRow({ cards, palette }: { cards: GameCard[]; palette: 
 }
 
 export function MobileGameLayout({ currentPlayer, state, actions, tutorialReferenceBoard, showEffectDebug, debugEffectRows = [] }: MobileGameLayoutProps) {
-  const { deck, discardPile, isDiscarding, hasModifiedBoardThisTurn, bracketMode, tutorialActive, tutorialStep } = state;
+  const { deck, discardPile, isDiscarding, hasModifiedBoardThisTurn, bracketMode, tutorialActive } = state;
   const palette = getPalette(currentPlayer.theme);
-  const canVerify = tutorialActive ? tutorialStep === 4 : !hasModifiedBoardThisTurn;
+  const canVerify = true;
   const integralVar = findIntegralVariable(currentPlayer.board);
   const hasVsLockedCard = currentPlayer.board.some(card => card.locked && VS_CARD_SYMBOLS.has(card.symbol));
   const integralCard = currentPlayer.board.find(card => card.symbol === 'int');
@@ -822,28 +823,38 @@ export function MobileGameLayout({ currentPlayer, state, actions, tutorialRefere
               </button>
             </>
           ) : (
-            <div className="relative group/menu">
+            <div className="flex items-center gap-1.5">
               <button
                 className="text-white p-2 hover:bg-white/10 rounded-lg transition-colors"
-                onClick={actions.openLeaveGameConfirm}
+                onClick={actions.handleDiscardExpression}
+                title="Vymazat tabuli L (spotřebuje tah)"
               >
-                <span className="material-symbols-outlined text-3xl">menu</span>
+                <span className="material-symbols-outlined text-3xl">ink_eraser</span>
               </button>
-              {showEffectDebug && (
-                <div className="pointer-events-none absolute left-0 top-full mt-2 hidden w-72 max-w-[85vw] rounded-lg border border-emerald-400/30 bg-black/85 p-3 text-[11px] text-emerald-100 shadow-xl backdrop-blur-sm group-hover/menu:block">
-                  <div className="mb-1 font-black uppercase tracking-wide text-emerald-300">Aktivní efekty</div>
-                  <div className="mb-1 text-emerald-200">Hráč: {currentPlayer.name}</div>
-                  {debugEffectRows.length > 0 ? (
-                    <ul className="space-y-0.5">
-                      {debugEffectRows.map((line) => (
-                        <li key={line}>• {line}</li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <div className="text-emerald-200/80">Žádné aktivní efekty/statusy.</div>
-                  )}
-                </div>
-              )}
+
+              <div className="relative group/menu">
+                <button
+                  className="text-white p-2 hover:bg-white/10 rounded-lg transition-colors"
+                  onClick={actions.openLeaveGameConfirm}
+                >
+                  <span className="material-symbols-outlined text-3xl">menu</span>
+                </button>
+                {showEffectDebug && (
+                  <div className="pointer-events-none absolute left-0 top-full mt-2 hidden w-72 max-w-[85vw] rounded-lg border border-emerald-400/30 bg-black/85 p-3 text-[11px] text-emerald-100 shadow-xl backdrop-blur-sm group-hover/menu:block">
+                    <div className="mb-1 font-black uppercase tracking-wide text-emerald-300">Aktivní efekty</div>
+                    <div className="mb-1 text-emerald-200">Hráč: {currentPlayer.name}</div>
+                    {debugEffectRows.length > 0 ? (
+                      <ul className="space-y-0.5">
+                        {debugEffectRows.map((line) => (
+                          <li key={line}>• {line}</li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <div className="text-emerald-200/80">Žádné aktivní efekty/statusy.</div>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           )}
           <span

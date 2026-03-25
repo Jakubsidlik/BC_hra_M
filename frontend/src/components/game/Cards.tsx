@@ -122,7 +122,7 @@ export function HandCard({ card, index, total, isDiscarding, onDiscard }: HandCa
       {...attributes}
       onClick={() => isDiscarding && onDiscard && onDiscard(card.id)}
       style={style}
-      className={`relative w-20 h-28 sm:w-24 sm:h-32 md:w-28 md:h-36 lg:w-32 lg:h-40 rounded-xl border-3 md:border-4 transition-all duration-200 origin-bottom bg-slate-800 shadow-xl
+      className={`relative w-20 h-28 sm:w-24 sm:h-32 md:w-28 md:h-36 lg:w-32 lg:h-40 rounded-xl border-2 transition-all duration-200 origin-bottom bg-slate-800 shadow-xl overflow-hidden
         ${isDragging ? 'scale-110 shadow-[0_0_25px_rgba(16,185,129,0.6)] ring-2 ring-emerald-400/50 rotate-0' : ''}
         ${isDiscarding
           ? 'cursor-pointer border-red-500 hover:scale-105 hover:shadow-[0_0_15px_rgba(239,68,68,0.4)] ring-2 ring-red-600/15 animate-pulse'
@@ -136,12 +136,12 @@ export function HandCard({ card, index, total, isDiscarding, onDiscard }: HandCa
         </div>
       )}
 
-      <div className="w-full h-full flex items-center justify-center p-2 pointer-events-none">
+      <div className="w-full h-full flex items-center justify-center p-0 pointer-events-none">
         {cardData?.image ? (
           <img
             src={`${BASE}${cardData.image.replace(/^\//, '')}`}
             alt={card.symbol}
-            className="w-full h-full object-cover drop-shadow-[0_0_5px_rgba(255,255,255,0.4)]"
+            className="w-full h-full object-cover rounded-[inherit] drop-shadow-[0_0_5px_rgba(255,255,255,0.4)]"
           />
         ) : (
           <span className="text-3xl font-chalk text-white drop-shadow-md">{card.symbol}</span>
@@ -313,13 +313,13 @@ export function BoardCard({ card, isTargeting, onCardClick, onIntegralVariableCh
         <>
           {ulKey && card.slotCards?.[ulKey] && (
             <div className="absolute" style={{ left: '20%', top: '-12%', transform: 'translateX(-50%) scale(0.85)', zIndex: 0 }}>
-              <div className={`w-20 h-28 sm:w-24 sm:h-32 md:w-28 md:h-36 lg:w-32 lg:h-40 rounded-xl border-3 md:border-4 flex items-center justify-center bg-slate-800 shadow-xl ${getBorderColor(card.slotCards[ulKey]!.symbol)}`}>
-                <div className="w-full h-full flex items-center justify-center p-3">
+              <div className={`w-20 h-28 sm:w-24 sm:h-32 md:w-28 md:h-36 lg:w-32 lg:h-40 rounded-xl border-2 flex items-center justify-center bg-slate-800 shadow-xl overflow-hidden ${getBorderColor(card.slotCards[ulKey]!.symbol)}`}>
+                <div className="w-full h-full flex items-center justify-center p-0">
                   {cardsDatabase[card.slotCards[ulKey]!.symbol]?.image ? (
                     <img
                       src={`${BASE}${cardsDatabase[card.slotCards[ulKey]!.symbol].image.replace(/^\//, '')}`}
                       alt={card.slotCards[ulKey]!.symbol}
-                      className="w-full h-full object-cover pointer-events-none"
+                      className="w-full h-full object-cover rounded-[inherit] pointer-events-none"
                     />
                   ) : (
                     <span className="text-4xl md:text-5xl font-chalk text-white pointer-events-none">
@@ -332,13 +332,13 @@ export function BoardCard({ card, isTargeting, onCardClick, onIntegralVariableCh
           )}
           {urKey && card.slotCards?.[urKey] && (
             <div className="absolute" style={{ left: '80%', top: '-12%', transform: 'translateX(-50%) scale(0.85)', zIndex: 0 }}>
-              <div className={`w-20 h-28 sm:w-24 sm:h-32 md:w-28 md:h-36 lg:w-32 lg:h-40 rounded-xl border-3 md:border-4 flex items-center justify-center bg-slate-800 shadow-xl ${getBorderColor(card.slotCards[urKey]!.symbol)}`}>
-                <div className="w-full h-full flex items-center justify-center p-3">
+              <div className={`w-20 h-28 sm:w-24 sm:h-32 md:w-28 md:h-36 lg:w-32 lg:h-40 rounded-xl border-2 flex items-center justify-center bg-slate-800 shadow-xl overflow-hidden ${getBorderColor(card.slotCards[urKey]!.symbol)}`}>
+                <div className="w-full h-full flex items-center justify-center p-0">
                   {cardsDatabase[card.slotCards[urKey]!.symbol]?.image ? (
                     <img
                       src={`${BASE}${cardsDatabase[card.slotCards[urKey]!.symbol].image.replace(/^\//, '')}`}
                       alt={card.slotCards[urKey]!.symbol}
-                      className="w-full h-full object-cover pointer-events-none"
+                      className="w-full h-full object-cover rounded-[inherit] pointer-events-none"
                     />
                   ) : (
                     <span className="text-4xl md:text-5xl font-chalk text-white pointer-events-none">
@@ -351,13 +351,13 @@ export function BoardCard({ card, isTargeting, onCardClick, onIntegralVariableCh
           )}
           {llKey && card.slotCards?.[llKey] && (
             <div className="absolute" style={{ left: '20%', top: '88%', transform: 'translateX(-50%) scale(0.85)', zIndex: 0 }}>
-              <div className={`w-20 h-28 sm:w-24 sm:h-32 md:w-28 md:h-36 lg:w-32 lg:h-40 rounded-xl border-3 md:border-4 flex items-center justify-center bg-slate-800 shadow-xl ${getBorderColor(card.slotCards[llKey]!.symbol)}`}>
-                <div className="w-full h-full flex items-center justify-center p-3">
+              <div className={`w-20 h-28 sm:w-24 sm:h-32 md:w-28 md:h-36 lg:w-32 lg:h-40 rounded-xl border-2 flex items-center justify-center bg-slate-800 shadow-xl overflow-hidden ${getBorderColor(card.slotCards[llKey]!.symbol)}`}>
+                <div className="w-full h-full flex items-center justify-center p-0">
                   {cardsDatabase[card.slotCards[llKey]!.symbol]?.image ? (
                     <img
                       src={`${BASE}${cardsDatabase[card.slotCards[llKey]!.symbol].image.replace(/^\//, '')}`}
                       alt={card.slotCards[llKey]!.symbol}
-                      className="w-full h-full object-cover pointer-events-none"
+                      className="w-full h-full object-cover rounded-[inherit] pointer-events-none"
                     />
                   ) : (
                     <span className="text-4xl md:text-5xl font-chalk text-white pointer-events-none">
@@ -370,13 +370,13 @@ export function BoardCard({ card, isTargeting, onCardClick, onIntegralVariableCh
           )}
           {lrKey && card.slotCards?.[lrKey] && (
             <div className="absolute" style={{ left: '80%', top: '88%', transform: 'translateX(-50%) scale(0.85)', zIndex: 0 }}>
-              <div className={`w-20 h-28 sm:w-24 sm:h-32 md:w-28 md:h-36 lg:w-32 lg:h-40 rounded-xl border-3 md:border-4 flex items-center justify-center bg-slate-800 shadow-xl ${getBorderColor(card.slotCards[lrKey]!.symbol)}`}>
-                <div className="w-full h-full flex items-center justify-center p-3">
+              <div className={`w-20 h-28 sm:w-24 sm:h-32 md:w-28 md:h-36 lg:w-32 lg:h-40 rounded-xl border-2 flex items-center justify-center bg-slate-800 shadow-xl overflow-hidden ${getBorderColor(card.slotCards[lrKey]!.symbol)}`}>
+                <div className="w-full h-full flex items-center justify-center p-0">
                   {cardsDatabase[card.slotCards[lrKey]!.symbol]?.image ? (
                     <img
                       src={`${BASE}${cardsDatabase[card.slotCards[lrKey]!.symbol].image.replace(/^\//, '')}`}
                       alt={card.slotCards[lrKey]!.symbol}
-                      className="w-full h-full object-cover pointer-events-none"
+                      className="w-full h-full object-cover rounded-[inherit] pointer-events-none"
                     />
                   ) : (
                     <span className="text-4xl md:text-5xl font-chalk text-white pointer-events-none">
@@ -393,13 +393,13 @@ export function BoardCard({ card, isTargeting, onCardClick, onIntegralVariableCh
         <>
           {topSlotKey && card.slotCards?.[topSlotKey] && (
             <div className="absolute left-1/2" style={{ top: '-10%', transform: 'translateX(-50%) scale(0.9)', zIndex: 0 }}>
-              <div className={`w-20 h-28 sm:w-24 sm:h-32 md:w-28 md:h-36 lg:w-32 lg:h-40 rounded-xl border-3 md:border-4 flex items-center justify-center bg-slate-800 shadow-xl ${getBorderColor(card.slotCards[topSlotKey]!.symbol)}`}>
-                <div className="w-full h-full flex items-center justify-center p-3">
+              <div className={`w-20 h-28 sm:w-24 sm:h-32 md:w-28 md:h-36 lg:w-32 lg:h-40 rounded-xl border-2 flex items-center justify-center bg-slate-800 shadow-xl overflow-hidden ${getBorderColor(card.slotCards[topSlotKey]!.symbol)}`}>
+                <div className="w-full h-full flex items-center justify-center p-0">
                   {cardsDatabase[card.slotCards[topSlotKey]!.symbol]?.image ? (
                     <img
                       src={`${BASE}${cardsDatabase[card.slotCards[topSlotKey]!.symbol].image.replace(/^\//, '')}`}
                       alt={card.slotCards[topSlotKey]!.symbol}
-                      className="w-full h-full object-cover pointer-events-none"
+                      className="w-full h-full object-cover rounded-[inherit] pointer-events-none"
                     />
                   ) : (
                     <span className="text-4xl md:text-5xl font-chalk text-white pointer-events-none">
@@ -412,13 +412,13 @@ export function BoardCard({ card, isTargeting, onCardClick, onIntegralVariableCh
           )}
           {bottomSlotKey && card.slotCards?.[bottomSlotKey] && (
             <div className="absolute left-1/2" style={{ top: '86%', transform: 'translateX(-50%) scale(0.9)', zIndex: 0 }}>
-              <div className={`w-20 h-28 sm:w-24 sm:h-32 md:w-28 md:h-36 lg:w-32 lg:h-40 rounded-xl border-3 md:border-4 flex items-center justify-center bg-slate-800 shadow-xl ${getBorderColor(card.slotCards[bottomSlotKey]!.symbol)}`}>
-                <div className="w-full h-full flex items-center justify-center p-3">
+              <div className={`w-20 h-28 sm:w-24 sm:h-32 md:w-28 md:h-36 lg:w-32 lg:h-40 rounded-xl border-2 flex items-center justify-center bg-slate-800 shadow-xl overflow-hidden ${getBorderColor(card.slotCards[bottomSlotKey]!.symbol)}`}>
+                <div className="w-full h-full flex items-center justify-center p-0">
                   {cardsDatabase[card.slotCards[bottomSlotKey]!.symbol]?.image ? (
                     <img
                       src={`${BASE}${cardsDatabase[card.slotCards[bottomSlotKey]!.symbol].image.replace(/^\//, '')}`}
                       alt={card.slotCards[bottomSlotKey]!.symbol}
-                      className="w-full h-full object-cover pointer-events-none"
+                      className="w-full h-full object-cover rounded-[inherit] pointer-events-none"
                     />
                   ) : (
                     <span className="text-4xl md:text-5xl font-chalk text-white pointer-events-none">
@@ -434,13 +434,13 @@ export function BoardCard({ card, isTargeting, onCardClick, onIntegralVariableCh
 
       {!isDragging && isExpanded && hasOneSlot && card.slotCards?.[slotKeys[0]] && (
         <div className="absolute left-1/2" style={{ top: '-10%', transform: 'translateX(-50%) scale(0.9)', zIndex: 0 }}>
-          <div className={`w-20 h-28 sm:w-24 sm:h-32 md:w-28 md:h-36 lg:w-32 lg:h-40 rounded-xl border-3 md:border-4 flex items-center justify-center bg-slate-800 shadow-xl ${getBorderColor(card.slotCards[slotKeys[0]]!.symbol)}`}>
-            <div className="w-full h-full flex items-center justify-center p-3">
+          <div className={`w-20 h-28 sm:w-24 sm:h-32 md:w-28 md:h-36 lg:w-32 lg:h-40 rounded-xl border-2 flex items-center justify-center bg-slate-800 shadow-xl overflow-hidden ${getBorderColor(card.slotCards[slotKeys[0]]!.symbol)}`}>
+            <div className="w-full h-full flex items-center justify-center p-0">
               {cardsDatabase[card.slotCards[slotKeys[0]]!.symbol]?.image ? (
                 <img
                   src={`${BASE}${cardsDatabase[card.slotCards[slotKeys[0]]!.symbol].image.replace(/^\//, '')}`}
                   alt={card.slotCards[slotKeys[0]]!.symbol}
-                  className="w-full h-full object-cover pointer-events-none"
+                  className="w-full h-full object-cover rounded-[inherit] pointer-events-none"
                 />
               ) : (
                 <span className="text-4xl md:text-5xl font-chalk text-white pointer-events-none">
@@ -462,9 +462,9 @@ export function BoardCard({ card, isTargeting, onCardClick, onIntegralVariableCh
         >
           {card.exponent && (
             <div className="w-full h-full scale-90 pointer-events-none">
-              <div className={`w-full h-full bg-slate-800 rounded-lg border-2 ${getBorderColor(card.exponent.symbol)} flex items-center justify-center p-1`}>
+              <div className={`w-full h-full bg-slate-800 rounded-lg border-2 overflow-hidden ${getBorderColor(card.exponent.symbol)} flex items-center justify-center p-0`}>
                 {cardsDatabase[card.exponent.symbol]?.image ? (
-                  <img src={`${BASE}${cardsDatabase[card.exponent.symbol].image.replace(/^\//, '')}`} className="w-full h-full object-cover" alt="exp" />
+                  <img src={`${BASE}${cardsDatabase[card.exponent.symbol].image.replace(/^\//, '')}`} className="w-full h-full object-cover rounded-[inherit]" alt="exp" />
                 ) : (
                   <span className="text-xl font-chalk text-slate-200">{card.exponent.symbol}</span>
                 )}
@@ -506,19 +506,19 @@ export function BoardCard({ card, isTargeting, onCardClick, onIntegralVariableCh
 
       {/* Hlavní karta na stole */}
       <div
-        className={`w-20 h-28 sm:w-24 sm:h-32 md:w-28 md:h-36 lg:w-32 lg:h-40 rounded-xl border-3 md:border-4 flex items-center justify-center bg-slate-800 shadow-xl
+        className={`w-20 h-28 sm:w-24 sm:h-32 md:w-28 md:h-36 lg:w-32 lg:h-40 rounded-xl border-2 flex items-center justify-center bg-slate-800 shadow-xl overflow-hidden
         ${borderColor}
         ${cardData?.hasEffect ? 'shadow-[0_0_15px_rgba(16,185,129,0.15)]' : ''}
         ${isDragging ? 'scale-110 shadow-[0_0_25px_rgba(255,255,255,0.7)] ring-2 ring-white/70 z-200' : ''}
         ${isTargeting ? 'hover:scale-105 hover:border-red-500 hover:shadow-[0_0_20px_rgba(239,68,68,0.3)]' : ''}
         ${absoluteValue ? 'border-x-6 border-x-blue-500' : ''}
       `}>
-        <div className="w-full h-full flex items-center justify-center p-3">
+        <div className="w-full h-full flex items-center justify-center p-0">
           {cardData?.image ? (
             <img
               src={`${BASE}${cardData.image.replace(/^\//, '')}`}
               alt={cardData.symbol}
-              className="w-full h-full object-cover pointer-events-none drop-shadow-[0_0_4px_rgba(255,255,255,0.6)]"
+              className="w-full h-full object-cover rounded-[inherit] pointer-events-none drop-shadow-[0_0_4px_rgba(255,255,255,0.6)]"
             />
           ) : (
             <span className="text-4xl md:text-5xl font-chalk text-white pointer-events-none">
