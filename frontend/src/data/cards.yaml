@@ -642,25 +642,14 @@ det:
   symbol: '='
   type: syntax
   count: 0
-abs:
-  symbol: abs
-  type: operator
-  count: 4
-  image: /svg/abs.svg
-  slots:
-    - single
-  hasEffect: true
-  effects:
-    optionA:
-      id: EFF_029
-      name: Univerzální plus
-      description: V příštím tahu můžeš zahrát libovolnou kartu z ruky jako +.
-      target: SELF
 skalar:
   symbol: skalar
   type: operator
   count: 4
   image: /svg/skalar.svg
+  slots:
+    - a
+    - b
   hasEffect: true
   effects:
     optionA:
@@ -673,6 +662,9 @@ vektor:
   type: operator
   count: 4
   image: /svg/vektor.svg
+  slots:
+    - a
+    - b
   hasEffect: true
   effects:
     optionA:

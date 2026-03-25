@@ -44,6 +44,51 @@ type PendingEffectState = {
   slotPlacement?: { parentId: string; slotKey: string };
 };
 
+const MAX_SLOT_DIGITS = 5;
+
+const isSingleDigitNumberCard = (card: GameCard): boolean => {
+  const cardType = cardsDatabase[card.symbol]?.type;
+  return cardType === 'number' && /^[0-9]$/.test(card.symbol);
+};
+
+const buildSlotSequenceExpression = (sequence: GameCard[]): string => {
+  if (sequence.length === 0) return '';
+
+  return sequence.reduce((acc, current, index) => {
+    if (index === 0) return current.symbol;
+    const previous = sequence[index - 1];
+    const shouldConcatenateDigits = isSingleDigitNumberCard(previous) && isSingleDigitNumberCard(current);
+    return shouldConcatenateDigits ? `${acc}${current.symbol}` : `${acc}*${current.symbol}`;
+  }, '');
+};
+
+const mergeCardIntoSlotValue = (
+  existing: GameCard | null,
+  incoming: GameCard
+): { merged: GameCard | null; error?: string } => {
+  const existingSequence = existing
+    ? (existing.slotSequence && existing.slotSequence.length > 0 ? existing.slotSequence : [existing])
+    : [];
+  const nextSequence = [...existingSequence, incoming];
+  const digitCount = nextSequence.filter(isSingleDigitNumberCard).length;
+
+  if (digitCount > MAX_SLOT_DIGITS) {
+    return { merged: null, error: `Do jednoho okénka můžeš vložit max ${MAX_SLOT_DIGITS} číslic.` };
+  }
+
+  const expression = buildSlotSequenceExpression(nextSequence);
+
+  return {
+    merged: {
+      ...(existing ?? incoming),
+      symbol: expression,
+      slotSequence: nextSequence,
+      exponent: null,
+      slotCards: undefined,
+    }
+  };
+};
+
 const createGameStats = (playerList: Player[]): GameStats => {
   const players: Record<number, PlayerSummaryStats> = {};
   playerList.forEach(player => {
@@ -251,7 +296,6 @@ export function useGameEngine() {
       const next = JSON.parse(JSON.stringify(prev));
       if (next[currentPlayerIndex]?.status) {
         next[currentPlayerIndex].status.playAnyAsZeroReady = false;
-        next[currentPlayerIndex].status.playAnyAsPlusReady = false;
       }
       return next;
     });
@@ -303,6 +347,47 @@ export function useGameEngine() {
     toast.info("Celý výraz byl vyhozen do odhazovacího balíčku.");
   };
 
+  const grantTutorialStep3SupportCard = useCallback((): string | null => {
+    let grantedSymbol: string | null = null;
+
+    setPlayers(prev => {
+      const next = JSON.parse(JSON.stringify(prev));
+      const p = next[currentPlayerIndex];
+      if (!p) return prev;
+
+      const hasInHand = (symbol: string) => p.hand.some((card: GameCard) => card.symbol === symbol);
+      const countTwosInTree = (cards: GameCard[]): number => cards.reduce((acc, card) => {
+        let total = acc + (card.symbol === '2' ? 1 : 0);
+        if (card.exponent) total += countTwosInTree([card.exponent]);
+        if (card.slotCards) {
+          Object.values(card.slotCards).forEach(slotCard => {
+            if (slotCard) total += countTwosInTree([slotCard]);
+          });
+        }
+        return total;
+      }, 0);
+      const powerCardsOnBoard = p.board.filter((card: GameCard) => card.symbol === 'a^b');
+      const hasPowerOnBoard = powerCardsOnBoard.length > 0;
+      const hasPowerWithoutExponent = powerCardsOnBoard.some((card: GameCard) => !card.slotCards?.single);
+      const totalTwos = p.hand.filter((card: GameCard) => card.symbol === '2').length + countTwosInTree(p.board);
+
+      if (!hasPowerOnBoard && !hasInHand('a^b')) {
+        grantedSymbol = 'a^b';
+      } else if (hasPowerWithoutExponent && !hasInHand('2')) {
+        grantedSymbol = '2';
+      } else if (totalTwos < 2 && !hasInHand('2')) {
+        grantedSymbol = '2';
+      }
+
+      if (!grantedSymbol) return prev;
+
+      p.hand.push(createTutorialStepCard(grantedSymbol, 't1-step3'));
+      return next;
+    });
+
+    return grantedSymbol;
+  }, [currentPlayerIndex]);
+
   const handleEndTurn = () => {
     if (bracketMode) {
       setBracketMode(null);
@@ -324,8 +409,12 @@ export function useGameEngine() {
 
       setHasModifiedBoardThisTurn(false);
       setPlaysThisTurn(0);
-      performDraw(1, currentPlayerIndex);
-      toast.info("Kolo ukončeno. Dobral(a) jsi 1 kartu.");
+      const granted = grantTutorialStep3SupportCard();
+      if (granted) {
+        toast.info(`Kolo ukončeno. Přidána karta ${granted}.`);
+      } else {
+        toast.info("Kolo ukončeno.");
+      }
       return;
     }
 
@@ -343,7 +432,7 @@ export function useGameEngine() {
         return next;
       });
     }
-    const handLimit = tutorialActive && tutorialStep === 2 ? 3 : 5;
+    const handLimit = 5;
     if (p.hand.length > handLimit) {
       setIsDiscarding(true);
       toast.warning(`Limit ruky překročen! Musíš zahodit ${p.hand.length - handLimit} karet.`);
@@ -387,7 +476,7 @@ export function useGameEngine() {
         const p = next[activePlayerIdx];
 
         // Kontrola nového počtu karet (po odebrání)
-        const handLimit = tutorialActive && tutorialStep === 2 ? 3 : 5;
+        const handLimit = 5;
         if (p.hand.length <= handLimit) {
           setIsDiscarding(false);
           if (tutorialActive) {
@@ -396,14 +485,8 @@ export function useGameEngine() {
               const firstPlayerIndex = next.findIndex((player: Player) => player.id === firstPlayerId);
               if (firstPlayerIndex > -1) {
                 const firstPlayerHand = next[firstPlayerIndex].hand;
-                const currentTwoCount = firstPlayerHand.filter((card: GameCard) => card.symbol === '2').length;
                 const hasPowerCard = firstPlayerHand.some((card: GameCard) => card.symbol === 'a^b');
 
-                if (currentTwoCount < 2) {
-                  for (let i = 0; i < 2 - currentTwoCount; i++) {
-                    firstPlayerHand.push(createTutorialStepCard('2', 't1-step3'));
-                  }
-                }
                 if (!hasPowerCard) {
                   firstPlayerHand.push(createTutorialStepCard('a^b', 't1-step3'));
                 }
@@ -468,10 +551,6 @@ export function useGameEngine() {
           next[nextIdx].status.playAnyAsZeroReady = true;
           next[nextIdx].status.playAnyAsZeroNextTurn = false;
         }
-        if (next[nextIdx].status.playAnyAsPlusNextTurn) {
-          next[nextIdx].status.playAnyAsPlusReady = true;
-          next[nextIdx].status.playAnyAsPlusNextTurn = false;
-        }
         next[nextIdx].status.extraDraw = 0;
         next[nextIdx].status.drawReduction = 0;
         next[nextIdx].status.notifications = [];
@@ -492,9 +571,6 @@ export function useGameEngine() {
   const checkMathEngine = async () => {
     if (tutorialActive && tutorialStep !== 4) {
       return toast.error("V tutoriálu teď ještě neověřuj Q.E.D.");
-    }
-    if (hasModifiedBoardThisTurn && !(tutorialActive && tutorialStep === 4)) {
-      return toast.error("V tomto tahu jsi již akci provedl!");
     }
     const curr = players[currentPlayerIndex];
     const missingSlots = curr.board.flatMap((card: GameCard) => {
@@ -641,18 +717,26 @@ export function useGameEngine() {
     options?: { countAsAction?: boolean }
   ) => {
     const countAsAction = options?.countAsAction ?? true;
+    let placed = false;
+    let mergeError: string | null = null;
+
     setPlayers(prev => {
       const next = JSON.parse(JSON.stringify(prev));
       const p = next[currentPlayerIndex];
-      p.hand = p.hand.filter((c: GameCard) => c.id !== card.id);
-      p.syntax = p.syntax.filter((c: GameCard) => c.id !== card.id);
 
       const updateSlot = (cards: GameCard[]): GameCard[] => cards.map(c => {
         if (c.id === parentId) {
           const slotCards = c.slotCards ?? createSlotCards(c.symbol) ?? {};
           const existing = slotCards[slotKey] || null;
-          slotCards[slotKey] = card;
-          if (existing) p.hand.push(existing);
+          const mergeResult = mergeCardIntoSlotValue(existing, card);
+          if (!mergeResult.merged) {
+            mergeError = mergeResult.error ?? 'Do tohoto okénka kartu vložit nejde.';
+            return c;
+          }
+          slotCards[slotKey] = mergeResult.merged;
+          p.hand = p.hand.filter((handCard: GameCard) => handCard.id !== card.id);
+          p.syntax = p.syntax.filter((syntaxCard: GameCard) => syntaxCard.id !== card.id);
+          placed = true;
           return { ...c, slotCards };
         }
         return c.exponent ? { ...c, exponent: updateSlot([c.exponent])[0] } : c;
@@ -661,6 +745,12 @@ export function useGameEngine() {
       p.board = updateSlot(p.board);
       return next;
     });
+
+    if (mergeError) {
+      toast.error(mergeError);
+      return;
+    }
+    if (!placed) return;
 
     updatePlayerStats(currentPlayerIndex, stats => ({
       ...stats,
@@ -783,6 +873,8 @@ export function useGameEngine() {
       if (overId === 'main-board' || overId.startsWith('main-board')) return players[currentPlayerIndex].board.length;
       return undefined;
     };
+
+    const overId = String(over.id);
 
     // ── ZÁVORKA DRAG ──
     const openSymbols = ['(', '[', '{'];
@@ -919,7 +1011,6 @@ export function useGameEngine() {
       return;
     }
 
-    const overId = String(over.id);
     const slotData = over.data.current as SlotDropData | undefined;
     const isSpecialTargetDrop = overId.startsWith('drop-exponent-') || !!(slotData?.slotKey && slotData?.parentId);
     const isVsSpecialMove = difficulty === 'VŠ' && isSpecialTargetDrop;
@@ -928,6 +1019,9 @@ export function useGameEngine() {
       const slotCard = players[currentPlayerIndex].hand.find(c => c.id === active.id);
       if (!slotCard) {
         if (difficulty !== 'VŠ') return;
+
+        let mergeError: string | null = null;
+        let moved = false;
 
         setPlayers(prev => {
           const next = JSON.parse(JSON.stringify(prev));
@@ -939,19 +1033,32 @@ export function useGameEngine() {
             if (c.id === slotData.parentId) {
               const currentSlots = c.slotCards ?? createSlotCards(c.symbol) ?? {};
               const existing = currentSlots[slotData.slotKey] || null;
-              currentSlots[slotData.slotKey] = removed;
-              const updatedCard = { ...c, slotCards: currentSlots };
-              if (existing) {
-                newCards.push(existing);
+              const mergeResult = mergeCardIntoSlotValue(existing, removed);
+              if (!mergeResult.merged) {
+                mergeError = mergeResult.error ?? 'Do tohoto okénka kartu vložit nejde.';
+                return c;
               }
+              currentSlots[slotData.slotKey] = mergeResult.merged;
+              const updatedCard = { ...c, slotCards: currentSlots };
+              moved = true;
               return updatedCard;
             }
             return c.exponent ? { ...c, exponent: updateSlot([c.exponent])[0] } : c;
           });
 
-          p.board = updateSlot(newCards);
+          const updatedBoard = updateSlot(newCards);
+          if (mergeError) return next;
+          p.board = updatedBoard;
           return next;
         });
+
+        if (mergeError) {
+          toast.error(mergeError);
+          return;
+        }
+        if (moved) {
+          setPendingEffect(null);
+        }
         return;
       }
       if (hasModifiedBoardThisTurn) return toast.error("Za kolo smíš z ruky provést pouze 1 akci!");
@@ -1057,7 +1164,6 @@ export function useGameEngine() {
     let transformedSymbol = cardToPlace.symbol;
     if (!isOnlyOnBoard && isFromHand) {
       if (pStatus?.playAnyAsZeroReady) transformedSymbol = '0';
-      else if (pStatus?.playAnyAsPlusReady) transformedSymbol = '+';
     }
 
     const wildcardConsumed = transformedSymbol !== cardToPlace.symbol;
@@ -1074,7 +1180,6 @@ export function useGameEngine() {
         const next = JSON.parse(JSON.stringify(prev));
         if (next[currentPlayerIndex]?.status) {
           next[currentPlayerIndex].status.playAnyAsZeroReady = false;
-          next[currentPlayerIndex].status.playAnyAsPlusReady = false;
         }
         return next;
       });
@@ -1483,7 +1588,7 @@ export function useGameEngine() {
     };
 
     const generateLimitTargetR = (): string => {
-      return `${Math.floor(Math.random() * (99 - (-99) + 1)) - 99}`;
+      return `${Math.floor(Math.random() * (99 - 9 + 1)) + 9}`;
     };
 
     const productTargetPool = buildProductTargetPool();

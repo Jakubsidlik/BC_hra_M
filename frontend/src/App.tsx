@@ -73,9 +73,7 @@ export default function App() {
   if (status.infinitePlays) effectDebugRows.push('infinitePlays: true');
   if (status.frozen) effectDebugRows.push('frozen: true');
   if (status.playAnyAsZeroNextTurn) effectDebugRows.push('playAnyAsZeroNextTurn: true');
-  if (status.playAnyAsPlusNextTurn) effectDebugRows.push('playAnyAsPlusNextTurn: true');
   if (status.playAnyAsZeroReady) effectDebugRows.push('playAnyAsZeroReady: true');
-  if (status.playAnyAsPlusReady) effectDebugRows.push('playAnyAsPlusReady: true');
   if (status.mathModifiers?.length) effectDebugRows.push(`mathModifiers: ${status.mathModifiers.join(', ')}`);
   if (status.notifications?.length) effectDebugRows.push(`notifications: ${status.notifications.length}`);
 
@@ -181,6 +179,7 @@ export default function App() {
           debugEffectRows={effectDebugRows}
           actions={{
             checkMathEngine: actions.checkMathEngine,
+            handleDiscardExpression: actions.handleDiscardExpression,
             handleEndTurn: actions.handleEndTurn,
             handleDiscard: actions.handleDiscard,
             cancelBracketMode: actions.cancelBracketMode,
@@ -202,6 +201,7 @@ export default function App() {
           debugEffectRows={effectDebugRows}
           actions={{
             checkMathEngine: actions.checkMathEngine,
+            handleDiscardExpression: actions.handleDiscardExpression,
             handleEndTurn: actions.handleEndTurn,
             handleDiscard: actions.handleDiscard,
             cancelBracketMode: actions.cancelBracketMode,
@@ -223,6 +223,7 @@ export default function App() {
           debugEffectRows={effectDebugRows}
           actions={{
             checkMathEngine: actions.checkMathEngine,
+            handleDiscardExpression: actions.handleDiscardExpression,
             handleEndTurn: actions.handleEndTurn,
             handleDiscard: actions.handleDiscard,
             cancelBracketMode: actions.cancelBracketMode,

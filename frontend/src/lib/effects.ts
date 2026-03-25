@@ -6,6 +6,8 @@ import { generatePersonalTargetR, type DifficultyMode } from './gameHelpers';
 export interface GameCard {
   id: string;
   symbol: string;
+  slotSequence?: GameCard[];
+  absoluteBoundary?: 'left' | 'right';
   type?: string; // Přidáno jako volitelné, pokud se s tím počítá jinde
   exponent?: GameCard | null;
   integralBounds?: { lower: number; upper: number }; // PŘIDÁNO: Pamatuje si meze integrálu
@@ -34,9 +36,7 @@ export interface PlayerStatus {
   exposedHand?: boolean;
   absoluteValue?: boolean;
   playAnyAsZeroNextTurn?: boolean;
-  playAnyAsPlusNextTurn?: boolean;
   playAnyAsZeroReady?: boolean;
-  playAnyAsPlusReady?: boolean;
   notifications: string[]; // PŘIDÁNO: Seznam zpráv od oponentů (krádeže, útoky)
 }
 
@@ -68,9 +68,7 @@ const ensureStatus = (player: Player) => {
       noDrawNextTurn: false,
       absoluteValue: false,
       playAnyAsZeroNextTurn: false,
-      playAnyAsPlusNextTurn: false,
       playAnyAsZeroReady: false,
-      playAnyAsPlusReady: false,
       mathModifiers: [],
       extraTurn: false,
       notifications: [] // PŘIDÁNO
@@ -344,9 +342,7 @@ export const applyEffectLogic = (
         p.status.immune = false;
         p.status.extraTurn = false;
         p.status.playAnyAsZeroNextTurn = false;
-        p.status.playAnyAsPlusNextTurn = false;
         p.status.playAnyAsZeroReady = false;
-        p.status.playAnyAsPlusReady = false;
       });
       newPlayers.forEach(p => {
         if (p.id !== activePlayer.id) {
@@ -382,11 +378,6 @@ export const applyEffectLogic = (
       break;
 
     case "EFF_028": // vektor: UI výběr 1 ze 3 řeší useGameEngine (minihra)
-      break;
-
-    case "EFF_029": // abs: v příštím tahu může zahrát jakoukoliv kartu jako +
-      activePlayer.status.playAnyAsPlusNextTurn = true;
-      activePlayer.status.notifications.push('➕ V příštím tahu můžeš zahrát libovolnou kartu jako +.');
       break;
 
     default:
