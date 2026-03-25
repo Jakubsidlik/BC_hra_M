@@ -347,47 +347,6 @@ export function useGameEngine() {
     toast.info("Celý výraz byl vyhozen do odhazovacího balíčku.");
   };
 
-  const grantTutorialStep3SupportCard = useCallback((): string | null => {
-    let grantedSymbol: string | null = null;
-
-    setPlayers(prev => {
-      const next = JSON.parse(JSON.stringify(prev));
-      const p = next[currentPlayerIndex];
-      if (!p) return prev;
-
-      const hasInHand = (symbol: string) => p.hand.some((card: GameCard) => card.symbol === symbol);
-      const countTwosInTree = (cards: GameCard[]): number => cards.reduce((acc, card) => {
-        let total = acc + (card.symbol === '2' ? 1 : 0);
-        if (card.exponent) total += countTwosInTree([card.exponent]);
-        if (card.slotCards) {
-          Object.values(card.slotCards).forEach(slotCard => {
-            if (slotCard) total += countTwosInTree([slotCard]);
-          });
-        }
-        return total;
-      }, 0);
-      const powerCardsOnBoard = p.board.filter((card: GameCard) => card.symbol === 'a^b');
-      const hasPowerOnBoard = powerCardsOnBoard.length > 0;
-      const hasPowerWithoutExponent = powerCardsOnBoard.some((card: GameCard) => !card.slotCards?.single);
-      const totalTwos = p.hand.filter((card: GameCard) => card.symbol === '2').length + countTwosInTree(p.board);
-
-      if (!hasPowerOnBoard && !hasInHand('a^b')) {
-        grantedSymbol = 'a^b';
-      } else if (hasPowerWithoutExponent && !hasInHand('2')) {
-        grantedSymbol = '2';
-      } else if (totalTwos < 2 && !hasInHand('2')) {
-        grantedSymbol = '2';
-      }
-
-      if (!grantedSymbol) return prev;
-
-      p.hand.push(createTutorialStepCard(grantedSymbol, 't1-step3'));
-      return next;
-    });
-
-    return grantedSymbol;
-  }, [currentPlayerIndex]);
-
   const handleEndTurn = () => {
     if (bracketMode) {
       setBracketMode(null);
@@ -407,14 +366,16 @@ export function useGameEngine() {
         return;
       }
 
+      if (!isDiscarding && !hasModifiedBoardThisTurn) {
+        toast.error("V tomto kole nejdřív vylož 1 kartu na tabuli.");
+        return;
+      }
+
       setHasModifiedBoardThisTurn(false);
       setPlaysThisTurn(0);
-      const granted = grantTutorialStep3SupportCard();
-      if (granted) {
-        toast.info(`Kolo ukončeno. Přidána karta ${granted}.`);
-      } else {
-        toast.info("Kolo ukončeno.");
-      }
+      setIsDiscarding(false);
+      performDraw(1, currentPlayerIndex);
+      toast.info("Kolo ukončeno. Přidána 1 náhodná karta.");
       return;
     }
 
@@ -486,9 +447,13 @@ export function useGameEngine() {
               if (firstPlayerIndex > -1) {
                 const firstPlayerHand = next[firstPlayerIndex].hand;
                 const hasPowerCard = firstPlayerHand.some((card: GameCard) => card.symbol === 'a^b');
+                const twoCount = firstPlayerHand.filter((card: GameCard) => card.symbol === '2').length;
 
                 if (!hasPowerCard) {
                   firstPlayerHand.push(createTutorialStepCard('a^b', 't1-step3'));
+                }
+                if (twoCount < 2) {
+                  firstPlayerHand.push(createTutorialStepCard('2', 't1-step3'));
                 }
               }
               setTutorialTwosAdded(true);
@@ -569,9 +534,6 @@ export function useGameEngine() {
   // ==========================================
 
   const checkMathEngine = async () => {
-    if (tutorialActive && tutorialStep !== 4) {
-      return toast.error("V tutoriálu teď ještě neověřuj Q.E.D.");
-    }
     const curr = players[currentPlayerIndex];
     const missingSlots = curr.board.flatMap((card: GameCard) => {
       const slots = getSpecialSlots(card.symbol);
@@ -1729,8 +1691,13 @@ export function useGameEngine() {
       }
     ];
 
+    const tutorialDeck = generateFilteredDeck('ZŠ').map(card => ({
+      ...card,
+      id: `td-${card.symbol}-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+    }));
+
     setDifficulty('ZŠ');
-    setDeck([]);
+    setDeck(tutorialDeck);
     setDiscardPile([]);
     setPlayers(newPlayers);
     setCurrentPlayerIndex(0);
@@ -1821,17 +1788,6 @@ export function useGameEngine() {
     const closeSet = new Set([')', ']', '}']);
     const isOpen = (card?: GameCard) => !!card && openSet.has(card.symbol);
     const isClose = (card?: GameCard) => !!card && closeSet.has(card.symbol);
-
-    const directExponentPattern =
-      board.length === 5 &&
-      isOpen(board[0]) &&
-      board[1]?.symbol === '2' &&
-      board[2]?.symbol === '+' &&
-      board[3]?.symbol === '3' &&
-      board[3]?.exponent?.symbol === '2' &&
-      isClose(board[4]);
-
-    if (directExponentPattern) return true;
 
     const powerCard = board[4];
     const powerExponent = powerCard?.slotCards?.single;

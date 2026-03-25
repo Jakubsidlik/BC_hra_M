@@ -25,7 +25,7 @@ export function TutorialOverlay({ active, step, onNext }: { active: boolean; ste
     },
     {
       title: 'Závorky a mocnina',
-      text: 'Do ruky se ti teď přidaly karty 2 a a^b. V každém kole vylož jen 1 kartu, pak klikni na Konec tahu. Postav výraz (2 + 3^2): polož 3, za ni a^b a pak přetáhni 2 do okénka karty a^b. Pokud překročíš limit 5 karet v ruce, nejdřív odhoď přebytek.'
+      text: 'Do ruky se ti teď přidaly karty 2 a a^b. V každém kole vylož jen 1 kartu, pak klikni na Konec tahu (dobereš 1 náhodnou kartu). Postav výraz (2 + 3^2): polož 3, za ni a^b a pak přetáhni 2 do okénka karty a^b. Pokud překročíš limit 5 karet v ruce, nejdřív odhoď přebytek.'
     },
     {
       title: 'Ověření Q.E.D.',

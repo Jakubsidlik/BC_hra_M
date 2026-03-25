@@ -645,9 +645,9 @@ function TutorialReferenceRow({ cards, palette }: { cards: GameCard[]; palette: 
 }
 
 export function TabletGameLayout({ currentPlayer, state, actions, tutorialReferenceBoard, showEffectDebug, debugEffectRows = [] }: TabletGameLayoutProps) {
-  const { deck, discardPile, isDiscarding, hasModifiedBoardThisTurn, bracketMode, tutorialActive, tutorialStep } = state;
+  const { deck, discardPile, isDiscarding, hasModifiedBoardThisTurn, bracketMode, tutorialActive } = state;
   const palette = getTabletPalette(currentPlayer.theme);
-  const canVerify = tutorialActive ? tutorialStep === 4 : true;
+  const canVerify = true;
   const integralVar = findIntegralVariable(currentPlayer.board);
   const hasVsLockedCard = currentPlayer.board.some(card => card.locked && VS_CARD_SYMBOLS.has(card.symbol));
   const integralCard = currentPlayer.board.find(card => card.symbol === 'int');
