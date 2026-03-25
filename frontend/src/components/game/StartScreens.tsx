@@ -182,7 +182,7 @@ export function RulesScreen({ onBack }: { onBack: () => void }) {
 
                 <div className="bg-blue-900/10 p-4 rounded-lg border border-blue-500/20">
                   <p className="text-blue-400 font-bold mb-2 uppercase text-xs">Pokročilé funkce SŠ</p>
-                  <p className="text-slate-300">Mocnina (a^b), Odmocnina, Logaritmy, Faktoriál (n!), Goniometrie (sin, cos, tan, cot), Kombinatorika.</p>
+                  <p className="text-slate-300">Mocnina (a^b), Odmocnina, Logaritmy (log2, log3, log10), Faktoriál (n!), Goniometrie (sin, cos, tan, cot), Kombinatorika.</p>
                 </div>
 
                 <div className="bg-purple-900/10 p-4 rounded-lg border border-purple-500/20">
@@ -353,7 +353,7 @@ export function RulesScreen({ onBack }: { onBack: () => void }) {
                 </div>
 
                 <div>
-                  <p className="text-emerald-300 font-bold uppercase text-xs">log</p>
+                  <p className="text-emerald-300 font-bold uppercase text-xs">log2</p>
                   <p>Můžeš v tomto tahu vyložit libovolný počet karet.</p>
                 </div>
                 <div>

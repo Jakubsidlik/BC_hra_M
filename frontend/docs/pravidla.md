@@ -63,7 +63,7 @@ Pokud hráč prohlásí Q.E.D., následuje kontrola:
 ## 9. Obsah balení
 - **Hodnoty (142 ks):** `0–9` (90 ks), `π` (5 ks), `e` (5 ks), `x` (10 ks), `y` (10 ks), goniometrické funkce (22 ks)
 - **Operace ZŠ (96 ks):** `+` (20 ks), `-` (20 ks), `*` (20 ks), `:` (20 ks), `^` (8 ks), `√` (8 ks)
-- **Operace SŠ (40 ks):** `log` (6 ks), `!` (4 ks), kombinace (4 ks), `| |` (6 ks), velikost vektoru (4 ks), modulo (6 ks), `det` (4 ks), skalární součin (6 ks)
+- **Operace SŠ (40 ks):** `log2/log3/log10` (6 ks), `!` (4 ks), kombinace (4 ks), `| |` (6 ks), velikost vektoru (4 ks), modulo (6 ks), `det` (4 ks), skalární součin (6 ks)
 - **Operace VŠ (30 ks):** derivace (6 ks), `∫` (6 ks), `∑` (6 ks), `∏` (6 ks), limita (6 ks)
 - **Fixní karty (56 ks):** `=` (8 ks), karta goniometrické tabulky (1 ks), levé závorky (24 ks), pravé závorky (24 ks)
 

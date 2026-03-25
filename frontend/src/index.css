@@ -11,11 +11,7 @@
 
 @font-face {
   font-family: 'Chalkduster';
-  src:
-    local('Chalkduster'),
-    local('Chalkduster Regular'),
-    url('/fonts/Chalkduster.ttf') format('truetype'),
-    url('/fonts/Merienda3.ttf') format('truetype');
+  src: url('/fonts/Chalkduster.ttf') format('truetype');
   font-weight: normal;
   font-style: normal;
   font-display: swap;
@@ -23,7 +19,7 @@
 
 /* 2. TAILWIND V4 TÉMA */
 @theme {
-  --font-chalk: 'Chalkduster', 'Merienda', cursive;
+  --font-chalk: 'Chalkduster', 'Merienda';
 
   /* Mapování barev pro shadcn komponenty */
   --color-background: var(--background);

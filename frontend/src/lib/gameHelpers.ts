@@ -146,7 +146,7 @@ export function parseBoardToMathString(board: GameCard[]): string {
     'e': 'E',
     'tg': 'tan',
     'cotg': '1/tan',
-    'ln': 'ln',
+    'ln': 'log3',
     'log': 'log2',
     'log10': 'log10',
     '√': 'sqrt',

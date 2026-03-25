@@ -121,7 +121,7 @@ function TabletHandCard({ card, index, total, isDiscarding, onDiscard, onSelect,
   const style: React.CSSProperties = {
     transform: transform
       ? CSS.Translate.toString(transform)
-      : `rotate(${rotation}deg) translateY(${translateY}px) translateX(${translateX}px) scale(${isSelected ? 1.5 : 1})`,
+      : `rotate(${rotation}deg) translateY(${translateY}px) translateX(${translateX}px) scale(${isSelected ? 1.7 : 1})`,
     zIndex: isDragging ? 99999 : 10 + index,
     position: 'absolute',
     width: FULL_CARD_W,

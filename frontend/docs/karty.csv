@@ -24,7 +24,7 @@ n!;Faktoriál;operator;2;1;EFF_013;Následující hráč nesmí v příštím ta
 d/dx;Derivace;operator;3;1;EFF_014;Odstranění všech konstant a proměnných z L zvoleného hráče.;0;0;1;0
 int;Integrál;operator;3;1;EFF_015;Okamžité nahrazení celého cíle R libovolného hráče novým losem.;0;0;1;0
 sum;Sumace;operator;4;1;EFF_016;Žádný z hráčů nesmí celé další kolo použít kartu operace;0;0;0;1
-log;Logaritmus;operator;2;1;EFF_017;Můžeš tento tah hrát libovolný počet karet.;1;0;0;0
+log;Logaritmus při základu 2;operator;2;1;EFF_017;Můžeš tento tah hrát libovolný počet karet.;1;0;0;0
 sin;Sinus;number;3;1;EFF_018;Všichni hráči si předají karty v ruce po směru.;0;0;0;1
 cos;Kosinus;number;3;1;EFF_019;Všichni hráči si předají karty v ruce proti směru.;0;0;0;1
 tg;Tangens;number;2;1;EFF_020;Všichni hráči si předají karty v ruce po směru.;0;0;0;1
