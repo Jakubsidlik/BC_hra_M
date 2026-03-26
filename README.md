@@ -1,34 +1,37 @@
-# Teorie křídy — Matematická karetní duelovka
+# Teorie křídy (Math4fun)
 
-Strategická karetní hra pro 2–8 hráčů zasazená do univerzitního prostředí, kde hráči sestavují matematické identity pomocí karet se symboly, operacemi a speciálními efekty. Cílem je jako první složit platnou rovnici (L = R), kterou ověří matematický engine na serveru.
+Matematická karetní hra pro 2–8 hráčů. Hráči skládají levou stranu rovnice `L` z karet a snaží se trefit svůj cíl `R`. O vítězství rozhoduje ověření `Q.E.D.`.
 
 🎮 **Hrát online:** [jakubsidlik.github.io/BC_hra_M](https://jakubsidlik.github.io/BC_hra_M/)
 
-## Hlavní prvky hry
+## Aktuální stav hry (03/2026)
 
-- **Stavba rovnic** — hráči přetahují karty na svou tabuli a skládají výrazy s čísly, funkcemi (sin, cos, tan), integrály, derivacemi, limitami a dalšími
-- **Speciální efekty karet** — karty mohou narušit soupeřovu rovnici nebo posílit tu vlastní
-- **Více úrovní obtížnosti** — od základní po pokročilou matematiku
-- **Ověření pomocí SymPy** — backend symbolicky ověří, zda levá strana rovnice odpovídá pravé
+- **Režimy:** `TUTORIÁL`, `ZŠ`, `SŠ`, `VŠ`
+- **Počet hráčů:** 2 až 8
+- **Herní flow:** hlavní menu, pravidla, výběr režimu, setup hráčů, handoff mezi tahy, výherní obrazovka a detail statistik po hře
+- **Mechaniky:** drag&drop skládání výrazu, závorky `() [] {}`, exponenty, speciální sloty (integrál, suma, limit, determinant, vektor/skalár), limity tahu a odhazování
+- **Efekty karet:** implementované a zapojené efekty `EFF_001` až `EFF_028` (včetně cílení, miniher a speciálních dialogů)
+- **Ověřování rovnice:** aktuálně probíhá **lokálně ve frontendu** (Nerdamer + Math.js), backend už není nutný pro běžné hraní
 
 ## Technologie
 
 | Část | Stack |
 |------|-------|
-| Frontend | React, TypeScript, Vite, Tailwind CSS, dnd-kit, Radix UI |
-| Backend | Python, FastAPI, SymPy |
+| Frontend | React 19, TypeScript, Vite, Tailwind CSS, dnd-kit, shadcn/ui, sonner |
+| Matematický engine ve hře | Nerdamer + Math.js |
+| Backend (volitelný) | Python, FastAPI, SymPy |
 | Hosting | GitHub Pages (frontend), Render (backend) |
 
 ## Spuštění lokálně
 
-### Frontend
+### Frontend (doporučeno)
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
 
-### Backend
+### Backend (volitelné API / samostatný SymPy engine)
 ```bash
 cd backend
 pip install -r requirements.txt
@@ -37,4 +40,4 @@ uvicorn main:app --reload
 
 ## Autor
 
-Jakub Šídlík — Bakalářská práce
+Jakub Šídlík — bakalářská práce
