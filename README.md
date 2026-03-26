@@ -4,7 +4,7 @@ Matematická karetní hra pro 2–8 hráčů. Hráči skládají levou stranu ro
 
 🎮 **Hrát online:** [jakubsidlik.github.io/BC_hra_M](https://jakubsidlik.github.io/BC_hra_M/)
 
-## Aktuální stav hry (03/2026)
+## Aktuální stav hry
 
 - **Režimy:** `TUTORIÁL`, `ZŠ`, `SŠ`, `VŠ`
 - **Počet hráčů:** 2 až 8
