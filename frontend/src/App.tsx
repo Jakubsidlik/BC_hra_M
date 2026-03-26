@@ -8,6 +8,10 @@ import { Toaster } from "sonner";
 import { useGameEngine } from '@/hooks/useGameEngine';
 import { cardsDatabase } from '@/data/cardsDB';
 import { useDeviceType } from '@/hooks/useDeviceType';
+import { preloadCardImages } from '@/lib/preloadCardImages';
+
+// Preload all card SVG images immediately on app startup
+preloadCardImages();
 
 // Importy Komponent
 import { 

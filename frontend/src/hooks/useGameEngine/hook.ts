@@ -888,6 +888,17 @@ export function useGameEngine() {
         // Fáze LEFT: hráč umístil otevírací závorku
         if (bracketMode) return toast.error("Nejprve dokonči umístění závorky.");
         const pairIndex = openSymbols.indexOf(syntaxCard.symbol);
+        // Najdi levou závorku v syntax
+        const lB = players[currentPlayerIndex].syntax.find(c => c.symbol === openSymbols[pairIndex]);
+        if (!lB) return;
+        // Vlož levou závorku do boardu na pozici insertPos
+        setPlayers(prev => {
+          const next = JSON.parse(JSON.stringify(prev));
+          const player = next[currentPlayerIndex];
+          player.syntax = player.syntax.filter((c) => c.id !== lB.id);
+          player.board.splice(insertPos, 0, lB);
+          return next;
+        });
         setBracketMode({ leftInsertPosition: insertPos, pairIndex });
         toast.info("Nyní přetáhni pravou závorku na místo v tabuli.", { icon: ')' });
         return;

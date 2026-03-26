@@ -141,7 +141,7 @@ export function HandCard({ card, index, total, isDiscarding, onDiscard }: HandCa
           <img
             src={`${BASE}${cardData.image.replace(/^\//, '')}`}
             alt={card.symbol}
-            loading="lazy"
+           
             decoding="async"
             className="w-full h-full object-cover rounded-[inherit] drop-shadow-[0_0_5px_rgba(255,255,255,0.4)]"
           />

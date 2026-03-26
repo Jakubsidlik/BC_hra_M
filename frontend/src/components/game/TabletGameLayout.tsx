@@ -96,7 +96,7 @@ function TabletSlotValueCard({ slotCard }: { slotCard: GameCard }) {
     >
       <div className="w-full h-full flex items-center justify-center p-1 pointer-events-none">
         {slotCardData?.image ? (
-          <img src={`${BASE}${slotCardData.image.replace(/^\//, '')}`} alt={slotCard.symbol} loading="lazy" decoding="async" className="w-full h-full object-cover" />
+          <img src={`${BASE}${slotCardData.image.replace(/^\//, '')}`} alt={slotCard.symbol} decoding="async" className="w-full h-full object-cover" />
         ) : (
           <span className="text-sm font-chalk text-white">{slotCard.symbol}</span>
         )}
@@ -161,7 +161,7 @@ function TabletHandCard({ card, index, total, isDiscarding, onDiscard, onSelect,
     >
       <div className="w-full h-full flex items-center justify-center">
         {cardData?.image ? (
-          <img src={`${BASE}${cardData.image.replace(/^\//, '')}`} alt={card.symbol} loading="lazy" decoding="async" className="w-full h-full object-cover" />
+          <img src={`${BASE}${cardData.image.replace(/^\//, '')}`} alt={card.symbol} decoding="async" className="w-full h-full object-cover" />
         ) : (
           <span className="text-4xl font-chalk text-white">{card.symbol}</span>
         )}
@@ -224,7 +224,8 @@ function DraggableBoardCard({
   const specialSlots = getSpecialSlots(card.symbol);
   const slotKeys = specialSlots.map(slot => slot.key);
   const hasFourSlots = slotKeys.length === 4;
-  const hasTwoSlots = slotKeys.length === 2;
+  const hasLeftRightSlots = slotKeys.length === 2 && slotKeys.includes('a' as any) && slotKeys.includes('b' as any);
+  const hasTwoSlots = slotKeys.length === 2 && !hasLeftRightSlots;
   const hasOneSlot = slotKeys.length === 1;
   const [isExpanded, setIsExpanded] = useState(false);
   const isVsCard = card.locked && VS_CARD_SYMBOLS.has(card.symbol);
@@ -243,6 +244,8 @@ function DraggableBoardCard({
 
   const topSlotKey = hasTwoSlots ? slotKeys[0] : null;
   const bottomSlotKey = hasTwoSlots ? slotKeys[1] : null;
+  const leftSlotKey = hasLeftRightSlots ? (slotKeys.find(k => k === 'a') ?? slotKeys[0]) : null;
+  const rightSlotKey = hasLeftRightSlots ? (slotKeys.find(k => k === 'b') ?? slotKeys[1]) : null;
 
   const { setNodeRef: setTopSlotRef, isOver: isOverTop } = useDroppable({
     id: topSlotKey ? `slot-${card.id}-${topSlotKey}` : `slot-${card.id}-top`,
@@ -253,6 +256,16 @@ function DraggableBoardCard({
     id: bottomSlotKey ? `slot-${card.id}-${bottomSlotKey}` : `slot-${card.id}-bottom`,
     data: bottomSlotKey ? ({ parentId: card.id, slotKey: bottomSlotKey } as SlotDropData) : undefined,
     disabled: !bottomSlotKey,
+  });
+  const { setNodeRef: setLeftSlotRef, isOver: isOverLeft } = useDroppable({
+    id: leftSlotKey ? `slot-${card.id}-${leftSlotKey}` : `slot-${card.id}-left`,
+    data: leftSlotKey ? ({ parentId: card.id, slotKey: leftSlotKey } as SlotDropData) : undefined,
+    disabled: !leftSlotKey,
+  });
+  const { setNodeRef: setRightSlotRef, isOver: isOverRight } = useDroppable({
+    id: rightSlotKey ? `slot-${card.id}-${rightSlotKey}` : `slot-${card.id}-right`,
+    data: rightSlotKey ? ({ parentId: card.id, slotKey: rightSlotKey } as SlotDropData) : undefined,
+    disabled: !rightSlotKey,
   });
   const ulKey = hasFourSlots ? slotKeys[0] : null;
   const urKey = hasFourSlots ? slotKeys[1] : null;
@@ -284,7 +297,7 @@ function DraggableBoardCard({
     disabled: !hasOneSlot,
   });
 
-  const isSlotOver = isOverTop || isOverBottom || isOverWhole || isOverUl || isOverUr || isOverLl || isOverLr;
+  const isSlotOver = isOverTop || isOverBottom || isOverWhole || isOverUl || isOverUr || isOverLl || isOverLr || isOverLeft || isOverRight;
 
   const style: React.CSSProperties = {
     width: isVsCard ? FULL_CARD_W : BOARD_CARD_W,
@@ -309,7 +322,7 @@ function DraggableBoardCard({
       `}
       style={style}
       onClick={() => {
-        if (!isDragging && (hasOneSlot || hasTwoSlots || hasFourSlots)) {
+        if (!isDragging && (hasOneSlot || hasTwoSlots || hasFourSlots || hasLeftRightSlots)) {
           setIsExpanded(prev => !prev);
         }
       }}
@@ -391,6 +404,20 @@ function DraggableBoardCard({
           />
         </>
       )}
+      {hasLeftRightSlots && (
+        <>
+          <div
+            ref={setLeftSlotRef}
+            className="absolute left-0 top-0 w-1/2 h-full rounded-l-md pointer-events-auto"
+            style={isOverLeft ? { boxShadow: '0 0 0 2px rgba(255,255,255,0.9), 0 0 12px rgba(255,255,255,0.7)' } : undefined}
+          />
+          <div
+            ref={setRightSlotRef}
+            className="absolute right-0 top-0 w-1/2 h-full rounded-r-md pointer-events-auto"
+            style={isOverRight ? { boxShadow: '0 0 0 2px rgba(255,255,255,0.9), 0 0 12px rgba(255,255,255,0.7)' } : undefined}
+          />
+        </>
+      )}
       {hasOneSlot && (
         <div
           ref={setWholeSlotRef}
@@ -465,6 +492,20 @@ function DraggableBoardCard({
           {bottomSlotKey && card.slotCards?.[bottomSlotKey] && (
             <div className="absolute left-1/2" style={{ top: '86%', transform: 'translateX(-50%) scale(0.9)', zIndex: 0, width: BOARD_CARD_W, height: BOARD_CARD_H }}>
               <TabletSlotValueCard slotCard={card.slotCards[bottomSlotKey]!} />
+            </div>
+          )}
+        </>
+      )}
+      {!isDragging && isExpanded && hasLeftRightSlots && (
+        <>
+          {leftSlotKey && card.slotCards?.[leftSlotKey] && (
+            <div className="absolute top-1/2" style={{ left: '-10%', transform: 'translateY(-50%) scale(0.9)', zIndex: 0, width: BOARD_CARD_W, height: BOARD_CARD_H }}>
+              <TabletSlotValueCard slotCard={card.slotCards[leftSlotKey]!} />
+            </div>
+          )}
+          {rightSlotKey && card.slotCards?.[rightSlotKey] && (
+            <div className="absolute top-1/2" style={{ right: '-10%', transform: 'translateY(-50%) translate(50%) scale(0.9)', zIndex: 0, width: BOARD_CARD_W, height: BOARD_CARD_H }}>
+              <TabletSlotValueCard slotCard={card.slotCards[rightSlotKey]!} />
             </div>
           )}
         </>

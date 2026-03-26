@@ -52,7 +52,7 @@ function BracketPair({
         <div
           ref={refL} {...listL} {...attrL}
           onMouseDown={() => onDragStart(pair.left, pairIndex)}
-          style={{ transform: transL ? CSS.Translate.toString(transL) : undefined, zIndex: isDragL ? 100 : 10 }}
+          style={{ transform: transL ? CSS.Translate.toString(transL) : undefined, zIndex: isDragL ? 99999 : 10 }}
           className={`${baseCls} ${isDragL ? 'scale-110 shadow-[0_0_25px_rgba(16,185,129,0.5)] ring-2 ring-white/20' : ''}`}
         >
           <span className="text-3xl md:text-4xl font-bold">{info.left}</span>
@@ -62,7 +62,7 @@ function BracketPair({
         <div
           ref={refR} {...listR} {...attrR}
           onMouseDown={() => onDragStart(pair.right, pairIndex)}
-          style={{ transform: transR ? CSS.Translate.toString(transR) : undefined, zIndex: isDragR ? 100 : 10 }}
+          style={{ transform: transR ? CSS.Translate.toString(transR) : undefined, zIndex: isDragR ? 99999 : 10 }}
           className={`${baseCls} ${isDragR ? 'scale-110 shadow-[0_0_25px_rgba(16,185,129,0.5)] ring-2 ring-white/20' : ''}`}
         >
           <span className="text-3xl md:text-4xl font-bold">{info.right}</span>
