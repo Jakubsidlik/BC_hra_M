@@ -895,7 +895,7 @@ export function useGameEngine() {
         setPlayers(prev => {
           const next = JSON.parse(JSON.stringify(prev));
           const player = next[currentPlayerIndex];
-          player.syntax = player.syntax.filter((c) => c.id !== lB.id);
+          player.syntax = player.syntax.filter((c: GameCard) => c.id !== lB.id);
           player.board.splice(insertPos, 0, lB);
           return next;
         });
