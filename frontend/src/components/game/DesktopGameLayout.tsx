@@ -98,7 +98,7 @@ function DesktopSlotValueCard({ slotCard }: { slotCard: GameCard }) {
     >
       <div className="w-full h-full flex items-center justify-center p-1 pointer-events-none">
         {slotCardData?.image ? (
-          <img src={`${BASE}${slotCardData.image.replace(/^\//, '')}`} alt={slotCard.symbol} className="w-full h-full object-cover" />
+          <img src={`${BASE}${slotCardData.image.replace(/^\//, '')}`} alt={slotCard.symbol} loading="lazy" decoding="async" className="w-full h-full object-cover" />
         ) : (
           <span className="text-xl font-chalk text-white">{slotCard.symbol}</span>
         )}
@@ -170,7 +170,7 @@ function DesktopHandCard({ card, index, total, isDiscarding, onDiscard, onSelect
     >
       <div className="w-full h-full flex items-center justify-center">
         {cardData?.image ? (
-          <img src={`${BASE}${cardData.image.replace(/^\//, '')}`} alt={card.symbol} className="w-full h-full object-cover" />
+          <img src={`${BASE}${cardData.image.replace(/^\//, '')}`} alt={card.symbol} loading="lazy" decoding="async" className="w-full h-full object-cover" />
         ) : (
           <span className="text-4xl font-chalk text-white">{card.symbol}</span>
         )}
@@ -453,7 +453,7 @@ function DraggableBoardCard({
         </div>
       )}
       {cardData?.image ? (
-        <img src={`${BASE}${cardData.image.replace(/^\//, '')}`} alt={card.symbol} className="w-full h-full object-cover pointer-events-none" />
+        <img src={`${BASE}${cardData.image.replace(/^\//, '')}`} alt={card.symbol} loading="lazy" decoding="async" className="w-full h-full object-cover pointer-events-none" />
       ) : (
         <span className="text-3xl font-chalk text-white">{card.symbol}</span>
       )}
@@ -513,7 +513,7 @@ function BracketCard({ syntax, bracketMode, palette, onCancel }: {
           }}
         >
           {closeCardData?.image ? (
-            <img src={`${BASE}${closeCardData.image.replace(/^\//, '')}`} alt={closeSymbol ?? undefined} className="w-full h-full object-cover" />
+            <img src={`${BASE}${closeCardData.image.replace(/^\//, '')}`} alt={closeSymbol ?? undefined} loading="lazy" decoding="async" className="w-full h-full object-cover" />
           ) : (
             <span className="text-3xl font-chalk text-yellow-300 leading-none">{closeSymbol}</span>
           )}
@@ -602,6 +602,8 @@ function TutorialReferenceRow({ cards, palette }: { cards: GameCard[]; palette: 
               <img
                 src={`${BASE}${cardData.image.replace(/^\//, '')}`}
                 alt={card.symbol}
+                loading="lazy"
+                decoding="async"
                 className="w-full h-full object-cover"
               />
             ) : (

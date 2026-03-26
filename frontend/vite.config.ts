@@ -4,6 +4,7 @@ import react from "@vitejs/plugin-react"
 import { defineConfig } from "vite"
 import { VitePWA } from "vite-plugin-pwa" // <--- TADY JE NOVÝ IMPORT
 import yaml from "@rollup/plugin-yaml"
+import compression from "vite-plugin-compression"
 
 // https://vite.dev/config/
 const base = process.env.GITHUB_ACTIONS ? "/BC_hra_M/" : "/";
@@ -16,6 +17,12 @@ export default defineConfig({
     react(), 
     tailwindcss(),
     yaml(),
+    compression({
+      algorithm: 'gzip',
+      ext: '.gz',
+      threshold: 10240, // Komprimuj soubory větší než 10KB
+      deleteOriginFile: false,
+    }),
     // <--- TADY ZAČÍNÁ PWA NASTAVENÍ --->
     VitePWA({
       registerType: 'autoUpdate',
@@ -51,6 +58,17 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+    },
+  },
+  build: {
+    assetsInlineLimit: 0, // Nebaluj base64 assets - ref se zbavíme komprese
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor': ['react', 'react-dom'],
+          'dnd': ['@dnd-kit/core', '@dnd-kit/utilities'],
+        },
+      },
     },
   },
 })
