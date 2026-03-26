@@ -187,7 +187,7 @@ function MiniHandCard({ card, index, total, isDiscarding, onDiscard, onSelect, i
   const style: React.CSSProperties = {
     transform: transform
       ? CSS.Translate.toString(transform)
-      : `rotate(${rotation}deg) translateY(${translateY}px) translateX(${translateX}px) scale(${isSelected ? 1.7 : 1})`,
+      : `rotate(${rotation}deg) translateY(${translateY}px) translateX(${translateX}px) scale(${isSelected ? 1.85 : 1})`,
     zIndex: isDragging ? 99999 : 10 + index,
     position: 'absolute',
     width: FULL_CARD_W,
@@ -743,7 +743,7 @@ function TutorialReferenceRow({ cards, palette }: { cards: GameCard[]; palette: 
         return (
           <div
             key={card.id}
-            className={`relative w-7 h-10 rounded border-2 bg-slate-800 flex items-center justify-center ${getBorderColor(card.symbol)}`}
+            className={`relative w-7 h-10 rounded border-2 bg-slate-800 flex items-center justify-center origin-center scale-[1.2] ${getBorderColor(card.symbol)}`}
           >
             {cardData?.image ? (
               <img
@@ -920,7 +920,7 @@ export function MobileGameLayout({ currentPlayer, state, actions, tutorialRefere
                       <div className="shrink-0" style={{ width: `calc(${BOARD_CARD_W} - 0.9rem)`, height: BOARD_CARD_H }} />
                     )}
                     {/* Kurzor před první kartou */}
-                    <BoardDropZone id="main-board-before-0" isVisible={isDraggingCard} />
+                    <BoardDropZone id="main-board-before-0" isVisible={isDraggingCard || !!tutorialActive} />
                     {beforeCards.map((card, index) => (
                       <React.Fragment key={card.id}>
                         <div className="flex flex-col items-center">
@@ -936,7 +936,7 @@ export function MobileGameLayout({ currentPlayer, state, actions, tutorialRefere
                         {/* Kurzor za každou kartou */}
                         <BoardDropZone
                           id={`main-board-between-${index}-${index + 1}`}
-                          isVisible={isDraggingCard}
+                          isVisible={isDraggingCard || !!tutorialActive}
                         />
                       </React.Fragment>
                     ))}
@@ -960,7 +960,7 @@ export function MobileGameLayout({ currentPlayer, state, actions, tutorialRefere
                       >
                         <span className="text-[10px] font-black">{integralLabel}</span>
                       </button>
-                      <BoardDropZone id={`main-board-after-dxdy-${beforeCards.length}`} isVisible={isDraggingCard} />
+                      <BoardDropZone id={`main-board-after-dxdy-${beforeCards.length}`} isVisible={isDraggingCard || !!tutorialActive} />
                       {afterCards.map((card, index) => {
                         const globalIndex = beforeCards.length + index;
                         return (
@@ -979,7 +979,7 @@ export function MobileGameLayout({ currentPlayer, state, actions, tutorialRefere
                               id={globalIndex < totalBoardCards - 1
                                 ? `main-board-between-${globalIndex}-${globalIndex + 1}`
                                 : `main-board-after-${totalBoardCards - 1}`}
-                              isVisible={isDraggingCard}
+                              isVisible={isDraggingCard || !!tutorialActive}
                             />
                           </React.Fragment>
                         );
