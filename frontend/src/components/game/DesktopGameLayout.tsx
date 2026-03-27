@@ -74,39 +74,6 @@ interface DesktopHandCardProps {
   palette: ThemePalette;
 }
 
-function DesktopSlotValueCard({ slotCard }: { slotCard: GameCard }) {
-  const slotCardData = cardsDatabase[slotCard.symbol];
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
-    id: slotCard.id,
-    data: slotCard,
-    disabled: !!slotCard.locked,
-  });
-
-  const style: React.CSSProperties = {
-    transform: transform ? CSS.Translate.toString(transform) : undefined,
-    zIndex: isDragging ? 99999 : undefined,
-  };
-
-  return (
-    <div
-      ref={setNodeRef}
-      {...listeners}
-      {...attributes}
-      style={style}
-      onPointerDown={(event) => event.stopPropagation()}
-      className={`w-full h-full rounded-md border-2 flex items-center justify-center bg-slate-800 shadow-xl cursor-grab active:cursor-grabbing ${getBorderColor(slotCard.symbol)} ${isDragging ? 'ring-2 ring-white/70 scale-105' : ''}`}
-    >
-      <div className="w-full h-full flex items-center justify-center p-1 pointer-events-none">
-        {slotCardData?.image ? (
-          <img src={`${BASE}${slotCardData.image.replace(/^\//, '')}`} alt={slotCard.symbol} decoding="async" className="w-full h-full object-cover" />
-        ) : (
-          <span className="text-xl font-chalk text-white">{slotCard.symbol}</span>
-        )}
-      </div>
-    </div>
-  );
-}
-
 function DesktopHandCard({ card, index, total, isDiscarding, onDiscard, onSelect, isSelected = false, palette }: DesktopHandCardProps) {
   const cardData = cardsDatabase[card.symbol];
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
@@ -218,9 +185,11 @@ function DesktopDiscardSlot({ discardCount, isDiscarding, palette }: { discardCo
 function DraggableBoardCard({
   card,
   palette,
+  hasModifiedBoardThisTurn,
   onDerivativeVariableChange,
   onSeriesVariableChange,
   onLimitVariableChange,
+  isSlot,
 }: {
   card: GameCard;
   palette: ThemePalette;
@@ -228,6 +197,7 @@ function DraggableBoardCard({
   onDerivativeVariableChange?: (cardId: string, variable: 'x' | 'y') => void;
   onSeriesVariableChange?: (cardId: string, variable: 'x' | 'y') => void;
   onLimitVariableChange?: (cardId: string, variable: 'x' | 'y') => void;
+  isSlot?: boolean;
 }) {
   const cardData = cardsDatabase[card.symbol];
   const specialSlots = getSpecialSlots(card.symbol);
@@ -236,7 +206,7 @@ function DraggableBoardCard({
   const hasLeftRightSlots = slotKeys.length === 2 && slotKeys.includes('a' as any) && slotKeys.includes('b' as any);
   const hasTwoSlots = slotKeys.length === 2 && !hasLeftRightSlots;
   const hasOneSlot = slotKeys.length === 1;
-  const [isExpanded, setIsExpanded] = useState(false);
+
   const isVsCard = card.locked && VS_CARD_SYMBOLS.has(card.symbol);
   const isDerivativeCard = card.symbol === 'd/dx';
   const derivativeVar = card.derivativeVariable === 'y' ? 'y' : 'x';
@@ -309,8 +279,8 @@ function DraggableBoardCard({
   const isSlotOver = isOverTop || isOverBottom || isOverWhole || isOverUl || isOverUr || isOverLl || isOverLr || isOverLeft || isOverRight;
 
   const style: React.CSSProperties = {
-    width: isVsCard ? CARD_W : BOARD_CARD_W,
-    height: isVsCard ? CARD_H : BOARD_CARD_H,
+    width: isSlot ? '100%' : (isVsCard ? CARD_W : BOARD_CARD_W),
+    height: isSlot ? '100%' : (isVsCard ? CARD_H : BOARD_CARD_H),
     backgroundColor: `${palette.bgDark}cc`,
     borderColor: isDragging ? palette.primary : 'rgba(255,255,255,0.25)',
     transform: transform
@@ -330,11 +300,7 @@ function DraggableBoardCard({
         ${card.locked ? 'cursor-default' : 'cursor-grab active:cursor-grabbing hover:border-red-400/60 hover:scale-105'}
       `}
       style={style}
-      onClick={() => {
-        if (!isDragging && (hasOneSlot || hasTwoSlots || hasFourSlots || hasLeftRightSlots)) {
-          setIsExpanded(prev => !prev);
-        }
-      }}
+
     >
       {isDerivativeCard && (
         <button
@@ -435,62 +401,63 @@ function DraggableBoardCard({
         />
       )}
 
-      {!isDragging && isExpanded && hasFourSlots && (
+      {/* --- ALWAYS-VISIBLE SLOT CARDS (tucked behind parent) --- */}
+      {!isDragging && hasFourSlots && (
         <>
           {ulKey && card.slotCards?.[ulKey] && (
-            <div className="absolute" style={{ left: '20%', top: '-12%', transform: 'translateX(-50%) scale(0.85)', zIndex: 0, width: BOARD_CARD_W, height: BOARD_CARD_H }}>
-              <DesktopSlotValueCard slotCard={card.slotCards[ulKey]!} />
+            <div className="absolute" style={{ left: '20%', top: '-20%', transform: 'translateX(-50%)', zIndex: -1, width: BOARD_CARD_W, height: BOARD_CARD_H }}>
+              <DraggableBoardCard card={card.slotCards[ulKey]!} palette={palette} hasModifiedBoardThisTurn={hasModifiedBoardThisTurn} isSlot={true} />
             </div>
           )}
           {urKey && card.slotCards?.[urKey] && (
-            <div className="absolute" style={{ left: '80%', top: '-12%', transform: 'translateX(-50%) scale(0.85)', zIndex: 0, width: BOARD_CARD_W, height: BOARD_CARD_H }}>
-              <DesktopSlotValueCard slotCard={card.slotCards[urKey]!} />
+            <div className="absolute" style={{ left: '80%', top: '-20%', transform: 'translateX(-50%)', zIndex: -2, width: BOARD_CARD_W, height: BOARD_CARD_H }}>
+              <DraggableBoardCard card={card.slotCards[urKey]!} palette={palette} hasModifiedBoardThisTurn={hasModifiedBoardThisTurn} isSlot={true} />
             </div>
           )}
           {llKey && card.slotCards?.[llKey] && (
-            <div className="absolute" style={{ left: '20%', top: '88%', transform: 'translateX(-50%) scale(0.85)', zIndex: 0, width: BOARD_CARD_W, height: BOARD_CARD_H }}>
-              <DesktopSlotValueCard slotCard={card.slotCards[llKey]!} />
+            <div className="absolute" style={{ left: '20%', top: '80%', transform: 'translateX(-50%)', zIndex: -1, width: BOARD_CARD_W, height: BOARD_CARD_H }}>
+              <DraggableBoardCard card={card.slotCards[llKey]!} palette={palette} hasModifiedBoardThisTurn={hasModifiedBoardThisTurn} isSlot={true} />
             </div>
           )}
           {lrKey && card.slotCards?.[lrKey] && (
-            <div className="absolute" style={{ left: '80%', top: '88%', transform: 'translateX(-50%) scale(0.85)', zIndex: 0, width: BOARD_CARD_W, height: BOARD_CARD_H }}>
-              <DesktopSlotValueCard slotCard={card.slotCards[lrKey]!} />
+            <div className="absolute" style={{ left: '80%', top: '80%', transform: 'translateX(-50%)', zIndex: -2, width: BOARD_CARD_W, height: BOARD_CARD_H }}>
+              <DraggableBoardCard card={card.slotCards[lrKey]!} palette={palette} hasModifiedBoardThisTurn={hasModifiedBoardThisTurn} isSlot={true} />
             </div>
           )}
         </>
       )}
-      {!isDragging && isExpanded && hasTwoSlots && (
+      {!isDragging && hasTwoSlots && (
         <>
           {topSlotKey && card.slotCards?.[topSlotKey] && (
-            <div className="absolute left-1/2" style={{ top: '-10%', transform: 'translateX(-50%) scale(0.9)', zIndex: 0, width: BOARD_CARD_W, height: BOARD_CARD_H }}>
-              <DesktopSlotValueCard slotCard={card.slotCards[topSlotKey]!} />
+            <div className="absolute left-1/2" style={{ top: '-20%', transform: 'translateX(-50%)', zIndex: -2, width: BOARD_CARD_W, height: BOARD_CARD_H }}>
+              <DraggableBoardCard card={card.slotCards[topSlotKey]!} palette={palette} hasModifiedBoardThisTurn={hasModifiedBoardThisTurn} isSlot={true} />
             </div>
           )}
           {bottomSlotKey && card.slotCards?.[bottomSlotKey] && (
-            <div className="absolute left-1/2" style={{ top: '86%', transform: 'translateX(-50%) scale(0.9)', zIndex: 0, width: BOARD_CARD_W, height: BOARD_CARD_H }}>
-              <DesktopSlotValueCard slotCard={card.slotCards[bottomSlotKey]!} />
+            <div className="absolute left-1/2" style={{ top: '80%', transform: 'translateX(-50%)', zIndex: -1, width: BOARD_CARD_W, height: BOARD_CARD_H }}>
+              <DraggableBoardCard card={card.slotCards[bottomSlotKey]!} palette={palette} hasModifiedBoardThisTurn={hasModifiedBoardThisTurn} isSlot={true} />
             </div>
           )}
         </>
       )}
-      {!isDragging && isExpanded && hasLeftRightSlots && (
+      {!isDragging && hasLeftRightSlots && (
         <>
           {leftSlotKey && card.slotCards?.[leftSlotKey] && (
-            <div className="absolute top-1/2" style={{ left: '-10%', transform: 'translateY(-50%) scale(0.9)', zIndex: 0, width: BOARD_CARD_W, height: BOARD_CARD_H }}>
-              <DesktopSlotValueCard slotCard={card.slotCards[leftSlotKey]!} />
+            <div className="absolute top-1/2" style={{ left: '-20%', transform: 'translateY(-50%)', zIndex: -1, width: BOARD_CARD_W, height: BOARD_CARD_H }}>
+              <DraggableBoardCard card={card.slotCards[leftSlotKey]!} palette={palette} hasModifiedBoardThisTurn={hasModifiedBoardThisTurn} isSlot={true} />
             </div>
           )}
           {rightSlotKey && card.slotCards?.[rightSlotKey] && (
-            <div className="absolute top-1/2" style={{ right: '-10%', transform: 'translateY(-50%) translate(50%) scale(0.9)', zIndex: 0, width: BOARD_CARD_W, height: BOARD_CARD_H }}>
-              <DesktopSlotValueCard slotCard={card.slotCards[rightSlotKey]!} />
+            <div className="absolute top-1/2" style={{ right: '-20%', transform: 'translateY(-50%)', zIndex: -1, width: BOARD_CARD_W, height: BOARD_CARD_H }}>
+              <DraggableBoardCard card={card.slotCards[rightSlotKey]!} palette={palette} hasModifiedBoardThisTurn={hasModifiedBoardThisTurn} isSlot={true} />
             </div>
           )}
         </>
       )}
 
-      {!isDragging && isExpanded && hasOneSlot && card.slotCards?.[slotKeys[0]] && (
-        <div className="absolute left-1/2" style={{ top: '-10%', transform: 'translateX(-50%) scale(0.9)', zIndex: 0, width: BOARD_CARD_W, height: BOARD_CARD_H }}>
-          <DesktopSlotValueCard slotCard={card.slotCards[slotKeys[0]]!} />
+      {!isDragging && hasOneSlot && card.slotCards?.[slotKeys[0]] && (
+        <div className="absolute left-1/2" style={{ top: '-20%', transform: 'translateX(-50%)', zIndex: -1, width: BOARD_CARD_W, height: BOARD_CARD_H }}>
+          <DraggableBoardCard card={card.slotCards[slotKeys[0]]!} palette={palette} hasModifiedBoardThisTurn={hasModifiedBoardThisTurn} isSlot={true} />
         </div>
       )}
       {cardData?.image ? (
@@ -643,7 +610,7 @@ function TutorialReferenceRow({ cards, palette }: { cards: GameCard[]; palette: 
               <img
                 src={`${BASE}${cardData.image.replace(/^\//, '')}`}
                 alt={card.symbol}
-               
+
                 decoding="async"
                 className="w-full h-full object-cover"
               />
@@ -669,7 +636,7 @@ export function DesktopGameLayout({ currentPlayer, state, actions, tutorialRefer
   const integralVar = findIntegralVariable(currentPlayer.board);
   const hasVsLockedCard = currentPlayer.board.some(card => card.locked && VS_CARD_SYMBOLS.has(card.symbol));
   const integralCard = currentPlayer.board.find(card => card.symbol === 'int');
-  const integralLabel = integralCard?.integralVariable === 'y' ? 'dy' : 'dx';
+
   const showDxDy = Boolean(integralCard);
   const beforeCards = showDxDy ? currentPlayer.board.filter(card => !card.afterDxDy) : currentPlayer.board;
   const afterCards = showDxDy ? currentPlayer.board.filter(card => card.afterDxDy) : [];
@@ -690,13 +657,14 @@ export function DesktopGameLayout({ currentPlayer, state, actions, tutorialRefer
 
   return (
     <div
-      className="min-h-screen flex flex-col transition-colors duration-700"
+      className="h-screen flex flex-col transition-colors duration-700"
       onClick={() => setSelectedHandCardId(null)}
       style={{
         background: `linear-gradient(to bottom, ${palette.bgDark} 0%, ${palette.bgMid} 100%)`,
         fontFamily: "'Merienda', cursive",
         color: '#fff',
-        minHeight: 'max(884px, 100dvh)',
+        height: '100dvh',
+        overflow: 'hidden',
       }}
     >
       {/* ── NAV ── */}
@@ -762,7 +730,7 @@ export function DesktopGameLayout({ currentPlayer, state, actions, tutorialRefer
           )}
           <span
             className="text-base font-bold tracking-tight ml-2"
-             style={{ fontFamily: "'Merienda', cursive" }}
+            style={{ fontFamily: "'Merienda', cursive" }}
           >
             Math4fun
           </span>
@@ -802,87 +770,92 @@ export function DesktopGameLayout({ currentPlayer, state, actions, tutorialRefer
                 <TutorialReferenceRow cards={tutorialReferenceBoard} palette={palette} />
               )}
               <div className={`flex items-stretch gap-0 flex-wrap w-full ${(hasVsLockedCard || showDxDy) ? 'justify-start' : 'justify-center'}`}>
-              {currentPlayer.board.length === 0 ? (
-                <span
-                  className="uppercase tracking-[0.25em] text-2xl pointer-events-none select-none italic self-center"
-                  style={{ color: 'rgba(255,255,255,0.10)' }}
-                >
-                  Tabule
-                </span>
-              ) : (
-                <>
-                  <div className="flex items-stretch gap-0 flex-wrap">
-                    {hasVsLockedCard && (
-                      <div className="shrink-0" style={{ width: `calc(${BOARD_CARD_W} - 0.9rem)`, height: BOARD_CARD_H }} />
-                    )}
-                    <BoardDropZone id="main-board-before-0" isVisible={isDraggingCard || !!tutorialActive} />
-                    {beforeCards.map((card, index) => (
-                      <React.Fragment key={card.id}>
-                        <div className="flex flex-col items-center">
-                          <DraggableBoardCard
-                            card={card}
-                            palette={palette}
-                            hasModifiedBoardThisTurn={hasModifiedBoardThisTurn}
-                            onDerivativeVariableChange={actions.setDerivativeVariable}
-                            onSeriesVariableChange={actions.setSeriesVariable}
-                            onLimitVariableChange={actions.setLimitVariable}
-                          />
-                        </div>
-                        <BoardDropZone
-                          id={`main-board-between-${index}-${index + 1}`}
-                          isVisible={isDraggingCard || !!tutorialActive}
-                        />
-                      </React.Fragment>
-                    ))}
-                  </div>
-                  {showDxDy && (
-                    <div className="flex items-stretch gap-0 ml-auto">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const nextVar = integralCard!.integralVariable === 'y' ? 'x' : 'y';
-                          actions.setIntegralVariable(integralCard!.id, nextVar);
-                        }}
-                        className="rounded-md border-2 shadow-md flex items-center justify-center bg-slate-900/90 text-white font-black"
-                        style={{
-                          width: BOARD_CARD_W,
-                          height: BOARD_CARD_H,
-                          borderColor: 'rgba(255,255,255,0.4)',
-                          backgroundColor: `${palette.bgDark}cc`,
-                          zIndex: 20,
-                        }}
-                      >
-                        <span className="text-2xl font-black">{integralLabel}</span>
-                      </button>
-                      <BoardDropZone id={`main-board-after-dxdy-${beforeCards.length}`} isVisible={isDraggingCard || !!tutorialActive} />
-                      {afterCards.map((card, index) => {
-                        const globalIndex = beforeCards.length + index;
-                        return (
-                          <React.Fragment key={card.id}>
-                            <div className="flex flex-col items-center">
-                              <DraggableBoardCard
-                                card={card}
-                                palette={palette}
-                                hasModifiedBoardThisTurn={hasModifiedBoardThisTurn}
-                                onDerivativeVariableChange={actions.setDerivativeVariable}
-                                onSeriesVariableChange={actions.setSeriesVariable}
-                                onLimitVariableChange={actions.setLimitVariable}
-                              />
-                            </div>
-                            <BoardDropZone
-                              id={globalIndex < totalBoardCards - 1
-                                ? `main-board-between-${globalIndex}-${globalIndex + 1}`
-                                : `main-board-after-${totalBoardCards - 1}`}
-                              isVisible={isDraggingCard || !!tutorialActive}
+                {currentPlayer.board.length === 0 ? (
+                  <span
+                    className="uppercase tracking-[0.25em] text-2xl pointer-events-none select-none italic self-center"
+                    style={{ color: 'rgba(255,255,255,0.10)' }}
+                  >
+                    Tabule
+                  </span>
+                ) : (
+                  <>
+                    <div className="flex items-stretch gap-0 flex-wrap">
+                      {hasVsLockedCard && (
+                        <div className="shrink-0" style={{ width: `calc(${BOARD_CARD_W} - 0.9rem)`, height: BOARD_CARD_H }} />
+                      )}
+                      <BoardDropZone id="main-board-before-0" isVisible={isDraggingCard || !!tutorialActive} />
+                      {beforeCards.map((card, index) => (
+                        <React.Fragment key={card.id}>
+                          <div className="flex flex-col items-center">
+                            <DraggableBoardCard
+                              card={card}
+                              palette={palette}
+                              hasModifiedBoardThisTurn={hasModifiedBoardThisTurn}
+                              onDerivativeVariableChange={actions.setDerivativeVariable}
+                              onSeriesVariableChange={actions.setSeriesVariable}
+                              onLimitVariableChange={actions.setLimitVariable}
                             />
-                          </React.Fragment>
-                        );
-                      })}
-                      <div className="shrink-0 pointer-events-none" style={{ width: BOARD_CARD_W, height: BOARD_CARD_H }} />
+                          </div>
+                          <BoardDropZone
+                            id={`main-board-between-${index}-${index + 1}`}
+                            isVisible={isDraggingCard || !!tutorialActive}
+                          />
+                        </React.Fragment>
+                      ))}
                     </div>
-                  )}
-                </>
-              )}
+                    {showDxDy && (
+                      <div className="flex items-stretch gap-0 ml-auto">
+                        <div
+                          className="rounded-md border-2 shadow-md bg-slate-900/90 relative"
+                          style={{
+                            width: BOARD_CARD_W,
+                            height: BOARD_CARD_H,
+                            borderColor: 'rgba(255,255,255,0.4)',
+                            zIndex: 20,
+                          }}
+                        >
+                          <img src={`${BASE}svg/dxdy.svg`} alt="dxdy" className="w-full h-full object-cover pointer-events-none" />
+                          <button
+                            type="button"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              const nextVar = integralCard!.integralVariable === 'y' ? 'x' : 'y';
+                              actions.setIntegralVariable(integralCard!.id, nextVar);
+                            }}
+                            className="absolute z-20 right-1 top-1 origin-top-right scale-[2] rounded-full border border-white/30 bg-slate-900/90 px-1.5 py-0.5 text-[9px] font-black text-white hover:bg-white/20 transition-colors cursor-pointer"
+                          >
+                            {integralCard!.integralVariable === 'y' ? 'y' : 'x'}
+                          </button>
+                        </div>
+                        <BoardDropZone id={`main-board-after-dxdy-${beforeCards.length}`} isVisible={isDraggingCard || !!tutorialActive} />
+                        {afterCards.map((card, index) => {
+                          const globalIndex = beforeCards.length + index;
+                          return (
+                            <React.Fragment key={card.id}>
+                              <div className="flex flex-col items-center">
+                                <DraggableBoardCard
+                                  card={card}
+                                  palette={palette}
+                                  hasModifiedBoardThisTurn={hasModifiedBoardThisTurn}
+                                  onDerivativeVariableChange={actions.setDerivativeVariable}
+                                  onSeriesVariableChange={actions.setSeriesVariable}
+                                  onLimitVariableChange={actions.setLimitVariable}
+                                />
+                              </div>
+                              <BoardDropZone
+                                id={globalIndex < totalBoardCards - 1
+                                  ? `main-board-between-${globalIndex}-${globalIndex + 1}`
+                                  : `main-board-after-${totalBoardCards - 1}`}
+                                isVisible={isDraggingCard || !!tutorialActive}
+                              />
+                            </React.Fragment>
+                          );
+                        })}
+                        <div className="shrink-0 pointer-events-none" style={{ width: BOARD_CARD_W, height: BOARD_CARD_H }} />
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
             </div>
 
@@ -919,24 +892,26 @@ export function DesktopGameLayout({ currentPlayer, state, actions, tutorialRefer
             <button
               onClick={actions.checkMathEngine}
               disabled={!canVerify}
-              className="font-bold py-4 rounded-xl shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="font-bold rounded-xl shadow-lg transition-all active:scale-95 flex flex-col items-center justify-center p-0 disabled:opacity-50 disabled:cursor-not-allowed"
               style={{
-                width: '7.26rem',
+                width: CARD_W,
+                height: `calc(${CARD_H} / 2)`,
                 background: canVerify ? palette.primary : `${palette.primary}55`,
                 color: '#fff',
                 fontFamily: "'Merienda', cursive",
                 boxShadow: canVerify ? `0 0 20px ${palette.glow}` : 'none',
               }}
             >
-              <span className="material-symbols-outlined text-lg">verified</span>
-              Ověřit (Q.E.D.)
+              <span className="text-[1.3rem] leading-tight">Ověřit</span>
+              <span className="text-[0.9rem] leading-tight mt-1">Q.E.D.</span>
             </button>
 
             <button
               onClick={actions.handleEndTurn}
-              className="font-bold py-4 rounded-xl border border-white/10 transition-all active:scale-95 flex items-center justify-center gap-2"
+              className="font-bold rounded-xl border border-white/10 transition-all active:scale-95 flex items-center justify-center gap-2"
               style={{
-                width: '15.5rem',
+                width: `calc(${CARD_W} * 2 + 0.75rem)`,
+                height: `calc(${CARD_H} / 2)`,
                 background: 'rgba(30,41,59,0.9)',
                 color: '#cbd5e1',
                 fontFamily: "'Merienda', cursive",
@@ -949,7 +924,7 @@ export function DesktopGameLayout({ currentPlayer, state, actions, tutorialRefer
         </section>
 
         {/* UTILITY ROW — modifier LEFT, discard+draw RIGHT (justify-between), larger cards */}
-        <section className="flex justify-between w-full">
+        <section className="flex justify-between w-full" style={{ position: 'relative', zIndex: 1 }}>
 
           {/* Závorky */}
           <BracketCard
@@ -986,9 +961,9 @@ export function DesktopGameLayout({ currentPlayer, state, actions, tutorialRefer
       {/* ── FOOTER (hand fan) — desktop: pb-44, cards larger & higher ── */}
       <footer
         className="mt-auto pb-20 pt-2 px-4 transition-colors duration-700"
-        style={{ background: `linear-gradient(to top, ${palette.footerBg} 0%, transparent 100%)` }}
+        style={{ background: `linear-gradient(to top, ${palette.footerBg} 0%, transparent 100%)`, position: 'relative', zIndex: 100 }}
       >
-        {/* translateY(-110px) to lift the whole fan up as in the mockup */}
+        {/* translateY(-200px) to lift the whole fan up as in the mockup */}
         <div
           className="relative max-w-lg mx-auto flex justify-center items-end h-48 select-none"
           style={{ transform: 'translateY(-200px)' }}

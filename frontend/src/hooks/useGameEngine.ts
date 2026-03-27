@@ -136,6 +136,7 @@ export function useGameEngine() {
   const [tutorialReferenceBoard, setTutorialReferenceBoard] = useState<GameCard[]>([]);
   const [tutorialBracketInfoShown, setTutorialBracketInfoShown] = useState(false);
   const [tutorialTwosAdded, setTutorialTwosAdded] = useState(false);
+  const [tutorialCardQueue, setTutorialCardQueue] = useState<GameCard[]>([]);
   const [leaveGameConfirmOpen, setLeaveGameConfirmOpen] = useState(false);
 
   // --- STAVY PRO UI A EFEKTY ---
@@ -366,7 +367,7 @@ export function useGameEngine() {
         return;
       }
 
-      if (!isDiscarding && !hasModifiedBoardThisTurn) {
+      if (!hasModifiedBoardThisTurn) {
         toast.error("V tomto kole nejdřív vylož 1 kartu na tabuli.");
         return;
       }
@@ -374,8 +375,21 @@ export function useGameEngine() {
       setHasModifiedBoardThisTurn(false);
       setPlaysThisTurn(0);
       setIsDiscarding(false);
-      performDraw(1, currentPlayerIndex);
-      toast.info("Kolo ukončeno. Přidána 1 náhodná karta.");
+
+      // Deal from tutorial queue first, then random
+      if (tutorialCardQueue.length > 0) {
+        const [nextCard, ...rest] = tutorialCardQueue;
+        setPlayers(prev => {
+          const next = JSON.parse(JSON.stringify(prev));
+          next[currentPlayerIndex].hand.push(nextCard);
+          return next;
+        });
+        setTutorialCardQueue(rest);
+        toast.info("Kolo ukončeno. Přidána připravená karta.");
+      } else {
+        performDraw(1, currentPlayerIndex);
+        toast.info("Kolo ukončeno. Přidána 1 náhodná karta.");
+      }
       return;
     }
 
@@ -449,11 +463,15 @@ export function useGameEngine() {
                 const hasPowerCard = firstPlayerHand.some((card: GameCard) => card.symbol === 'a^b');
                 const twoCount = firstPlayerHand.filter((card: GameCard) => card.symbol === '2').length;
 
-                if (!hasPowerCard) {
-                  firstPlayerHand.push(createTutorialStepCard('a^b', 't1-step3'));
-                }
-                if (twoCount < 2) {
-                  firstPlayerHand.push(createTutorialStepCard('2', 't1-step3'));
+                // Build queue of cards to deal one-by-one
+                const queueCards: GameCard[] = [];
+                if (!hasPowerCard) queueCards.push(createTutorialStepCard('a^b', 't1-step3'));
+                if (twoCount < 2) queueCards.push(createTutorialStepCard('2', 't1-step3'));
+
+                // Deal first card immediately, queue the rest
+                if (queueCards.length > 0) {
+                  firstPlayerHand.push(queueCards[0]);
+                  setTutorialCardQueue(queueCards.slice(1));
                 }
               }
               setTutorialTwosAdded(true);
@@ -481,9 +499,10 @@ export function useGameEngine() {
     let nextIdx = (currentPlayerIndex + playDirection + players.length) % players.length;
     if (players[nextIdx].status?.frozen) {
       toast.info(`${players[nextIdx].name} vynechává.`, { icon: '❄️' });
+      const frozenIdx = nextIdx;
       setPlayers(prev => {
         const next = JSON.parse(JSON.stringify(prev));
-        next[nextIdx].status.frozen = false;
+        if (next[frozenIdx]?.status) next[frozenIdx].status.frozen = false;
         return next;
       });
       nextIdx = (nextIdx + playDirection + players.length) % players.length;
@@ -679,8 +698,42 @@ export function useGameEngine() {
     options?: { countAsAction?: boolean }
   ) => {
     const countAsAction = options?.countAsAction ?? true;
-    let placed = false;
+
+    // PRE-CHECK: Avoid state manipulation logic returning local variables
+    let canPlace = false;
     let mergeError: string | null = null;
+    let mergedValue: GameCard | null = null;
+
+    const findAndMergeSlot = (cards: GameCard[]) => {
+      for (const c of cards) {
+        if (c.id === parentId) {
+          const slotCards = c.slotCards ?? createSlotCards(c.symbol) ?? {};
+          const existing = slotCards[slotKey] || null;
+          const mergeResult = mergeCardIntoSlotValue(existing, card);
+          if (!mergeResult.merged) {
+             mergeError = mergeResult.error ?? 'Do tohoto okénka kartu vložit nejde.';
+          } else {
+             canPlace = true;
+             mergedValue = mergeResult.merged;
+          }
+          return;
+        }
+        if (c.exponent) findAndMergeSlot([c.exponent]);
+        if (c.slotCards) {
+          for (const sc of Object.values(c.slotCards)) {
+             if (sc) findAndMergeSlot([sc]);
+          }
+        }
+      }
+    };
+    
+    findAndMergeSlot(players[currentPlayerIndex].board);
+
+    if (mergeError) {
+      toast.error(mergeError);
+      return;
+    }
+    if (!canPlace || !mergedValue) return;
 
     setPlayers(prev => {
       const next = JSON.parse(JSON.stringify(prev));
@@ -689,16 +742,9 @@ export function useGameEngine() {
       const updateSlot = (cards: GameCard[]): GameCard[] => cards.map(c => {
         if (c.id === parentId) {
           const slotCards = c.slotCards ?? createSlotCards(c.symbol) ?? {};
-          const existing = slotCards[slotKey] || null;
-          const mergeResult = mergeCardIntoSlotValue(existing, card);
-          if (!mergeResult.merged) {
-            mergeError = mergeResult.error ?? 'Do tohoto okénka kartu vložit nejde.';
-            return c;
-          }
-          slotCards[slotKey] = mergeResult.merged;
+          slotCards[slotKey] = mergedValue!;
           p.hand = p.hand.filter((handCard: GameCard) => handCard.id !== card.id);
           p.syntax = p.syntax.filter((syntaxCard: GameCard) => syntaxCard.id !== card.id);
-          placed = true;
           return { ...c, slotCards };
         }
         return c.exponent ? { ...c, exponent: updateSlot([c.exponent])[0] } : c;
@@ -708,12 +754,6 @@ export function useGameEngine() {
       return next;
     });
 
-    if (mergeError) {
-      toast.error(mergeError);
-      return;
-    }
-    if (!placed) return;
-
     updatePlayerStats(currentPlayerIndex, stats => ({
       ...stats,
       cardsToBoard: stats.cardsToBoard + 1,
@@ -721,10 +761,10 @@ export function useGameEngine() {
 
     if (countAsAction) {
       setHasModifiedBoardThisTurn(true);
-      setPlaysThisTurn(prev => prev + 1);
+      setPlaysThisTurn((prevCount: number) => prevCount + 1);
     }
     setPendingEffect(null);
-  }, [currentPlayerIndex, updatePlayerStats]);
+  }, [players, currentPlayerIndex, updatePlayerStats]);
 
   const placePendingEffectCard = useCallback((effectState: PendingEffectState) => {
     if (effectState.slotPlacement) {
@@ -977,48 +1017,68 @@ export function useGameEngine() {
     const isSpecialTargetDrop = overId.startsWith('drop-exponent-') || !!(slotData?.slotKey && slotData?.parentId);
     const isVsSpecialMove = difficulty === 'VŠ' && isSpecialTargetDrop;
 
+    const isDragCardWithSlots = (cardId: string): boolean => {
+      const inHand = players[currentPlayerIndex].hand.find(c => c.id === cardId);
+      if (inHand) return getSpecialSlots(inHand.symbol).length > 0;
+      const checkTree = (cards: GameCard[]): boolean => {
+        for (const c of cards) {
+          if (c.id === cardId) return getSpecialSlots(c.symbol).length > 0;
+          if (c.exponent && checkTree([c.exponent])) return true;
+          if (c.slotCards) {
+            for (const sc of Object.values(c.slotCards)) {
+              if (sc && checkTree([sc])) return true;
+            }
+          }
+        }
+        return false;
+      };
+      return checkTree(players[currentPlayerIndex].board);
+    };
+
     if (slotData?.slotKey && slotData?.parentId) {
+      if (isDragCardWithSlots(active.id as string)) {
+        return toast.error("Karty s volným oknem nelze vkládat do jiných karet.");
+      }
       const slotCard = players[currentPlayerIndex].hand.find(c => c.id === active.id);
       if (!slotCard) {
         if (difficulty !== 'VŠ') return;
 
+        const p = players[currentPlayerIndex];
+        const { removed, newCards } = removeCardRecursively(p.board, active.id as string);
+        if (!removed || removed.locked) return;
+
         let mergeError: string | null = null;
         let moved = false;
 
-        setPlayers(prev => {
-          const next = JSON.parse(JSON.stringify(prev));
-          const p = next[currentPlayerIndex];
-          const { removed, newCards } = removeCardRecursively(p.board, active.id as string);
-          if (!removed || removed.locked) return next;
-
-          const updateSlot = (cards: GameCard[]): GameCard[] => cards.map(c => {
-            if (c.id === slotData.parentId) {
-              const currentSlots = c.slotCards ?? createSlotCards(c.symbol) ?? {};
-              const existing = currentSlots[slotData.slotKey] || null;
-              const mergeResult = mergeCardIntoSlotValue(existing, removed);
-              if (!mergeResult.merged) {
-                mergeError = mergeResult.error ?? 'Do tohoto okénka kartu vložit nejde.';
-                return c;
-              }
-              currentSlots[slotData.slotKey] = mergeResult.merged;
-              const updatedCard = { ...c, slotCards: currentSlots };
-              moved = true;
-              return updatedCard;
+        const updateSlot = (cards: GameCard[]): GameCard[] => cards.map(c => {
+          if (c.id === slotData.parentId) {
+            const currentSlots = { ...(c.slotCards ?? createSlotCards(c.symbol) ?? {}) };
+            const existing = currentSlots[slotData.slotKey] || null;
+            const mergeResult = mergeCardIntoSlotValue(existing, removed);
+            if (!mergeResult.merged) {
+              mergeError = mergeResult.error ?? 'Do tohoto okénka kartu vložit nejde.';
+              return c;
             }
-            return c.exponent ? { ...c, exponent: updateSlot([c.exponent])[0] } : c;
-          });
-
-          const updatedBoard = updateSlot(newCards);
-          if (mergeError) return next;
-          p.board = updatedBoard;
-          return next;
+            currentSlots[slotData.slotKey] = mergeResult.merged;
+            moved = true;
+            return { ...c, slotCards: currentSlots };
+          }
+          return c.exponent ? { ...c, exponent: updateSlot([c.exponent])[0] } : c;
         });
+
+        const updatedBoard = updateSlot(newCards);
 
         if (mergeError) {
           toast.error(mergeError);
           return;
         }
+
         if (moved) {
+          setPlayers(prev => {
+            const next = JSON.parse(JSON.stringify(prev));
+            next[currentPlayerIndex].board = updatedBoard;
+            return next;
+          });
           setPendingEffect(null);
         }
         return;
@@ -1095,6 +1155,9 @@ export function useGameEngine() {
 
     // Rozpoznání typu drop zóny
     if (overId.startsWith('drop-exponent-')) {
+      if (getSpecialSlots(cardToPlace.symbol).length > 0) {
+        return toast.error("Karty s volným oknem nelze vkládat do exponentu.");
+      }
       targetId = (over.data.current as DropData).parentId;
     } else if (overId.startsWith('main-board-after-dxdy-')) {
       const match = overId.match(/main-board-after-dxdy-(\d+)/);
@@ -1714,6 +1777,7 @@ export function useGameEngine() {
     setTutorialReferenceBoard(referenceBoard);
     setTutorialBracketInfoShown(false);
     setTutorialTwosAdded(false);
+    setTutorialCardQueue([]);
 
     setGamePhase('PLAYING');
   };
@@ -1729,6 +1793,7 @@ export function useGameEngine() {
     setTutorialReferenceBoard([]);
     setTutorialBracketInfoShown(false);
     setTutorialTwosAdded(false);
+    setTutorialCardQueue([]);
     setWinner(null);
     setDeck([]);
     setDiscardPile([]);
@@ -1749,6 +1814,7 @@ export function useGameEngine() {
     setTutorialReferenceBoard([]);
     setTutorialBracketInfoShown(false);
     setTutorialTwosAdded(false);
+    setTutorialCardQueue([]);
     setWinner(null);
     setDeck([]);
     setDiscardPile([]);

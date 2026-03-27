@@ -25,11 +25,11 @@ export function TutorialOverlay({ active, step, onNext }: { active: boolean; ste
     },
     {
       title: 'Závorky a mocnina',
-      text: 'Do ruky se ti teď přidaly karty 2 a a^b. V každém kole vylož jen 1 kartu, pak klikni na Konec tahu (dobereš 1 náhodnou kartu). Postav výraz (2 + 3^2): polož 3, za ni a^b a pak přetáhni 2 do okénka karty a^b. Pokud překročíš limit 5 karet v ruce, nejdřív odhoď přebytek.'
+      text: 'Do ruky dostáváš po jedné kartě za kolo. V každém kole polož 1 kartu na tabuli a klikni Ukončit tah. Postav výraz (2 + 3^2): polož 3, pak a^b a přetáhni 2 do okénka. Pokud překročíš limit 5 karet, nejdřív odhoď přebytek.'
     },
     {
       title: 'Ověření Q.E.D.',
-      text: 'Klikni na tlačítko Ověřit (Q.E.D.). Pokud je L = R, hra skončí a ty vyhraješ.'
+      text: 'Klikni na tlačítko Ověřit Q.E.D.. Pokud je L = R, hra skončí a ty vyhraješ.'
     },
     {
       title: 'Hotovo',
@@ -41,15 +41,15 @@ export function TutorialOverlay({ active, step, onNext }: { active: boolean; ste
   const showNext = step === 0 || step === 1;
 
   return (
-    <div className="fixed left-1/2 top-6 z-120 w-[92vw] max-w-xl -translate-x-1/2 rounded-2xl border border-white/10 bg-slate-950/85 p-5 text-slate-100 shadow-2xl backdrop-blur-md">
-      <div className="flex items-start justify-between gap-4">
+    <div className="fixed left-1/2 top-16 sm:top-6 z-120 w-[82vw] sm:w-[92vw] max-w-xl -translate-x-1/2 rounded-2xl border border-white/10 bg-slate-950/85 p-3 sm:p-5 text-slate-100 shadow-2xl backdrop-blur-md">
+      <div className="flex items-start justify-between gap-3 sm:gap-4">
         <div>
-          <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">Tutoriál</p>
-          <h3 className="text-2xl font-black italic text-white">{content.title}</h3>
+          <p className="text-[10px] sm:text-xs uppercase tracking-[0.3em] text-emerald-300">Tutoriál</p>
+          <h3 className="text-lg sm:text-2xl font-black italic text-white">{content.title}</h3>
         </div>
-        <div className="text-xs text-slate-400">Krok {Math.min(step + 1, steps.length)} / {steps.length}</div>
+        <div className="text-[10px] sm:text-xs text-slate-400">Krok {Math.min(step + 1, steps.length)} / {steps.length}</div>
       </div>
-      <p className="mt-3 text-sm text-slate-200">{content.text}</p>
+      <p className="mt-2 sm:mt-3 text-xs sm:text-sm text-slate-200">{content.text}</p>
       {showNext && (
         <div className="mt-4 flex justify-end">
           <Button size="sm" className="bg-emerald-600 hover:bg-emerald-500" onClick={onNext}>Začít</Button>
@@ -190,7 +190,7 @@ export function GameSummaryDialog({
   };
 
   return (
-    <div className="fixed inset-0 z-120 bg-slate-950/95 flex items-center justify-center p-6">
+    <div className="fixed inset-0 z-[200] bg-slate-950/95 flex items-center justify-center p-6">
       <div className="w-full max-w-5xl rounded-2xl border border-white/10 bg-slate-900/80 backdrop-blur-md p-6 text-slate-100">
         <div className="flex items-start justify-between gap-4">
           <div>
@@ -270,7 +270,7 @@ export function GameSummaryDialog({
 export function HandoffScreen({ isHandoff, players, nextIndex, onReveal }: { isHandoff: boolean, players: Player[], nextIndex: number, onReveal: () => void }) {
   if (!isHandoff) return null;
   return (
-    <div className="fixed inset-0 bg-slate-950 z-200 flex flex-col items-center justify-center text-white text-center p-4">
+    <div className="fixed inset-0 bg-slate-950 z-[200] flex flex-col items-center justify-center text-white text-center p-4">
       <style>{`
         @keyframes shrinkBar {
           0% { width: 100%; }
@@ -313,7 +313,7 @@ export function TargetingOverlay({
   const targetPlayer = players.find((p: Player) => p.id === targetingMode.targetPlayerId);
 
   return (
-    <div className="fixed inset-0 bg-slate-950/95 z-150 flex flex-col items-center justify-center p-8 backdrop-blur-md animate-in fade-in duration-300">
+    <div className="fixed inset-0 bg-slate-950/95 z-[200] flex flex-col items-center justify-center p-8 backdrop-blur-md animate-in fade-in duration-300">
       <div className="text-center mb-12">
         <Badge variant="outline" className="mb-4 border-red-500 text-red-500 px-4 py-1 animate-pulse">TARGET ACQUIRED</Badge>
         <h2 className="text-6xl text-white font-black mb-4 tracking-tighter uppercase font-chalk">Zaměřování</h2>

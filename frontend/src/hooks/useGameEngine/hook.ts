@@ -516,9 +516,10 @@ export function useGameEngine() {
     let nextIdx = (currentPlayerIndex + playDirection + players.length) % players.length;
     if (players[nextIdx].status?.frozen) {
       toast.info(`${players[nextIdx].name} vynechává.`, { icon: '❄️' });
+      const frozenIdx = nextIdx;
       setPlayers(prev => {
         const next = JSON.parse(JSON.stringify(prev));
-        next[nextIdx].status.frozen = false;
+        if (next[frozenIdx]?.status) next[frozenIdx].status.frozen = false;
         return next;
       });
       nextIdx = (nextIdx + playDirection + players.length) % players.length;

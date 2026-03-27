@@ -314,7 +314,7 @@ export function BoardCard({ card, isTargeting, onCardClick, onIntegralVariableCh
       {!isDragging && isExpanded && hasFourSlots && (
         <>
           {ulKey && card.slotCards?.[ulKey] && (
-            <div className="absolute" style={{ left: '20%', top: '-12%', transform: 'translateX(-50%) scale(0.85)', zIndex: 0 }}>
+            <div className="absolute" style={{ left: '20%', top: '-20%', transform: 'translateX(-50%)', zIndex: 0 }}>
               <div className={`w-20 h-28 sm:w-24 sm:h-32 md:w-28 md:h-36 lg:w-32 lg:h-40 rounded-xl border-2 flex items-center justify-center bg-slate-800 shadow-xl overflow-hidden ${getBorderColor(card.slotCards[ulKey]!.symbol)}`}>
                 <div className="w-full h-full flex items-center justify-center p-0">
                   {cardsDatabase[card.slotCards[ulKey]!.symbol]?.image ? (
@@ -333,7 +333,7 @@ export function BoardCard({ card, isTargeting, onCardClick, onIntegralVariableCh
             </div>
           )}
           {urKey && card.slotCards?.[urKey] && (
-            <div className="absolute" style={{ left: '80%', top: '-12%', transform: 'translateX(-50%) scale(0.85)', zIndex: 0 }}>
+            <div className="absolute" style={{ left: '80%', top: '-20%', transform: 'translateX(-50%)', zIndex: 0 }}>
               <div className={`w-20 h-28 sm:w-24 sm:h-32 md:w-28 md:h-36 lg:w-32 lg:h-40 rounded-xl border-2 flex items-center justify-center bg-slate-800 shadow-xl overflow-hidden ${getBorderColor(card.slotCards[urKey]!.symbol)}`}>
                 <div className="w-full h-full flex items-center justify-center p-0">
                   {cardsDatabase[card.slotCards[urKey]!.symbol]?.image ? (
@@ -352,7 +352,7 @@ export function BoardCard({ card, isTargeting, onCardClick, onIntegralVariableCh
             </div>
           )}
           {llKey && card.slotCards?.[llKey] && (
-            <div className="absolute" style={{ left: '20%', top: '88%', transform: 'translateX(-50%) scale(0.85)', zIndex: 0 }}>
+            <div className="absolute" style={{ left: '20%', top: '80%', transform: 'translateX(-50%)', zIndex: 0 }}>
               <div className={`w-20 h-28 sm:w-24 sm:h-32 md:w-28 md:h-36 lg:w-32 lg:h-40 rounded-xl border-2 flex items-center justify-center bg-slate-800 shadow-xl overflow-hidden ${getBorderColor(card.slotCards[llKey]!.symbol)}`}>
                 <div className="w-full h-full flex items-center justify-center p-0">
                   {cardsDatabase[card.slotCards[llKey]!.symbol]?.image ? (
@@ -371,7 +371,7 @@ export function BoardCard({ card, isTargeting, onCardClick, onIntegralVariableCh
             </div>
           )}
           {lrKey && card.slotCards?.[lrKey] && (
-            <div className="absolute" style={{ left: '80%', top: '88%', transform: 'translateX(-50%) scale(0.85)', zIndex: 0 }}>
+            <div className="absolute" style={{ left: '80%', top: '80%', transform: 'translateX(-50%)', zIndex: 0 }}>
               <div className={`w-20 h-28 sm:w-24 sm:h-32 md:w-28 md:h-36 lg:w-32 lg:h-40 rounded-xl border-2 flex items-center justify-center bg-slate-800 shadow-xl overflow-hidden ${getBorderColor(card.slotCards[lrKey]!.symbol)}`}>
                 <div className="w-full h-full flex items-center justify-center p-0">
                   {cardsDatabase[card.slotCards[lrKey]!.symbol]?.image ? (
@@ -394,7 +394,7 @@ export function BoardCard({ card, isTargeting, onCardClick, onIntegralVariableCh
       {!isDragging && isExpanded && hasTwoSlots && (
         <>
           {topSlotKey && card.slotCards?.[topSlotKey] && (
-            <div className="absolute left-1/2" style={{ top: '-10%', transform: 'translateX(-50%) scale(0.9)', zIndex: 0 }}>
+            <div className="absolute left-1/2" style={{ top: '-20%', transform: 'translateX(-50%)', zIndex: 0 }}>
               <div className={`w-20 h-28 sm:w-24 sm:h-32 md:w-28 md:h-36 lg:w-32 lg:h-40 rounded-xl border-2 flex items-center justify-center bg-slate-800 shadow-xl overflow-hidden ${getBorderColor(card.slotCards[topSlotKey]!.symbol)}`}>
                 <div className="w-full h-full flex items-center justify-center p-0">
                   {cardsDatabase[card.slotCards[topSlotKey]!.symbol]?.image ? (
@@ -413,7 +413,7 @@ export function BoardCard({ card, isTargeting, onCardClick, onIntegralVariableCh
             </div>
           )}
           {bottomSlotKey && card.slotCards?.[bottomSlotKey] && (
-            <div className="absolute left-1/2" style={{ top: '86%', transform: 'translateX(-50%) scale(0.9)', zIndex: 0 }}>
+            <div className="absolute left-1/2" style={{ top: '80%', transform: 'translateX(-50%)', zIndex: 0 }}>
               <div className={`w-20 h-28 sm:w-24 sm:h-32 md:w-28 md:h-36 lg:w-32 lg:h-40 rounded-xl border-2 flex items-center justify-center bg-slate-800 shadow-xl overflow-hidden ${getBorderColor(card.slotCards[bottomSlotKey]!.symbol)}`}>
                 <div className="w-full h-full flex items-center justify-center p-0">
                   {cardsDatabase[card.slotCards[bottomSlotKey]!.symbol]?.image ? (
@@ -435,7 +435,7 @@ export function BoardCard({ card, isTargeting, onCardClick, onIntegralVariableCh
       )}
 
       {!isDragging && isExpanded && hasOneSlot && card.slotCards?.[slotKeys[0]] && (
-        <div className="absolute left-1/2" style={{ top: '-10%', transform: 'translateX(-50%) scale(0.9)', zIndex: 0 }}>
+        <div className="absolute left-1/2" style={{ top: '-20%', transform: 'translateX(-50%)', zIndex: 0 }}>
           <div className={`w-20 h-28 sm:w-24 sm:h-32 md:w-28 md:h-36 lg:w-32 lg:h-40 rounded-xl border-2 flex items-center justify-center bg-slate-800 shadow-xl overflow-hidden ${getBorderColor(card.slotCards[slotKeys[0]]!.symbol)}`}>
             <div className="w-full h-full flex items-center justify-center p-0">
               {cardsDatabase[card.slotCards[slotKeys[0]]!.symbol]?.image ? (
