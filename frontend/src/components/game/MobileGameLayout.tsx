@@ -785,7 +785,7 @@ export function MobileGameLayout({ currentPlayer, state, actions, tutorialRefere
         background: `linear-gradient(to bottom, ${palette.bgDark} 0%, ${palette.bgMid} 100%)`,
         fontFamily: "'Merienda', cursive",
         color: '#fff',
-        minHeight: 'max(796px, 90dvh)',
+        minHeight: '100dvh',
       }}
     >
       {/* ── NAV ── */}
@@ -867,7 +867,7 @@ export function MobileGameLayout({ currentPlayer, state, actions, tutorialRefere
         <section className="relative group">
           <MobileBoardDropZone id="main-board" palette={palette} />
           <div
-            className="w-full border-4 shadow-2xl flex items-center justify-center overflow-hidden relative rounded-lg p-4 transition-colors duration-700"
+            className={`w-full border-4 shadow-2xl flex items-center justify-center relative rounded-lg p-4 transition-colors duration-700 ${isDraggingCard ? 'overflow-visible' : 'overflow-hidden'}`}
             style={{
               borderColor: `${palette.primary}66`,
               backgroundColor: palette.bgMid,
@@ -1000,14 +1000,14 @@ export function MobileGameLayout({ currentPlayer, state, actions, tutorialRefere
 
         {/* ACTION BUTTONS */}
         <section className="flex flex-col items-center gap-3">
-          <div className="flex gap-3 w-full">
+          <div className="flex items-stretch gap-3 mx-auto" style={{ width: `calc(3 * ${FULL_CARD_W} + 2 * 1rem)` }}>
             <button
               onClick={actions.checkMathEngine}
               disabled={!canVerify}
               className="font-bold rounded-xl shadow-lg transition-all active:scale-95 flex flex-col items-center justify-center p-0 disabled:opacity-50 disabled:cursor-not-allowed"
               style={{
                 width: FULL_CARD_W,
-                height: `calc(${FULL_CARD_H} / 2)`,
+                height: `calc(${FULL_CARD_H} * 0.35)`,
                 background: canVerify ? palette.primary : `${palette.primary}55`,
                 color: '#fff',
                 fontFamily: "'Merienda', cursive",
@@ -1022,8 +1022,8 @@ export function MobileGameLayout({ currentPlayer, state, actions, tutorialRefere
               onClick={actions.handleEndTurn}
               className="font-bold rounded-xl border border-white/10 transition-all active:scale-95 flex items-center justify-center gap-2"
               style={{
-                width: `calc(${FULL_CARD_W} * 2 + 1rem)`,
-                height: `calc(${FULL_CARD_H} / 2)`,
+                flex: 1,
+                height: `calc(${FULL_CARD_H} * 0.35)`,
                 background: 'rgba(30,41,59,0.9)',
                 color: '#cbd5e1',
                 fontFamily: "'Merienda', cursive",
@@ -1076,9 +1076,9 @@ export function MobileGameLayout({ currentPlayer, state, actions, tutorialRefere
       {/* ── FOOTER (hand fan) ── */}
       <footer
         className="mt-auto pb-4 pt-2 px-4 transition-colors duration-700"
-        style={{ background: `linear-gradient(to top, ${palette.footerBg} 0%, transparent 100%)`, position: 'relative', zIndex: 100 }}
+        style={{ background: `linear-gradient(to top, ${palette.bgMid} 0%, transparent 100%)`, position: 'relative', zIndex: 100 }}
       >
-        <div className="relative h-44 max-w-lg mx-auto flex justify-center items-end select-none" style={{ transform: 'translateY(-110px)' }}>
+        <div className="relative h-44 max-w-lg mx-auto flex justify-center items-end select-none" style={{ transform: 'translateY(-70px)' }}>
           {handCards.map((card, index) => (
             <MiniHandCard
               key={card.id}

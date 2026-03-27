@@ -749,7 +749,7 @@ export function DesktopGameLayout({ currentPlayer, state, actions, tutorialRefer
         <section className="relative group">
           <DesktopBoardDropZone id="main-board" palette={palette} />
           <div
-            className="w-full border-4 shadow-2xl flex items-center justify-center overflow-hidden relative rounded-lg p-4 transition-colors duration-700"
+            className={`w-full border-4 shadow-2xl flex items-center justify-center relative rounded-lg p-4 transition-colors duration-700 ${isDraggingCard ? 'overflow-visible' : 'overflow-hidden'}`}
             style={{
               borderColor: `${palette.primary}66`,
               backgroundColor: palette.bgMid,
