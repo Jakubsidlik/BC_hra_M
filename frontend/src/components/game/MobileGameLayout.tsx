@@ -1078,7 +1078,7 @@ export function MobileGameLayout({ currentPlayer, state, actions, tutorialRefere
         className="mt-auto pb-4 pt-2 px-4 transition-colors duration-700"
         style={{ background: `linear-gradient(to top, ${palette.bgMid} 0%, transparent 100%)`, position: 'relative', zIndex: 100 }}
       >
-        <div className="relative h-44 max-w-lg mx-auto flex justify-center items-end select-none" style={{ transform: 'translateY(-70px)' }}>
+        <div className="relative h-44 max-w-lg mx-auto flex justify-center items-end select-none" style={{ transform: 'translateY(-55px)' }}>
           {handCards.map((card, index) => (
             <MiniHandCard
               key={card.id}
