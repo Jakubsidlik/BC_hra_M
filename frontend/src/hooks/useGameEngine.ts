@@ -1134,6 +1134,15 @@ export function useGameEngine() {
     });
     const isOnlyOnBoard = !card && isCardInBoardTree(players[currentPlayerIndex].board, String(active.id));
     const pStatus = players[currentPlayerIndex].status;
+
+    // EFF_006: mustPlayOperation — musí hrát operaci (kontrola PŘED limity tahu)
+    if (pStatus?.mustPlayOperation && card && !isOnlyOnBoard) {
+      const draggedCardData = cardsDatabase[card.symbol];
+      if (draggedCardData?.type !== 'operator') {
+        return toast.error("Musíš hrát kartu operace! Tak ti nařídil soupeř (+).");
+      }
+    }
+
     if (pStatus?.playLimit !== null && pStatus?.playLimit !== undefined && playsThisTurn >= pStatus.playLimit && !isVsSpecialMove) {
       return toast.error("Tento tah už nesmíš vyložit další kartu!");
     }
@@ -1227,10 +1236,7 @@ export function useGameEngine() {
       if (pStatus?.numberLock && cardData?.type === 'number') {
         return toast.error("Tento tah nesmíš hrát číslo! (Zákaz čísel ∏)");
       }
-      // EFF_006: mustPlayOperation — musí hrát operaci
-      if (pStatus?.mustPlayOperation && cardData?.type !== 'operator') {
-        return toast.error("Musíš hrát kartu operace! Tak ti nařídil soupeř (+).");
-      }
+      // EFF_006: mustPlayOperation — already checked above before hasModifiedBoardThisTurn
       // EFF_013: playLimit — smí hrát jen N karet za tah (sledujeme kolik již zahrál)
       // (playLimit resets each turn via nextTurn clearing; we track via hasModifiedBoardThisTurn for limit=1)
       // The basic limit=1 case: hasModifiedBoardThisTurn already catches it (same error path above)

@@ -178,17 +178,22 @@ function MiniHandCard({ card, index, total, isDiscarding, onDiscard, onSelect, i
     data: card,
   });
 
+  // Fan layout calculations
   const midpoint = (total - 1) / 2;
   const distanceFromCenter = index - midpoint;
   const rotation = isDragging ? 0 : distanceFromCenter * 12;
-  const translateY = isDragging ? 0 : Math.abs(distanceFromCenter) * 6;
+  const fanTranslateY = isDragging ? 0 : Math.abs(distanceFromCenter) * 6;
   const translateX = isDragging ? 0 : distanceFromCenter * 28;
+
+  // When selected: straighten, lift up, scale to 2.75x so card is fully visible
+  const selectedTransform = `rotate(0deg) translateY(-6rem) translateX(${translateX}px) scale(2.25)`;
+  const normalTransform = `rotate(${rotation}deg) translateY(${fanTranslateY}px) translateX(${translateX}px)`;
 
   const style: React.CSSProperties = {
     transform: transform
       ? CSS.Translate.toString(transform)
-      : `rotate(${rotation}deg) translateY(${translateY}px) translateX(${translateX}px) scale(${isSelected ? 1.85 : 1})`,
-    zIndex: isDragging ? 99999 : 10 + index,
+      : isSelected ? selectedTransform : normalTransform,
+    zIndex: isDragging ? 199 : isSelected ? 199 : 60 + index,
     position: 'absolute',
     width: FULL_CARD_W,
     height: FULL_CARD_H,
@@ -217,7 +222,7 @@ function MiniHandCard({ card, index, total, isDiscarding, onDiscard, onSelect, i
       }}
       style={style}
       className={`rounded-xl border-2 shadow-xl select-none overflow-hidden
-        transition-all duration-200 origin-bottom
+        transition-all duration-300 origin-bottom
         ${isDragging ? 'scale-110 ring-2 ring-white/30' : ''}
         ${isDiscarding
           ? 'cursor-pointer border-red-500! animate-pulse'
@@ -1076,9 +1081,9 @@ export function MobileGameLayout({ currentPlayer, state, actions, tutorialRefere
       {/* ── FOOTER (hand fan) ── */}
       <footer
         className="mt-auto pb-4 pt-2 px-4 transition-colors duration-700"
-        style={{ background: `linear-gradient(to top, ${palette.bgMid} 0%, transparent 100%)`, position: 'relative', zIndex: 100 }}
+        style={{ background: `linear-gradient(to top, ${palette.bgMid} 0%, transparent 100%)`, position: 'relative', zIndex: 60 }}
       >
-        <div className="relative h-44 max-w-lg mx-auto flex justify-center items-end select-none" style={{ transform: 'translateY(-55px)' }}>
+        <div className="relative h-44 max-w-lg mx-auto flex justify-center items-end select-none" style={{ transform: 'translateY(-50px)' }}>
           {handCards.map((card, index) => (
             <MiniHandCard
               key={card.id}
