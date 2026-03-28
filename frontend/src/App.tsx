@@ -77,7 +77,7 @@ export default function App() {
       onBack={() => actions.setGamePhase('MENU')}
     />
   );
-  if (state.gamePhase === 'SETUP') return <SetupScreen onStart={actions.handleStartGame} />;
+  if (state.gamePhase === 'SETUP') return <SetupScreen onStart={actions.handleStartGame} onBack={() => actions.setGamePhase('MENU')} />;
 
   // 4. HLAVNÍ HRACÍ PLOCHA
   const currentPlayer = state.players[state.currentPlayerIndex];
