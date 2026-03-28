@@ -17,9 +17,10 @@ export const AVAILABLE_THEMES = [
 
 interface SetupScreenProps {
   onStart: (players: { name: string, theme: string }[]) => void;
+  onBack: () => void;
 }
 
-export function SetupScreen({ onStart }: SetupScreenProps) {
+export function SetupScreen({ onStart, onBack }: SetupScreenProps) {
   const [playerCount, setPlayerCount] = useState(2);
   const [setupPlayers, setSetupPlayers] = useState([
     { name: 'Matematik 1', theme: 'bg-violet-600/60' }, // Výchozí fialová
@@ -80,7 +81,7 @@ export function SetupScreen({ onStart }: SetupScreenProps) {
               <button 
                 key={num}
                 onClick={() => handleCountChange(num)}
-                className={`w-12 h-12 md:w-16 md:h-16 rounded-2xl text-xl md:text-2xl font-black transition-all duration-300 border-2 
+                className={`w-[2.85rem] h-[2.85rem] md:w-16 md:h-16 rounded-2xl text-xl md:text-2xl font-black transition-all duration-300 border-2 
                   ${playerCount === num 
                     ? 'bg-emerald-600 border-emerald-400 text-white shadow-[0_0_20px_rgba(16,185,129,0.3)] scale-105' 
                     : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10 hover:text-white'}`}
@@ -135,13 +136,20 @@ export function SetupScreen({ onStart }: SetupScreenProps) {
           ))}
         </div>
 
-        <div className="flex justify-center pb-4">
+        <div className="flex flex-col items-center gap-2 pb-4">
           <Button 
             size="lg" 
             className="bg-emerald-600 hover:bg-emerald-500 text-white font-black text-3xl px-16 py-10 rounded-2rem shadow-[0_0_40px_rgba(16,185,129,0.25)] transition-all hover:scale-105 active:scale-95 border-4 border-emerald-400/50" 
             onClick={handleStart}
           >
             ZAČÍT
+          </Button>
+          <Button
+            variant="ghost"
+            className="mt-4 text-slate-400 hover:text-white text-base md:text-xl font-bold"
+            onClick={onBack}
+          >
+            ← ZPĚT DO MENU
           </Button>
         </div>
 

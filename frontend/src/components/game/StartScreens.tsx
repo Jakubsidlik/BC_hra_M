@@ -84,16 +84,36 @@ export function DifficultySelection({ onSelect, onBack }: { onSelect: (mode: 'TU
           Vyber režim...
         </h2>
 
-        <div className="flex flex-col gap-8 w-full max-w-3xl mb-16">
+        <div className="flex flex-col items-center gap-6 w-full max-w-3xl mb-16 md:gap-8">
           <Button
             size="lg"
-            className="w-full bg-emerald-600/15 hover:bg-emerald-600/35 text-emerald-100 font-black text-4xl py-10 rounded-3xl border-4 border-emerald-400/40 hover:border-emerald-400 transition-all shadow-xl"
+            className="w-[45%] mx-auto bg-emerald-600/15 hover:bg-emerald-600/35 text-emerald-100 font-black text-2xl py-7 rounded-3xl border-4 border-emerald-400/40 hover:border-emerald-400 transition-all shadow-xl md:w-full md:text-4xl md:py-10"
             onClick={() => onSelect('TUTORIAL')}
           >
             TUTORIÁL
           </Button>
-
-          <div className="flex flex-col md:flex-row gap-8 w-full">
+          <Button
+            size="lg"
+            className="w-[45%] mx-auto bg-emerald-600/20 hover:bg-emerald-600/40 text-emerald-100 font-black text-[2.15rem] py-14 rounded-3xl border-4 border-emerald-400/50 hover:border-emerald-400 transition-all shadow-xl md:hidden"
+            onClick={() => onSelect('ZŠ')}
+          >
+            ZŠ
+          </Button>
+          <Button
+            size="lg"
+            className="w-[45%] mx-auto bg-emerald-600/20 hover:bg-emerald-600/40 text-emerald-100 font-black text-[2.15rem] py-14 rounded-3xl border-4 border-emerald-400/50 hover:border-emerald-400 transition-all shadow-xl md:hidden"
+            onClick={() => onSelect('SŠ')}
+          >
+            SŠ
+          </Button>
+          <Button
+            size="lg"
+            className="w-[45%] mx-auto bg-emerald-600/20 hover:bg-emerald-600/40 text-emerald-100 font-black text-[2.15rem] py-14 rounded-3xl border-4 border-emerald-400/50 hover:border-emerald-400 transition-all shadow-xl md:hidden"
+            onClick={() => onSelect('VŠ')}
+          >
+            VŠ
+          </Button>
+          <div className="hidden md:flex flex-row justify-center gap-5 w-full">
             {(['ZŠ', 'SŠ', 'VŠ'] as const).map((mode) => (
               <Button 
                 key={mode}
