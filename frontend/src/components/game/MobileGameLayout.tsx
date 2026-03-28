@@ -866,7 +866,7 @@ export function MobileGameLayout({ currentPlayer, state, actions, tutorialRefere
       </nav>
 
       {/* ── MAIN ── */}
-      <main className="flex-1 flex flex-col mx-auto w-full p-2 max-w-4xl gap-2">
+      <main className="flex-1 flex flex-col mx-auto w-full p-2 pb-16 max-w-4xl gap-2">
 
         {/* CHALKBOARD — board + target */}
         <section className="relative group">
@@ -889,7 +889,7 @@ export function MobileGameLayout({ currentPlayer, state, actions, tutorialRefere
             />
 
             {/* Board cards */}
-            <div className="z-10 flex flex-col items-center gap-2 w-full" style={{ minHeight: '5rem' }}>
+            <div className="z-10 flex flex-col items-center gap-2 w-full" style={{ minHeight: '5rem', paddingBottom: '2.5rem' }}>
               {tutorialReferenceBoard && tutorialReferenceBoard.length > 0 && (
                 <TutorialReferenceRow cards={tutorialReferenceBoard} palette={palette} />
               )}
@@ -1080,10 +1080,10 @@ export function MobileGameLayout({ currentPlayer, state, actions, tutorialRefere
 
       {/* ── FOOTER (hand fan) ── */}
       <footer
-        className="mt-auto pb-4 pt-2 px-4 transition-colors duration-700"
-        style={{ background: `linear-gradient(to top, ${palette.bgMid} 0%, transparent 100%)`, position: 'relative', zIndex: 60 }}
+        className="mt-auto pt-2 px-4 transition-colors duration-700"
+        style={{ background: `linear-gradient(to top, ${palette.bgMid} 0%, transparent 100%)`, position: 'relative', zIndex: 60, paddingBottom: 'calc(1rem + 10px)' }}
       >
-        <div className="relative h-44 max-w-lg mx-auto flex justify-center items-end select-none" style={{ transform: 'translateY(-50px)' }}>
+        <div className="relative h-44 max-w-lg mx-auto flex justify-center items-end select-none" style={{ transform: 'translateY(-85px)' }}>
           {handCards.map((card, index) => (
             <MiniHandCard
               key={card.id}
