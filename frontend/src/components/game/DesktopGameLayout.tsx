@@ -98,7 +98,7 @@ function DesktopHandCard({ card, index, total, isDiscarding, onDiscard, onSelect
     transform: transform
       ? CSS.Translate.toString(transform)
       : `rotate(${rotation}deg) translateX(${translateXVal}px) translateY(${translateYVal}px) scale(${isSelected ? 1.85 : 1})`,
-    zIndex: isDragging ? 99999 : 10 + index,
+    zIndex:  isDragging ? 199 : isSelected ? 199 : 60 + index,
     position: 'absolute',
     width: CARD_W,
     height: CARD_H,
