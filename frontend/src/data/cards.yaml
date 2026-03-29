@@ -183,7 +183,7 @@ x:
 +:
   symbol: +
   type: operator
-  count: 15
+  count: 20
   image: /svg/plus.svg
   hasEffect: true
   effects:
@@ -195,7 +195,7 @@ x:
 '-':
   symbol: '-'
   type: operator
-  count: 15
+  count: 20
   image: /svg/minus.svg
   hasEffect: true
   effects:
@@ -207,7 +207,7 @@ x:
 '*':
   symbol: '*'
   type: operator
-  count: 15
+  count: 20
   image: /svg/krat.svg
   hasEffect: true
   effects:
@@ -219,7 +219,7 @@ x:
 /:
   symbol: /
   type: operator
-  count: 15
+  count: 20
   image: /svg/deleno.svg
   hasEffect: true
   effects:
@@ -231,7 +231,7 @@ x:
 a^b:
   symbol: a^b
   type: operator
-  count: 4
+  count: 8
   image: /svg/mocnina.svg
   slots:
     - single
@@ -245,7 +245,7 @@ a^b:
 sqrt:
   symbol: sqrt
   type: operator
-  count: 4
+  count: 8
   image: /svg/odmocneno.svg
   slots:
     - single
@@ -259,7 +259,7 @@ sqrt:
 mod:
   symbol: mod
   type: operator
-  count: 4
+  count: 5
   image: /svg/mod.svg
   slots:
     - single
@@ -273,7 +273,7 @@ mod:
 n!:
   symbol: n!
   type: operator
-  count: 2
+  count: 6
   image: /svg/faktorial.svg
   hasEffect: true
   effects:
@@ -306,7 +306,7 @@ int:
 log:
   symbol: log
   type: operator
-  count: 2
+  count: 6
   image: /svg/log.svg
   slots:
     - single
@@ -584,7 +584,7 @@ cotg(π/2):
 nCk:
   symbol: nCk
   type: operator
-  count: 4
+  count: 6
   image: /svg/kombinace.svg
   slots:
     - upper
@@ -614,7 +614,7 @@ lim:
 det:
   symbol: det
   type: operator
-  count: 2
+  count: 5
   image: /svg/det.svg
   slots:
     - ul
@@ -645,7 +645,7 @@ det:
 skalar:
   symbol: skalar
   type: operator
-  count: 4
+  count: 6
   image: /svg/skalar.svg
   slots:
     - a
@@ -660,7 +660,7 @@ skalar:
 vektor:
   symbol: vektor
   type: operator
-  count: 4
+  count: 6
   image: /svg/vektor.svg
   slots:
     - a
@@ -675,14 +675,14 @@ vektor:
 ln:
   symbol: ln
   type: operator
-  count: 2
+  count: 6
   image: /svg/ln.svg
   slots:
     - single
 log10:
   symbol: log10
   type: operator
-  count: 2
+  count: 6
   image: /svg/log10.svg
   slots:
     - single

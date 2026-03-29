@@ -94,7 +94,7 @@ function TabletHandCard({ card, index, total, isDiscarding, onDiscard, onSelect,
     transform: transform
       ? CSS.Translate.toString(transform)
       : `rotate(${rotation}deg) translateY(${translateY}px) translateX(${translateX}px) scale(${isSelected ? 1.85 : 1})`,
-    zIndex: isDragging ? 99999 : 10 + index,
+    zIndex: isDragging ? 199 : isSelected ? 199 : 60 + index,
     position: 'absolute',
     width: FULL_CARD_W,
     height: FULL_CARD_H,

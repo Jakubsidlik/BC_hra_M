@@ -156,7 +156,7 @@ export function RulesScreen({ onBack }: { onBack: () => void }) {
         <div className="flex-1 overflow-y-auto pr-2 md:pr-6 text-slate-200 font-mono scrollbar-thin scrollbar-thumb-slate-600">
           
           <div className="bg-black/40 backdrop-blur-sm border border-slate-500/30 p-4 md:p-6 rounded-xl mb-10 italic text-slate-300 text-sm md:text-base">
-            <span className="text-emerald-400 font-bold uppercase">Upozornění:</span> Tento herní systém respektuje zavedená matematická pravidla, definice, věty, logické důsledky a veškeré axiomatické systémy. Mechanika hry neumožňuje subjektivní interpretaci; vyžaduje se konstrukce výrazu v souladu s formální logikou.
+            <span className="text-emerald-400 font-bold uppercase">Upozornění:</span> Tento herní systém respektuje zavedená matematická pravidla, definice, věty, logické důsledky a veškeré axiomatické systémy. Mechanika hry neumožňuje subjektivní interpretaci; vyžaduje se konstrukce výrazu v souladu s formální logikou. Využívá knihovnu SymPy pro ověřování.
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 md:gap-16">
@@ -164,7 +164,7 @@ export function RulesScreen({ onBack }: { onBack: () => void }) {
               <section>
               <h3 className="text-3xl font-bold text-emerald-400 border-b border-emerald-400/30 pb-2 mb-4 italic">1. Představení</h3>
               <p className="leading-relaxed">
-                Math4fun je karetní herní systém zaměřený na skladbu matematických výrazů pro 2–8 hráčů. Hráči z karet staví levou stranu rovnice L a snaží se ji dostat na předepsaný cíl R.
+                Math4fun je karetní herní systém zaměřený na skladbu matematických výrazů pro 2–8 hráčů. Hráči z lokálních karet staví levou stranu rovnice <span className="text-emerald-300 font-bold">L</span> a snaží se ji logicky dotáhnout na předepsaný cíl <span className="text-yellow-300 font-bold">R</span>.
               </p>
               </section>
 
@@ -174,7 +174,7 @@ export function RulesScreen({ onBack }: { onBack: () => void }) {
               <ul className="space-y-3 text-sm md:text-base">
                 <li className="flex gap-2">
                   <span className="text-emerald-400 font-bold">L:</span> 
-                  <span>Levá strana; řetězec čísel, proměnných a operátorů skládáný na tabuli.</span>
+                  <span>Levá strana; řetězec čísel, proměnných a operátorů skládáný na vaší tabuli.</span>
                 </li>
                 <li className="flex gap-2">
                   <span className="text-yellow-400 font-bold">R:</span> 
@@ -202,213 +202,161 @@ export function RulesScreen({ onBack }: { onBack: () => void }) {
 
                 <div className="bg-blue-900/10 p-4 rounded-lg border border-blue-500/20">
                   <p className="text-blue-400 font-bold mb-2 uppercase text-xs">Pokročilé funkce SŠ</p>
-                  <p className="text-slate-300">Mocnina (a^b), Odmocnina, Logaritmy (log2, log3, log10), Faktoriál (n!), Goniometrie (sin, cos, tan, cot), Kombinatorika.</p>
+                  <p className="text-slate-300">Mocnina (a^b), Odmocnina (sqrt), Logaritmy (ln, log10, log2), Faktoriál (n!), Goniometrie (sin, cos, tg, cotg), Kombinatorika (nCk).</p>
                 </div>
 
                 <div className="bg-purple-900/10 p-4 rounded-lg border border-purple-500/20">
-                  <p className="text-purple-400 font-bold mb-2 uppercase text-xs">Analytické operátory VŠ</p>
-                  <p className="text-slate-300">Derivace, Integrál, Diskrétní sumace, Sekvenční produkt, Limita, Determinant.</p>
-                </div>
-                <div className="bg-black/30 p-4 rounded-lg border border-white/10">
-                  <p className="text-slate-300">
-                    Některé karty mají herní efekty (bonusy, blokace, výměny). Efekty VŠ karet Integrál, Derivace, Sumace a Sekvenční produkt jsou vypnuté a slouží jen jako operátory.
-                  </p>
+                  <p className="text-purple-400 font-bold mb-2 uppercase text-xs">Analytické operace VŠ</p>
+                  <p className="text-slate-300">Derivace (d/dx), Integrál (int), Sumace (∑), Produkt (∏), Limita (lim), Determinant (det), Skalární a Vektorový součin.</p>
                 </div>
               </div>
               </section>
 
               <section>
-              <h3 className="text-3xl font-bold text-emerald-400 border-b border-emerald-400/30 pb-2 mb-4 italic">4. Vizuál a Ikony</h3>
-              <div className="space-y-3 bg-black/20 p-5 rounded-xl text-sm md:text-base">
-                <p className="text-xs text-slate-400 mb-2 italic text-center">Barva okraje: Modrá-číslo, Oranžová-operace, Černá-závorka, Šedá-proměnná.</p>
-                <p>👤 <span className="text-white font-bold">Hlava:</span> Platí pro hráče samotného.</p>
-                <p>➔👤 <span className="text-white font-bold">Postava:</span> Cílí na následujícího hráče.</p>
-                <p>✨👤 <span className="text-white font-bold">Postava:</span> Cílí na libovolného hráče.</p>
-                <p>👥 <span className="text-white font-bold">Více postav:</span> Všichni kromě aktivního hráče.</p>
-              </div>
-              </section>
-
-              <section>
-              <h3 className="text-3xl font-bold text-emerald-400 border-b border-emerald-400/30 pb-2 mb-4 italic">5. Příprava hry</h3>
+              <h3 className="text-3xl font-bold text-emerald-400 border-b border-emerald-400/30 pb-2 mb-4 italic">4. Příprava hry</h3>
               <ol className="list-decimal list-inside space-y-3 text-sm md:text-base">
                 <li>Každý obdrží 3 páry závorek ((), [], {"{}"}) a 1 operátor ekvivalence (=).</li>
                 <li>Určí se hodnota R dle zvolené obtížnosti (ZŠ, SŠ, VŠ).</li>
-                <li>Každý si dobere 5 počátečních karet.</li>
-                <li>Zahajující hráč začíná dobráním šesté karty.</li>
-                <li>Ve VŠ režimu dostane každý hráč na tabuli jednu speciální kartu (Integrál, Derivace, Sumace nebo Sekvenční produkt), která nejde odhodit.</li>
+                <li>Hráči si doberou 5 počátečních karet ze společného balíčku.</li>
+                <li>Zahajující hráč začíná dobráním šesté karty na začátku tahu.</li>
               </ol>
               </section>
 
               <section>
-              <h3 className="text-3xl font-bold text-emerald-400 border-b border-emerald-400/30 pb-2 mb-4 italic">6. Průběh tahu</h3>
-              <p className="text-sm italic mb-4">Matematik má v každém kole možnost provést jednu akci (pokud efekt neříká jinak):</p>
+              <h3 className="text-3xl font-bold text-emerald-400 border-b border-emerald-400/30 pb-2 mb-4 italic">5. Průběh tahu a Akce</h3>
+              <p className="text-sm italic mb-4">Matematik má v každém kole možnost provést 1 až vícero akcí dle zahraných karet:</p>
               <div className="space-y-4 text-sm md:text-base">
-                <div className="border-l-4 border-emerald-500 pl-4">
-                  <p className="font-bold text-white">Přidání</p>
-                  <p className="text-xs md:text-sm">Vložit kartu z ruky do tabule L a poskládat výraz.</p>
+                <div className="border-l-4 border-emerald-500 pl-4 bg-emerald-500/10 py-2">
+                  <p className="font-bold text-emerald-200">Přidání výpočtu</p>
+                  <p className="text-xs md:text-sm text-slate-300">Vložit kartu z ruky do tabule L nebo poskládat rovnici.</p>
                 </div>
-                <div className="border-l-4 border-blue-400 pl-4">
-                  <p className="font-bold text-white">Odebrání / Výměna</p>
-                  <p className="text-xs md:text-sm">Odebrat vlastní kartu z tabule do odhozu nebo přeskládat pořadí na tabuli.</p>
+                <div className="border-l-4 border-yellow-500 pl-4 bg-yellow-500/10 py-2">
+                  <p className="font-bold text-yellow-200">Vyplnění Okénka (Slotu)</p>
+                  <p className="text-xs md:text-sm text-slate-300">Speciální VŠ operátory a Sumy/Integrály mají okénka. Do nich se karty vkládají přímo přetažením na ně.</p>
                 </div>
-                <div className="border-l-4 border-red-500 pl-4">
-                  <p className="font-bold text-white">Restart</p>
-                  <p className="text-xs md:text-sm">Vyhodit celý výraz L a začít v příštím kole znovu (VŠ speciální karta zůstává).</p>
+                <div className="border-l-4 border-blue-400 pl-4 bg-blue-500/10 py-2">
+                  <p className="font-bold text-blue-200">Odebrání / Přemístění</p>
+                  <p className="text-xs md:text-sm text-slate-300">Odebrat kartu do odhozu (spolu se všemi vnořenými dětmi a okénky) nebo změnit pořadí na tabuli.</p>
                 </div>
               </div>
-              <div className="mt-6 space-y-3 text-sm md:text-base">
-                <p>Na konci tahu musí mít hráč v ruce maximálně 5 karet, jinak přechází do režimu odhazování.</p>
-                <p>Většina karet s efektem nabídne volbu: aktivovat efekt, nebo kartu položit na tabuli.</p>
+              <div className="mt-6 space-y-3 text-sm md:text-base bg-black/30 p-4 border border-slate-700/50 rounded-xl">
+                <p>Na konci tahu musí mít hráč v ruce max. 5 karet. Jinak přejde do režimu odhazování.</p>
+                <p>Karty s efektem nabídnou volbu: aktivovat destruktivní/výhodný efekt (a odhodit), nebo kartu pasivně zadrátovat na tabuli.</p>
               </div>
               </section>
 
               <section>
-              <h3 className="text-3xl font-bold text-emerald-400 border-b border-emerald-400/30 pb-2 mb-4 italic">7. Závorky, exponenty a speciální sloty</h3>
-              <div className="space-y-3 text-sm md:text-base">
-                <p>Závorky se umísťují ve dvou krocích: nejdřív levá, potom pravá. Uvnitř musí být alespoň jedno číslo nebo proměnná.</p>
-                <p>Některé karty umožňují exponent (např. a^b, odmocnina). Exponent lze přidat jen číslem nebo proměnnou.</p>
-                <p>Speciální VŠ karty mají okénka pro doplnění. Do okének lze vkládat pouze čísla.</p>
+              <h3 className="text-3xl font-bold text-emerald-400 border-b border-emerald-400/30 pb-2 mb-4 italic">6. Závorky a Implicitní Násobení</h3>
+              <div className="space-y-3 text-sm md:text-base border-l-4 border-slate-500 pl-4">
+                <p><strong>Závorky:</strong> Umísťují se ve 2 krocích: nejdřív levá, potom pravá.</p>
+                <p><strong>Implicitní násobení:</strong> Pokud položíte číslo a proměnnou (2 a x) beze znaménka, tabule automaticky znásobkuje `2*x`.</p>
+              </div>
+              </section>
+
+              <section>
+              <h3 className="text-3xl font-bold text-emerald-400 border-b border-emerald-400/30 pb-2 mb-4 italic">7. Logika Okének (Slotů)</h3>
+              <div className="space-y-3 text-sm md:text-base border-l-4 border-indigo-500 pl-4 py-2 bg-indigo-500/10">
+                <p>Okénka (např. meze u integrálů, mocnitelé apod.) přijímají <strong>čísla, proměnné a i základní operátory (+, -, *, /).</strong></p>
+                <p>Do slotu lze nakládat více karet – tvoří pak komplexnější formuli. (Až 5 číslic!)</p>
               </div>
               </section>
 
               <section>
                 <h3 className="text-3xl font-bold text-emerald-400 border-b border-emerald-400/30 pb-2 mb-4 italic">8. Ukončení a Q.E.D.</h3>
-                <p className="mb-4">Při dosažení rovnosti L = R použij tlačítko Q.E.D. pro ověření.</p>
-                <div className="bg-black/20 p-4 rounded-xl space-y-3 text-sm">
-                  <p>✅ <span className="text-emerald-400 font-bold">Správné řešení:</span> Hráč se stává vítězem a hra končí.</p>
-                  <p>❌ <span className="text-red-400 font-bold">Chybný důkaz:</span> Hráč odstraní všechny karty ze své plochy L a hra pokračuje.</p>
+                <p className="mb-4">Při formální rovnosti stiskni tlačítko Q.E.D.</p>
+                <div className="bg-black/40 border border-slate-700 p-4 rounded-xl space-y-3 text-sm">
+                  <p>✅ <span className="text-emerald-400 font-bold">Správné řešení:</span> Engine (SymPy) formálně potvrdí identitu = L s R. Vítězíte.</p>
+                  <p>❌ <span className="text-red-400 font-bold">Chybný důkaz:</span> Hráčovo L se lissí. Penalizace – L je pohlceno odpadem a hráč tak ztratí svůj dosavadní pokrok.</p>
                 </div>
               </section>
-
-              <div className="bg-emerald-900/40 backdrop-blur-sm p-6 border border-emerald-500/30 rounded-2xl text-center">
-                <h4 className="font-bold mb-2 text-emerald-300 uppercase text-xs tracking-widest">Poznámka</h4>
-                <p className="text-[10px] md:text-xs text-slate-300">
-                  Pravidla odpovídají aktuální implementaci hry v aplikaci.
-                </p>
-              </div>
             </div>
 
             <div className="space-y-12">
               <section>
-                <h3 className="text-3xl font-bold text-emerald-400 border-b border-emerald-400/30 pb-2 mb-4 italic">Efekty karet</h3>
-              <div className="bg-black/20 p-4 rounded-xl space-y-4 text-sm md:text-base">
-                <div>
-                  <p className="text-emerald-300 font-bold uppercase text-xs">Čísla 0–9</p>
-                  <p>Dobrání 1 karty navíc v příštím tahu.</p>
-                </div>
-                <div>
-                  <p className="text-emerald-300 font-bold uppercase text-xs">π</p>
-                  <p>Výměna 1 karty z tvé plochy L za vybranou kartu z L oponenta.</p>
-                </div>
-                <div>
-                  <p className="text-emerald-300 font-bold uppercase text-xs">e</p>
-                  <p>Okamžité nahrazení cíle R libovolného hráče novým losem.</p>
-                </div>
-                <div>
-                  <p className="text-emerald-300 font-bold uppercase text-xs">y</p>
-                  <p>Následující hráč odhodí všechny číslice z ruky.</p>
-                </div>
-                <div>
-                  <p className="text-emerald-300 font-bold uppercase text-xs">x</p>
-                  <p>Následující hráč odhodí všechny operace z ruky.</p>
-                </div>
-
-                <div>
-                  <p className="text-emerald-400 font-bold uppercase text-xs">+</p>
-                  <p>Následující hráč musí v příštím tahu použít operaci.</p>
-                </div>
-                <div>
-                  <p className="text-emerald-400 font-bold uppercase text-xs">-</p>
-                  <p>Odebere náhodnou kartu z ruky vybraného oponenta.</p>
-                </div>
-                <div>
-                  <p className="text-emerald-400 font-bold uppercase text-xs">*</p>
-                  <p>V příštím tahu dobíráš o 2 karty navíc.</p>
-                </div>
-                <div>
-                  <p className="text-emerald-400 font-bold uppercase text-xs">/</p>
-                  <p>Vidíš 3 vrchní karty balíčku a přerovnáš jejich pořadí.</p>
+                <h3 className="text-3xl font-bold text-emerald-400 border-b border-emerald-400/30 pb-2 mb-6 italic">Specifické Herní Efekty</h3>
+              <div className="bg-black/30 p-5 rounded-2xl border border-slate-700/50 shadow-lg space-y-6 text-sm md:text-base">
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div className="p-3 bg-slate-800/40 rounded-lg">
+                    <p className="text-emerald-300 font-bold uppercase text-xs mb-1 tracking-wider">0–9 Čísla | 👤</p>
+                    <p className="text-slate-300 text-xs">Bonus: Dobrání 1 karty navíc v příštím tahu.</p>
+                  </div>
+                  <div className="p-3 bg-slate-800/40 rounded-lg">
+                    <p className="text-emerald-300 font-bold uppercase text-xs mb-1 tracking-wider">π (Pí) | ➔👤</p>
+                    <p className="text-slate-300 text-xs">Výměna tvé karty z L za jakoukoliv kartu z L oponenta.</p>
+                  </div>
+                  <div className="p-3 bg-slate-800/40 rounded-lg">
+                    <p className="text-emerald-300 font-bold uppercase text-xs mb-1 tracking-wider">e (Euler) | ✨👤</p>
+                    <p className="text-slate-300 text-xs">Transformace: Okamžité nahrazení cíle R libovolného hráče (nový los z R poolu).</p>
+                  </div>
+                  <div className="p-3 bg-slate-800/40 rounded-lg">
+                    <p className="text-emerald-300 font-bold uppercase text-xs mb-1 tracking-wider">x / y | ➔👤</p>
+                    <p className="text-slate-300 text-xs">Ničitel: Oponent odhodí všechny zbraně daného druhu (y = číslice, x = operace).</p>
+                  </div>
                 </div>
 
-                <div>
-                  <p className="text-blue-400 font-bold uppercase text-xs">a^b</p>
-                  <p>Následující hráč přeskakuje svůj tah.</p>
-                </div>
-                <div>
-                  <p className="text-blue-400 font-bold uppercase text-xs">sqrt</p>
-                  <p>Vybraný oponent odhodí celou ruku a dobere stejný počet karet.</p>
-                </div>
-                <div>
-                  <p className="text-blue-400 font-bold uppercase text-xs">mod</p>
-                  <p>R cílového hráče se změní na R mod vybrané číslo z ruky.</p>
-                </div>
-                <div>
-                  <p className="text-blue-400 font-bold uppercase text-xs">n!</p>
-                  <p>Omezení: následující hráč smí v příštím tahu vyložit max 1 kartu.</p>
+                <div className="h-px bg-slate-700/50 w-full" />
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div className="p-3 bg-orange-900/20 border border-orange-500/20 rounded-lg">
+                    <p className="text-orange-400 font-bold uppercase text-xs mb-1">+ (Součet) | ➔👤</p>
+                    <p className="text-slate-300 text-xs">Klíště: Následující hráč je nucen pod pohrůžkou použít operaci v tahu!</p>
+                  </div>
+                  <div className="p-3 bg-orange-900/20 border border-orange-500/20 rounded-lg">
+                    <p className="text-orange-400 font-bold uppercase text-xs mb-1">- (Rozdíl) | ✨👤</p>
+                    <p className="text-slate-300 text-xs">Krádež: Odstraní vybranému oponentovi náhodnou kartu z ruky.</p>
+                  </div>
+                  <div className="p-3 bg-orange-900/20 border border-orange-500/20 rounded-lg">
+                    <p className="text-orange-400 font-bold uppercase text-xs mb-1">* (Násobení) | 👤</p>
+                    <p className="text-slate-300 text-xs">Zdvojnásobení počtu dobíraných karet v příštím tahu (2x navíc).</p>
+                  </div>
+                  <div className="p-3 bg-orange-900/20 border border-orange-500/20 rounded-lg">
+                    <p className="text-orange-400 font-bold uppercase text-xs mb-1">/ (Dělení) | 👤</p>
+                    <p className="text-slate-300 text-xs">Vize: Náhled na 3 vrchní karty balíčku a svobodné určení jejich navázání.</p>
+                  </div>
+                  <div className="p-3 bg-orange-900/20 border border-orange-500/20 rounded-lg">
+                    <p className="text-orange-400 font-bold uppercase text-xs mb-1">a^b | ➔👤</p>
+                    <p className="text-slate-300 text-xs">Stasis: Následující hráč zcela přeskakuje příští tah.</p>
+                  </div>
+                  <div className="p-3 bg-orange-900/20 border border-orange-500/20 rounded-lg">
+                    <p className="text-orange-400 font-bold uppercase text-xs mb-1">sqrt (Odmocnina) | ➔👤</p>
+                    <p className="text-slate-300 text-xs">Mulligan: Další hráč plně odhazuje ruku a re-drowuje stejný počet do ruky.</p>
+                  </div>
+                  <div className="p-3 bg-orange-900/20 border border-orange-500/20 rounded-lg">
+                    <p className="text-orange-400 font-bold uppercase text-xs mb-1">mod | ✨👤</p>
+                    <p className="text-slate-300 text-xs">Modulo destrukce: Oponentův cíl (R) se změní na zbytek po dělení číslem, které sám určíš ze své ruky.</p>
+                  </div>
+                  <div className="p-3 bg-orange-900/20 border border-orange-500/20 rounded-lg">
+                    <p className="text-orange-400 font-bold uppercase text-xs mb-1">n! (Faktoriál) | ➔👤</p>
+                    <p className="text-slate-300 text-xs">Restrikce akce: Soupeř smí udělat pouze 1 max move v dalším kole z ruky na tabuli.</p>
+                  </div>
                 </div>
 
-                <div>
-                  <p className="text-purple-400 font-bold uppercase text-xs">d/dx</p>
-                  <p>Efekt je vypnutý; karta slouží pouze jako operátor.</p>
-                </div>
-                <div>
-                  <p className="text-purple-400 font-bold uppercase text-xs">int</p>
-                  <p>Efekt je vypnutý; karta slouží pouze jako operátor.</p>
-                </div>
-                <div>
-                  <p className="text-purple-400 font-bold uppercase text-xs">∑</p>
-                  <p>Efekt je vypnutý; karta slouží pouze jako operátor.</p>
-                </div>
-                <div>
-                  <p className="text-purple-400 font-bold uppercase text-xs">∏</p>
-                  <p>Efekt je vypnutý; karta slouží pouze jako operátor.</p>
-                </div>
-                <div>
-                  <p className="text-purple-400 font-bold uppercase text-xs">lim</p>
-                  <p>Efekt je vypnutý; karta slouží pouze jako operátor.</p>
-                </div>
-                <div>
-                  <p className="text-purple-400 font-bold uppercase text-xs">det</p>
-                  <p>Zruší všechny aktivní efekty u všech hráčů.</p>
+                <div className="h-px bg-slate-700/50 w-full" />
+
+                <div className="grid grid-cols-1 gap-5">
+                  <div className="p-3 bg-purple-900/20 border border-purple-500/20 rounded-lg">
+                    <p className="text-purple-400 font-bold uppercase text-xs mb-1">Vektorová, Skalární a Analytická Pokročilá Třída</p>
+                    <ul className="text-slate-300 text-xs space-y-2 mt-2">
+                      <li><span className="font-bold text-white">nCk:</span> Prohození cifer cíle (R) zasaženého soupeře!</li>
+                      <li><span className="font-bold text-white">log/log2:</span> Otrhané řetězce! Aktivní neomezená sekvence (můžeš házet, co chceš, bez restrikce jedné akce).</li>
+                      <li><span className="font-bold text-white">det (Determinant):</span> Velký reset stolu - Usmrtí plošně všechny doposavad přeživší efekty!</li>
+                      <li><span className="font-bold text-white">skalar (Skalární Součin):</span> Univerzální kamufláž za identitu '0' do jednoho slotu v dalším kole.</li>
+                      <li><span className="font-bold text-white">vektor (Vektorový Součin):</span> Velikost vektoru! Nárazové získání 3 karet, uchování pouze jedné volby!</li>
+                    </ul>
+                  </div>
+
+                  <div className="p-3 bg-cyan-900/20 border border-cyan-500/20 rounded-lg">
+                    <p className="text-cyan-400 font-bold uppercase text-xs mb-1">Goniometrické Globály (sin, cos, tg, cotg)</p>
+                    <p className="text-slate-300 text-xs mb-2">Masivní dopad na plynulost stolu, směrování kol nebo debuffy všech najednou:</p>
+                    <ul className="text-slate-300 text-xs space-y-1">
+                      <li><span className="text-indigo-300">Předání po směru:</span> sin(π, 2π, π/2, 3π/2), tg(π, π/4). Všechny ruční zbraně (karty v ruce) jdou o 1 místo napřed.</li>
+                      <li><span className="text-indigo-300">Předání proti směru:</span> cos(π, 2π, π/2, 3π/2), cotg(π/2, π/4). Reversní ruka u všech na stole.</li>
+                      <li><span className="text-rose-300">Daňové Ztráty Dobírání:</span> π/3, π/6 — Odepření zisku všech vašich oponentů v budoucích chvílích o 1 kartu!</li>
+                    </ul>
+                  </div>
                 </div>
 
-                <div>
-                  <p className="text-emerald-300 font-bold uppercase text-xs">log2</p>
-                  <p>Můžeš v tomto tahu vyložit libovolný počet karet.</p>
-                </div>
-                <div>
-                  <p className="text-emerald-300 font-bold uppercase text-xs">nCk</p>
-                  <p>Prohodí cifry v R cílového oponenta.</p>
-                </div>
-
-                <div>
-                  <p className="text-emerald-300 font-bold uppercase text-xs">sin</p>
-                  <p>
-                    Předání po směru: sin(2π), sin(π/2), sin(π), sin(3π/2).
-                    Ztráta dobírání: sin(π/6), sin(π/4), sin(π/3) — všichni soupeři doberou o 1 kartu méně v příštím tahu.
-                  </p>
-                </div>
-                <div>
-                  <p className="text-emerald-300 font-bold uppercase text-xs">cos</p>
-                  <p>
-                    Předání proti směru: cos(2π), cos(π/2), cos(π), cos(3π/2).
-                    Ztráta dobírání: cos(π/6), cos(π/4), cos(π/3) — všichni soupeři doberou o 1 kartu méně v příštím tahu.
-                  </p>
-                </div>
-                <div>
-                  <p className="text-emerald-300 font-bold uppercase text-xs">tg</p>
-                  <p>
-                    Předání po směru: tg(π/4), tg(π).
-                    Ztráta dobírání: tg(π/6), tg(π/3) — všichni soupeři doberou o 1 kartu méně v příštím tahu.
-                  </p>
-                </div>
-                <div>
-                  <p className="text-emerald-300 font-bold uppercase text-xs">cotg</p>
-                  <p>
-                    Předání proti směru: cotg(π/4), cotg(π/2).
-                    Ztráta dobírání: cotg(π/6), cotg(π/3) — všichni soupeři doberou o 1 kartu méně v příštím tahu.
-                  </p>
-                </div>
               </div>
               </section>
             </div>
@@ -417,10 +365,10 @@ export function RulesScreen({ onBack }: { onBack: () => void }) {
           <div className="h-20" /> 
         </div>
 
-        <div className="mt-4 flex justify-center pt-4 pb-2">
+        <div className="mt-4 flex justify-center pt-4 pb-4">
           <Button
             variant="ghost"
-            className="text-slate-400 hover:text-white text-xl font-bold"
+            className="text-slate-400 hover:text-white text-xl font-bold bg-black/40 backdrop-blur py-6 px-10 border border-slate-700"
             onClick={onBack}
           >
             ← ZPĚT DO MENU

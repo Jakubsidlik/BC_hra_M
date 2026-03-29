@@ -51,6 +51,8 @@ const isSingleDigitNumberCard = (card: GameCard): boolean => {
   return cardType === 'number' && /^[0-9]$/.test(card.symbol);
 };
 
+const isBasicOperator = (sym: string) => ['+', '-', '*', '/'].includes(sym);
+
 const buildSlotSequenceExpression = (sequence: GameCard[]): string => {
   if (sequence.length === 0) return '';
 
@@ -58,7 +60,14 @@ const buildSlotSequenceExpression = (sequence: GameCard[]): string => {
     if (index === 0) return current.symbol;
     const previous = sequence[index - 1];
     const shouldConcatenateDigits = isSingleDigitNumberCard(previous) && isSingleDigitNumberCard(current);
-    return shouldConcatenateDigits ? `${acc}${current.symbol}` : `${acc}*${current.symbol}`;
+    
+    if (shouldConcatenateDigits) {
+      return `${acc}${current.symbol}`;
+    } else if (isBasicOperator(previous.symbol) || isBasicOperator(current.symbol)) {
+      return `${acc}${current.symbol}`;
+    } else {
+      return `${acc}*${current.symbol}`;
+    }
   }, '');
 };
 
@@ -1076,8 +1085,12 @@ export function useGameEngine() {
       if (hasModifiedBoardThisTurn) return toast.error("Za kolo smíš z ruky provést pouze 1 akci!");
 
       const slotCardData = cardsDatabase[slotCard.symbol];
-      if (slotCardData?.type === 'operator' || slotCardData?.type === 'syntax') {
-        return toast.error("Do okénka lze vložit jen čísla nebo symboly.");
+      const allowedOperators = ['+', '-', '*', '/'];
+      if (
+        (slotCardData?.type === 'operator' && !allowedOperators.includes(slotCard.symbol)) || 
+        slotCardData?.type === 'syntax'
+      ) {
+        return toast.error("Do okénka lze vložit jen čísla, proměnné a základní operace (+, -, *, /).");
       }
       if (players[currentPlayerIndex].status?.mustPlayOperation) {
         return toast.error("Musíš v tomto tahu zahrát operaci.");
