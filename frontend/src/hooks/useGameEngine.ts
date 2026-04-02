@@ -13,7 +13,7 @@ import {
   createSlotCards,
   type DifficultyMode
 } from '@/lib/gameHelpers';
-import { evaluateExpression } from '@/lib/mathEngine';
+import { evaluateExpression, evaluateExpressionValue } from '@/lib/mathEngine';
 import type { GameCard, Player } from '@/lib/effects';
 import type { DropData, SlotDropData } from '@/components/game/Cards';
 
@@ -44,12 +44,19 @@ type PendingEffectState = {
   slotPlacement?: { parentId: string; slotKey: string };
 };
 
+type GameMode = 'CLASSIC' | 'SHARED_GOAL';
+
+type VictoryReason =
+  | { type: 'QED' }
+  | { type: 'SHARED_GOAL_TIMEOUT'; target: number; bestDistance: number | null; isDraw: boolean };
+
 const MAX_SLOT_DIGITS = 5;
 const NUMBER_DRAW_BOOST = 0.15;
 const ANTI_STREAK_THRESHOLD = 3;
 const ANTI_STREAK_BASE_BOOST = 0.08;
 const ANTI_STREAK_STEP_BOOST = 0.02;
 const ANTI_STREAK_MAX_BOOST = 0.15;
+const SHARED_GOAL_TOTAL_TURNS = 30;
 
 const getAntiStreakNumberBoost = (nonNumberStreak: number): number => {
   if (nonNumberStreak < ANTI_STREAK_THRESHOLD) return 0;
@@ -160,7 +167,8 @@ const createTutorialStepCard = (symbol: string, prefix: string): GameCard => ({
 
 export function useGameEngine() {
   // --- STAVY JÁDRA ---
-  const [gamePhase, setGamePhase] = useState<'MENU' | 'RULES' | 'PICK_MODE' | 'SETUP' | 'PLAYING'>('MENU');
+  const [gamePhase, setGamePhase] = useState<'MENU' | 'RULES' | 'PICK_MODE' | 'PICK_DIFFICULTY' | 'SETUP' | 'PLAYING'>('MENU');
+  const [gameMode, setGameMode] = useState<GameMode>('CLASSIC');
   const [difficulty, setDifficulty] = useState<DifficultyMode>('ZŠ');
   const [players, setPlayers] = useState<Player[]>([]);
   const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
@@ -168,7 +176,10 @@ export function useGameEngine() {
   const [discardPile, setDiscardPile] = useState<GameCard[]>([]);
   const [playDirection] = useState<1 | -1>(1);
   const [isHandoff, setIsHandoff] = useState(false);
-  const [winner, setWinner] = useState<Player | null>(null);
+  const [winner, setWinner] = useState<Player[] | null>(null);
+  const [victoryReason, setVictoryReason] = useState<VictoryReason | null>(null);
+  const [sharedGoalTarget, setSharedGoalTarget] = useState<number | null>(null);
+  const [sharedGoalTurnsRemaining, setSharedGoalTurnsRemaining] = useState<number | null>(null);
   const [gameSummaryOpen, setGameSummaryOpen] = useState(false);
   const [gameStats, setGameStats] = useState<GameStats | null>(null);
   const [pendingHandSwap, setPendingHandSwap] = useState<{ direction: 1 | -1; snapshot: { playerId: number; hand: GameCard[] }[] } | null>(null);
@@ -269,6 +280,61 @@ export function useGameEngine() {
     setGameStats(createGameStats(playerList));
     setGameSummaryOpen(false);
   }, []);
+
+  const resolveSharedGoalTimeout = useCallback(() => {
+    if (sharedGoalTarget === null) return;
+
+    const evaluatedPlayers = players.map(player => {
+      if (!player.board || player.board.length === 0) {
+        return { player, value: null as number | null, distance: Number.POSITIVE_INFINITY };
+      }
+
+      const expression = parseBoardToMathString(player.board);
+      const value = evaluateExpressionValue(expression, player.status?.mathModifiers || []);
+      const distance = value === null ? Number.POSITIVE_INFINITY : Math.abs(value - sharedGoalTarget);
+      return { player, value, distance };
+    });
+
+    const finiteDistances = evaluatedPlayers
+      .map(entry => entry.distance)
+      .filter(distance => Number.isFinite(distance));
+
+    let winningPlayers: Player[] = [];
+    let bestDistance: number | null = null;
+
+    if (finiteDistances.length === 0) {
+      winningPlayers = [...players];
+    } else {
+      bestDistance = Math.min(...finiteDistances);
+      const EPSILON = 1e-9;
+      winningPlayers = evaluatedPlayers
+        .filter(entry => Number.isFinite(entry.distance) && Math.abs(entry.distance - bestDistance!) < EPSILON)
+        .map(entry => entry.player);
+    }
+
+    const isDraw = winningPlayers.length > 1;
+    setWinner(winningPlayers);
+    setVictoryReason({
+      type: 'SHARED_GOAL_TIMEOUT',
+      target: sharedGoalTarget,
+      bestDistance,
+      isDraw,
+    });
+    setIsHandoff(false);
+
+    if (finiteDistances.length === 0) {
+      toast.info('Po 30 tazích nebylo možné vyhodnotit vzdálenost. Hra končí remízou všech hráčů.');
+      return;
+    }
+
+    if (isDraw) {
+      const names = winningPlayers.map(player => player.name).join(', ');
+      toast.info(`Po 30 tazích došlo k remíze mezi hráči: ${names}.`);
+      return;
+    }
+
+    toast.success(`Po 30 tazích vyhrává nejbližší hráč: ${winningPlayers[0].name}.`);
+  }, [players, sharedGoalTarget]);
 
   // ==========================================
   // 2. LOGIKA TAHŮ A PŘIDÁVÁNÍ KARET
@@ -381,8 +447,18 @@ export function useGameEngine() {
       performDraw(1, currentPlayerIndex);
       return;
     }
+
+    if (gameMode === 'SHARED_GOAL' && sharedGoalTurnsRemaining !== null) {
+      const nextRemaining = sharedGoalTurnsRemaining - 1;
+      setSharedGoalTurnsRemaining(Math.max(0, nextRemaining));
+      if (nextRemaining <= 0) {
+        resolveSharedGoalTimeout();
+        return;
+      }
+    }
+
     setIsHandoff(true);
-  }, [applyPendingHandSwap, players, currentPlayerIndex, performDraw, updatePlayerStats]);
+  }, [applyPendingHandSwap, players, currentPlayerIndex, performDraw, updatePlayerStats, gameMode, sharedGoalTurnsRemaining, resolveSharedGoalTimeout]);
 
   const handleDiscardExpression = () => {
     if (hasModifiedBoardThisTurn) return toast.error("Již jsi provedl akci za tento tah!");
@@ -651,7 +727,7 @@ export function useGameEngine() {
       // PROVÁDĚNÍ MATEMATIKY LOKÁLNĚ MÍSTO BACKENDU
       const data = evaluateExpression(
         expression,
-        curr.targetR.toString(),
+        (gameMode === 'SHARED_GOAL' && sharedGoalTarget !== null ? sharedGoalTarget : curr.targetR).toString(),
         curr.status?.mathModifiers || []
       );
 
@@ -662,7 +738,8 @@ export function useGameEngine() {
 
       if (data.success && data.is_match) {
         toast.success("Q.E.D.!", { id: toastId });
-        setWinner(curr);
+        setWinner([curr]);
+        setVictoryReason({ type: 'QED' });
       } else {
         toast.error("Chyba v důkazu!", { id: toastId });
         const boardCount = curr.board.flatMap((card: GameCard) => flattenCardTree(card)).length;
@@ -1445,7 +1522,15 @@ export function useGameEngine() {
           });
         }
 
-        setPlayers(resultPlayers);
+        if (gameMode === 'SHARED_GOAL' && sharedGoalTarget !== null) {
+          const syncedPlayers = resultPlayers.map((player: Player) => ({
+            ...player,
+            targetR: sharedGoalTarget,
+          }));
+          setPlayers(syncedPlayers);
+        } else {
+          setPlayers(resultPlayers);
+        }
 
         // --- SPECIÁLNÍ EFEKTY S UI DIALOGY ---
         if (metadata?.deckPreviewTriggered) {
@@ -1580,6 +1665,14 @@ export function useGameEngine() {
 
     setPlayers(prev => {
       const next = JSON.parse(JSON.stringify(prev));
+
+      if (gameMode === 'SHARED_GOAL' && sharedGoalTarget !== null) {
+        next.forEach((player: Player) => {
+          player.targetR = sharedGoalTarget;
+        });
+        return next;
+      }
+
       const targetIdx = next.findIndex((p: Player) => p.id === (moduloMode.targetPlayerId || moduloMode.activePlayerIndex));
 
       if (targetIdx !== -1) {
@@ -1600,7 +1693,7 @@ export function useGameEngine() {
     setChosenEffectChoice(null);
 
     toast.success("Modulo operace aplikována!");
-  }, [moduloMode]);
+  }, [moduloMode, gameMode, sharedGoalTarget]);
 
   const cancelBracketMode = () => {
     setBracketMode(null);
@@ -1624,6 +1717,7 @@ export function useGameEngine() {
   const handleStartGame = (configuredPlayers: { name: string, theme: string }[]) => {
     const initialDeck = generateFilteredDeck(difficulty);
     const vsCards = ['int', 'd/dx', '∑', '∏', 'lim'];
+    const isSharedGoalMode = gameMode === 'SHARED_GOAL';
 
     const hasAtLeastThreePrimeFactors = (value: number): boolean => {
       let remainder = value;
@@ -1684,9 +1778,16 @@ export function useGameEngine() {
       return `${productTargetPool[randomIndex]}`;
     };
 
+    const generateSharedTargetR = (): string => {
+      if (difficulty === 'VŠ') return generatePersonalTargetR('VŠ');
+      return generatePersonalTargetR(difficulty);
+    };
+
+    const initialSharedTarget = isSharedGoalMode ? generateSharedTargetR() : null;
+
     const newPlayers: Player[] = configuredPlayers.map((p, i) => ({
       id: i, name: p.name, theme: p.theme, hand: [], board: [],
-      targetR: difficulty === 'VŠ' ? '0' : generatePersonalTargetR(difficulty),
+      targetR: initialSharedTarget ?? (difficulty === 'VŠ' ? '0' : generatePersonalTargetR(difficulty)),
       syntax: [
         { id: `p${i}-l1`, symbol: '(' }, { id: `p${i}-r1`, symbol: ')' },  // Pár 1: kulaté
         { id: `p${i}-l2`, symbol: '[' }, { id: `p${i}-r2`, symbol: ']' },  // Pár 2: hranaté
@@ -1706,14 +1807,16 @@ export function useGameEngine() {
           slotCards: createSlotCards(picked),
         });
 
-        if (picked === '∏') {
-          player.targetR = generateCompositeTargetR();
-        } else if (picked === '∑') {
-          player.targetR = generateNumericTargetR();
-        } else if (picked === 'lim') {
-          player.targetR = generateLimitTargetR();
-        } else {
-          player.targetR = generatePersonalTargetR('VŠ');
+        if (!isSharedGoalMode) {
+          if (picked === '∏') {
+            player.targetR = generateCompositeTargetR();
+          } else if (picked === '∑') {
+            player.targetR = generateNumericTargetR();
+          } else if (picked === 'lim') {
+            player.targetR = generateLimitTargetR();
+          } else {
+            player.targetR = generatePersonalTargetR('VŠ');
+          }
         }
       });
     }
@@ -1750,7 +1853,19 @@ export function useGameEngine() {
 
     setDeck(deckCopy);
     setPlayers(newPlayers);
+    setCurrentPlayerIndex(0);
+    setIsHandoff(false);
+    setWinner(null);
     setNonNumberDrawStreakByPlayer(openingNonNumberStreakByPlayerId);
+    setVictoryReason(null);
+    if (isSharedGoalMode) {
+      const sharedTargetNumber = Number(initialSharedTarget);
+      setSharedGoalTarget(Number.isFinite(sharedTargetNumber) ? sharedTargetNumber : null);
+      setSharedGoalTurnsRemaining(SHARED_GOAL_TOTAL_TURNS);
+    } else {
+      setSharedGoalTarget(null);
+      setSharedGoalTurnsRemaining(null);
+    }
     resetGameStats(newPlayers);
     setPendingHandSwap(null);
     setGamePhase('PLAYING');
@@ -1840,11 +1955,15 @@ export function useGameEngine() {
     setCurrentPlayerIndex(0);
     setIsHandoff(false);
     setWinner(null);
+    setVictoryReason(null);
     setHasModifiedBoardThisTurn(false);
     setPlaysThisTurn(0);
     resetGameStats(newPlayers);
     setPendingHandSwap(null);
     setNonNumberDrawStreakByPlayer({});
+    setGameMode('CLASSIC');
+    setSharedGoalTarget(null);
+    setSharedGoalTurnsRemaining(null);
 
     setTutorialAllowedDiscardIds(discardableIds);
     setTutorialActive(true);
@@ -1870,6 +1989,7 @@ export function useGameEngine() {
     setTutorialTwosAdded(false);
     setTutorialCardQueue([]);
     setWinner(null);
+    setVictoryReason(null);
     setDeck([]);
     setDiscardPile([]);
     setPlayers([]);
@@ -1880,6 +2000,9 @@ export function useGameEngine() {
     setGameSummaryOpen(false);
     setPendingHandSwap(null);
     setNonNumberDrawStreakByPlayer({});
+    setGameMode('CLASSIC');
+    setSharedGoalTarget(null);
+    setSharedGoalTurnsRemaining(null);
     setGamePhase('PICK_MODE');
   };
 
@@ -1892,6 +2015,7 @@ export function useGameEngine() {
     setTutorialTwosAdded(false);
     setTutorialCardQueue([]);
     setWinner(null);
+    setVictoryReason(null);
     setDeck([]);
     setDiscardPile([]);
     setPlayers([]);
@@ -1902,6 +2026,9 @@ export function useGameEngine() {
     setGameSummaryOpen(false);
     setPendingHandSwap(null);
     setNonNumberDrawStreakByPlayer({});
+    setGameMode('CLASSIC');
+    setSharedGoalTarget(null);
+    setSharedGoalTurnsRemaining(null);
     setGamePhase('PICK_MODE');
   };
 
@@ -1971,16 +2098,17 @@ export function useGameEngine() {
 
   return {
     state: {
-      gamePhase, difficulty, players, currentPlayerIndex, deck, discardPile,
-      isHandoff, winner, pendingEffect, effectStep, chosenEffectChoice,
+      gamePhase, gameMode, difficulty, players, currentPlayerIndex, deck, discardPile,
+      isHandoff, winner, victoryReason, pendingEffect, effectStep, chosenEffectChoice,
       targetingMode, minigameMode, bracketMode, integralSetup,
       isDiscarding, hasModifiedBoardThisTurn, playDirection,
       deckPreviewMode, moduloMode,
       tutorialActive, tutorialStep, tutorialReferenceBoard,
-      leaveGameConfirmOpen, gameSummaryOpen, gameStats
+      leaveGameConfirmOpen, gameSummaryOpen, gameStats,
+      sharedGoalTarget, sharedGoalTurnsRemaining, sharedGoalTotalTurns: SHARED_GOAL_TOTAL_TURNS
     },
     actions: {
-      setGamePhase, setDifficulty, handleStartGame, handleStartTutorial, handleEndTurn, handleDiscard,
+      setGamePhase, setGameMode, setDifficulty, handleStartGame, handleStartTutorial, handleEndTurn, handleDiscard,
       nextTurn, checkMathEngine, handleEffectChoice, handleIntegralSubmit,
       handleDragEnd, handleMinigamePick, cancelBracketMode, setMinigameMode, setBracketMode,
       setTargetingMode, setIntegralSetup, setPendingEffect, setEffectStep,

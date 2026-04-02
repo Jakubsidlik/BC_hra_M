@@ -73,8 +73,26 @@ interface EffectDialogProps {
 }
 
 // --- 1. VÍTĚZNÁ OBRAZOVKA (Q.E.D) ---
-export function VictoryScreen({ winner, onReset, onShowDetails }: { winner: Player | null, onReset: () => void, onShowDetails: () => void }) {
-  if (!winner) return null;
+type VictoryReason =
+  | { type: 'QED' }
+  | { type: 'SHARED_GOAL_TIMEOUT'; target: number; bestDistance: number | null; isDraw: boolean };
+
+export function VictoryScreen({ winner, victoryReason, onReset, onShowDetails }: { winner: Player[] | null, victoryReason?: VictoryReason | null, onReset: () => void, onShowDetails: () => void }) {
+  if (!winner || winner.length === 0) return null;
+  const isDraw = winner.length > 1;
+  const winnerNames = winner.map(player => player.name).join(', ');
+     const heading = victoryReason?.type === 'QED' ? 'QED' : 'Konec hry';
+
+  let resultText = `Hráč "${winner[0].name}" jako první zkonstruoval rovnost!`;
+  if (victoryReason?.type === 'SHARED_GOAL_TIMEOUT') {
+    if (isDraw) {
+      resultText = `Po 30 tazích došlo k remíze mezi hráči: ${winnerNames}.`;
+    } else if (typeof victoryReason.bestDistance === 'number') {
+      resultText = `Po 30 tazích byl cíli ${victoryReason.target} nejblíže hráč "${winner[0].name}" (odchylka ${victoryReason.bestDistance}).`;
+    } else {
+      resultText = 'Po 30 tazích se nepodařilo určit nejbližšího hráče. Hra končí remízou.';
+    }
+  }
   return (
     <div className="fixed inset-0 z-100 flex flex-col items-center justify-center px-6 text-center select-none overflow-hidden min-h-dvh" style={{ background: 'radial-gradient(circle at center 40%, #2e7a42 0%, #1a4225 50%, #141e17 90%)', backgroundColor: '#141e17', backgroundAttachment: 'fixed', backgroundSize: 'cover' }}>
       <div className="absolute inset-0 pointer-events-none overflow-hidden flex items-center justify-center opacity-30">
@@ -85,10 +103,10 @@ export function VictoryScreen({ winner, onReset, onShowDetails }: { winner: Play
       <div className="z-10 flex flex-col items-center max-w-sm animate-in zoom-in duration-500">
         <div className="mb-6 relative">
           <div className="absolute -inset-24 blur-[120px] rounded-full" style={{ backgroundColor: 'rgba(57, 149, 81, 0.32)' }}></div>
-          <h1 className="text-8xl md:text-9xl font-bold relative animate-bounce" style={{ fontFamily: "'Merienda', cursive", color: '#60d984', filter: 'drop-shadow(0 0 15px rgba(96, 217, 132, 0.5))' }}>QED</h1>
+             <h1 className="text-8xl md:text-9xl font-bold relative animate-bounce" style={{ fontFamily: "'Merienda', cursive", color: '#60d984', filter: 'drop-shadow(0 0 15px rgba(96, 217, 132, 0.5))' }}>{heading}</h1>
         </div>
         <p className="text-xl md:text-2xl text-slate-100 leading-relaxed px-4 drop-shadow-md" style={{ fontFamily: "'Merienda', cursive" }}>
-          Hráč <span className="font-bold" style={{ color: '#60d984' }}>"{winner.name}"</span> jako první zkonstruoval rovnost!
+             {resultText}
         </p>
         <div className="mt-16 w-full max-w-70 flex flex-col gap-4">
           <button onClick={onReset} className="w-full flex items-center justify-center gap-2 text-white font-bold py-4 px-8 rounded-xl transition-all shadow-lg active:scale-95" style={{ backgroundColor: '#399551' }}>

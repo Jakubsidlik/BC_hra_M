@@ -70,6 +70,48 @@ export function MainMenu({ onPlay, onRules }: { onPlay: () => void, onRules: () 
   );
 }
 
+export function GameModeSelection({ onSelect, onBack }: { onSelect: (mode: 'CLASSIC' | 'SHARED_GOAL') => void, onBack: () => void }) {
+  return (
+    <div
+      className="min-h-screen flex flex-col items-center justify-center p-8 border-16px border-amber-950/90 relative overflow-hidden bg-cover bg-center shadow-[inset_0_0_120px_rgba(0,0,0,0.7)]"
+      style={{ backgroundImage: `url('${BASE}tabule.svg')` }}
+    >
+      <div className="absolute inset-0 bg-black/30 pointer-events-none" />
+
+      <div className="relative z-10 flex flex-col items-center w-full max-w-4xl">
+        <h2 className="text-5xl md:text-7xl font-black italic text-slate-100 mb-12 opacity-95 text-center">
+          Vyber herní režim...
+        </h2>
+
+        <div className="flex flex-col items-center gap-6 w-full max-w-3xl mb-16 md:gap-8">
+          <Button
+            size="lg"
+            className="w-[55%] mx-auto bg-emerald-600/20 hover:bg-emerald-600/40 text-emerald-100 font-black text-2xl py-8 rounded-3xl border-4 border-emerald-400/50 hover:border-emerald-400 transition-all shadow-xl md:w-full md:text-4xl md:py-10"
+            onClick={() => onSelect('CLASSIC')}
+          >
+            KLASICKÝ
+          </Button>
+          <Button
+            size="lg"
+            className="w-[55%] mx-auto bg-emerald-600/20 hover:bg-emerald-600/40 text-emerald-100 font-black text-2xl py-8 rounded-3xl border-4 border-emerald-400/50 hover:border-emerald-400 transition-all shadow-xl md:w-full md:text-4xl md:py-10"
+            onClick={() => onSelect('SHARED_GOAL')}
+          >
+            SPOLEČNÝ CÍL
+          </Button>
+        </div>
+
+        <Button
+          variant="ghost"
+          className="text-slate-400 hover:text-white text-xl font-bold"
+          onClick={onBack}
+        >
+          ← ZPĚT DO MENU
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 // --- VÝBĚR REŽIMU ---
 export function DifficultySelection({ onSelect, onBack }: { onSelect: (mode: 'TUTORIAL' | 'ZŠ' | 'SŠ' | 'VŠ') => void, onBack: () => void }) {
   return (

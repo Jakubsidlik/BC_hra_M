@@ -27,7 +27,7 @@ import {
   LeaveGameDialog
 } from '@/components/game/GameUI';
 import { SetupScreen } from '@/components/game/SetupScreen';
-import { MainMenu, RulesScreen, DifficultySelection } from '@/components/game/StartScreens';
+import { MainMenu, RulesScreen, DifficultySelection, GameModeSelection } from '@/components/game/StartScreens';
 import { IntegralSetupDialog } from '@/components/game/IntegralSetupDialog';
 import { MobileGameLayout } from '@/components/game/MobileGameLayout';
 import { TabletGameLayout } from '@/components/game/TabletGameLayout';
@@ -65,6 +65,15 @@ export default function App() {
   if (state.gamePhase === 'MENU') return <MainMenu onPlay={() => actions.setGamePhase('PICK_MODE')} onRules={() => actions.setGamePhase('RULES')} />;
   if (state.gamePhase === 'RULES') return <RulesScreen onBack={() => actions.setGamePhase('MENU')} />;
   if (state.gamePhase === 'PICK_MODE') return (
+    <GameModeSelection
+      onSelect={(mode) => {
+        actions.setGameMode(mode);
+        actions.setGamePhase('PICK_DIFFICULTY');
+      }}
+      onBack={() => actions.setGamePhase('MENU')}
+    />
+  );
+  if (state.gamePhase === 'PICK_DIFFICULTY') return (
     <DifficultySelection
       onSelect={(m) => {
         if (m === 'TUTORIAL') {
@@ -74,7 +83,7 @@ export default function App() {
         actions.setDifficulty(m);
         actions.setGamePhase('SETUP');
       }}
-      onBack={() => actions.setGamePhase('MENU')}
+      onBack={() => actions.setGamePhase('PICK_MODE')}
     />
   );
   if (state.gamePhase === 'SETUP') return <SetupScreen onStart={actions.handleStartGame} onBack={() => actions.setGamePhase('MENU')} />;
@@ -131,6 +140,7 @@ export default function App() {
       {/* --- OVERLAY VRSTVY (Vítězství, Předání, Minihry) --- */}
       <VictoryScreen
         winner={state.winner}
+        victoryReason={state.victoryReason}
         onReset={actions.returnToModeSelect}
         onShowDetails={actions.openGameSummary}
       />

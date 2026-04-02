@@ -702,6 +702,9 @@ interface MobileGameLayoutProps {
     discardPile: GameCard[];
     isDiscarding: boolean;
     hasModifiedBoardThisTurn: boolean;
+    gameMode?: 'CLASSIC' | 'SHARED_GOAL';
+    sharedGoalTurnsRemaining?: number | null;
+    sharedGoalTotalTurns?: number;
     bracketMode: { leftInsertPosition: number; pairIndex: number } | null;
     tutorialActive?: boolean;
     tutorialStep?: number;
@@ -757,7 +760,7 @@ function TutorialReferenceRow({ cards, palette }: { cards: GameCard[]; palette: 
 }
 
 export function MobileGameLayout({ currentPlayer, state, actions, tutorialReferenceBoard, showEffectDebug, debugEffectRows = [] }: MobileGameLayoutProps) {
-  const { deck, discardPile, isDiscarding, hasModifiedBoardThisTurn, bracketMode, tutorialActive } = state;
+  const { deck, discardPile, isDiscarding, hasModifiedBoardThisTurn, bracketMode, tutorialActive, gameMode, sharedGoalTurnsRemaining, sharedGoalTotalTurns } = state;
   const palette = getPalette(currentPlayer.theme);
   const canVerify = true;
   const integralVar = findIntegralVariable(currentPlayer.board);
@@ -781,6 +784,11 @@ export function MobileGameLayout({ currentPlayer, state, actions, tutorialRefere
   });
 
   const handCards = currentPlayer.hand;
+  const showSharedGoalTracker = gameMode === 'SHARED_GOAL' && sharedGoalTurnsRemaining !== null;
+  const totalSharedTurns = sharedGoalTotalTurns ?? 30;
+  const sharedGoalProgress = showSharedGoalTracker
+    ? Math.max(0, Math.min(100, (sharedGoalTurnsRemaining! / totalSharedTurns) * 100))
+    : 0;
 
   return (
     <div
@@ -867,6 +875,20 @@ export function MobileGameLayout({ currentPlayer, state, actions, tutorialRefere
 
       {/* ── MAIN ── */}
       <main className="flex-1 flex flex-col mx-auto w-full p-2 pb-16 max-w-4xl gap-2">
+        {showSharedGoalTracker && (
+          <section className="w-full rounded-xl border border-white/15 bg-black/25 px-3 py-2">
+            <div className="mb-2 flex items-center justify-between text-[10px] uppercase tracking-[0.15em] text-emerald-200">
+              <span>Společný cíl</span>
+              <span>{sharedGoalTurnsRemaining} / {totalSharedTurns} tahů</span>
+            </div>
+            <div className="h-2.5 w-full overflow-hidden rounded-full bg-white/10">
+              <div
+                className="h-full rounded-full bg-emerald-500 transition-all duration-500"
+                style={{ width: `${sharedGoalProgress}%` }}
+              />
+            </div>
+          </section>
+        )}
 
         {/* CHALKBOARD — board + target */}
         <section className="relative group">
