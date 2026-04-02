@@ -77,13 +77,75 @@ define(['./workbox-5a5d9309'], (function (workbox) { 'use strict';
    * requests for URLs in the manifest.
    * See https://goo.gl/S9QRab
    */
-  workbox.precacheAndRoute([{
-    "url": "registerSW.js",
-    "revision": "3ca0b8505b4bec776b69afdba2768812"
-  }, {
-    "url": "index.html",
-    "revision": "0.392h8jr2qs8"
-  }], {});
+  workbox.precacheAndRoute([
+    { "url": "registerSW.js", "revision": "3ca0b8505b4bec776b69afdba2768812" },
+    { "url": "index.html", "revision": "0.392h8jr2qs8" },
+    // SVG karty
+    { "url": "svg/0.svg", "revision": "1" },
+    { "url": "svg/1.svg", "revision": "1" },
+    { "url": "svg/2.svg", "revision": "1" },
+    { "url": "svg/3.svg", "revision": "1" },
+    { "url": "svg/4.svg", "revision": "1" },
+    { "url": "svg/5.svg", "revision": "1" },
+    { "url": "svg/6.svg", "revision": "1" },
+    { "url": "svg/7.svg", "revision": "1" },
+    { "url": "svg/8.svg", "revision": "1" },
+    { "url": "svg/9.svg", "revision": "1" },
+    { "url": "svg/cos2pi.svg", "revision": "1" },
+    { "url": "svg/cos3pi2.svg", "revision": "1" },
+    { "url": "svg/cospi.svg", "revision": "1" },
+    { "url": "svg/cospi2.svg", "revision": "1" },
+    { "url": "svg/cospi3.svg", "revision": "1" },
+    { "url": "svg/cospi4.svg", "revision": "1" },
+    { "url": "svg/cospi6.svg", "revision": "1" },
+    { "url": "svg/cotgpi2.svg", "revision": "1" },
+    { "url": "svg/cotgpi3.svg", "revision": "1" },
+    { "url": "svg/cotgpi4.svg", "revision": "1" },
+    { "url": "svg/cotgpi6.svg", "revision": "1" },
+    { "url": "svg/deleno.svg", "revision": "1" },
+    { "url": "svg/der.svg", "revision": "1" },
+    { "url": "svg/det.svg", "revision": "1" },
+    { "url": "svg/dxdy.svg", "revision": "1" },
+    { "url": "svg/e.svg", "revision": "1" },
+    { "url": "svg/faktorial.svg", "revision": "1" },
+    { "url": "svg/hranataleva.svg", "revision": "1" },
+    { "url": "svg/hranataprava.svg", "revision": "1" },
+    { "url": "svg/int.svg", "revision": "1" },
+    { "url": "svg/kombinace.svg", "revision": "1" },
+    { "url": "svg/krat.svg", "revision": "1" },
+    { "url": "svg/kulataleva.svg", "revision": "1" },
+    { "url": "svg/kulataprava.svg", "revision": "1" },
+    { "url": "svg/lim.svg", "revision": "1" },
+    { "url": "svg/ln.svg", "revision": "1" },
+    { "url": "svg/log.svg", "revision": "1" },
+    { "url": "svg/log10.svg", "revision": "1" },
+    { "url": "svg/minus.svg", "revision": "1" },
+    { "url": "svg/mocnina.svg", "revision": "1" },
+    { "url": "svg/mod.svg", "revision": "1" },
+    { "url": "svg/odmocneno.svg", "revision": "1" },
+    { "url": "svg/pi.svg", "revision": "1" },
+    { "url": "svg/plus.svg", "revision": "1" },
+    { "url": "svg/sin2pi.svg", "revision": "1" },
+    { "url": "svg/sin3pi2.svg", "revision": "1" },
+    { "url": "svg/sinpi.svg", "revision": "1" },
+    { "url": "svg/sinpi2.svg", "revision": "1" },
+    { "url": "svg/sinpi3.svg", "revision": "1" },
+    { "url": "svg/sinpi4.svg", "revision": "1" },
+    { "url": "svg/sinpi6.svg", "revision": "1" },
+    { "url": "svg/skalar.svg", "revision": "1" },
+    { "url": "svg/slozenaleva.svg", "revision": "1" },
+    { "url": "svg/slozenaprava.svg", "revision": "1" },
+    { "url": "svg/sum.svg", "revision": "1" },
+    { "url": "svg/tgpi.svg", "revision": "1" },
+    { "url": "svg/tgpi3.svg", "revision": "1" },
+    { "url": "svg/tgpi4.svg", "revision": "1" },
+    { "url": "svg/tgpi6.svg", "revision": "1" },
+    { "url": "svg/vektor.svg", "revision": "1" },
+    { "url": "svg/velkepi.svg", "revision": "1" },
+    { "url": "svg/x.svg", "revision": "1" },
+    { "url": "svg/y.svg", "revision": "1" },
+    { "url": "svg/zada.svg", "revision": "1" }
+  ], {});
   workbox.cleanupOutdatedCaches();
   workbox.registerRoute(new workbox.NavigationRoute(workbox.createHandlerBoundToURL("index.html"), {
     allowlist: [/^\/$/]

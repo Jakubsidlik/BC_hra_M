@@ -45,6 +45,50 @@ type PendingEffectState = {
 };
 
 const MAX_SLOT_DIGITS = 5;
+const NUMBER_DRAW_BOOST = 0.15;
+const ANTI_STREAK_THRESHOLD = 3;
+const ANTI_STREAK_BASE_BOOST = 0.08;
+const ANTI_STREAK_STEP_BOOST = 0.02;
+const ANTI_STREAK_MAX_BOOST = 0.15;
+
+const getAntiStreakNumberBoost = (nonNumberStreak: number): number => {
+  if (nonNumberStreak < ANTI_STREAK_THRESHOLD) return 0;
+  const extraSteps = nonNumberStreak - ANTI_STREAK_THRESHOLD;
+  return Math.min(ANTI_STREAK_MAX_BOOST, ANTI_STREAK_BASE_BOOST + extraSteps * ANTI_STREAK_STEP_BOOST);
+};
+
+const drawCardWithNumberBias = (sourceDeck: GameCard[], numberBoost: number = NUMBER_DRAW_BOOST): GameCard | undefined => {
+  if (sourceDeck.length === 0) return undefined;
+
+  const numberIndexes: number[] = [];
+  const nonNumberIndexes: number[] = [];
+
+  sourceDeck.forEach((card, index) => {
+    const cardType = cardsDatabase[card.symbol]?.type;
+    if (cardType === 'number') {
+      numberIndexes.push(index);
+    } else {
+      nonNumberIndexes.push(index);
+    }
+  });
+
+  if (numberIndexes.length === 0) {
+    const randomIndex = Math.floor(Math.random() * sourceDeck.length);
+    return sourceDeck.splice(randomIndex, 1)[0];
+  }
+
+  const baseNumberChance = numberIndexes.length / sourceDeck.length;
+  const boostedNumberChance = Math.min(1, baseNumberChance + numberBoost);
+  const shouldDrawNumber = Math.random() < boostedNumberChance;
+
+  let pool = shouldDrawNumber ? numberIndexes : nonNumberIndexes;
+  if (pool.length === 0) {
+    pool = shouldDrawNumber ? nonNumberIndexes : numberIndexes;
+  }
+
+  const selectedIndex = pool[Math.floor(Math.random() * pool.length)];
+  return sourceDeck.splice(selectedIndex, 1)[0];
+};
 
 const isSingleDigitNumberCard = (card: GameCard): boolean => {
   const cardType = cardsDatabase[card.symbol]?.type;
@@ -149,6 +193,7 @@ export function useGameEngine() {
   const [integralSetup, setIntegralSetup] = useState<{ card: GameCard, targetId: string | null, insertPosition?: number } | null>(null);
   const [deckPreviewMode, setDeckPreviewMode] = useState<{ originalDeck: GameCard[], reorderedDeck?: GameCard[] } | null>(null);
   const [moduloMode, setModuloMode] = useState<{ activePlayerIndex: number, targetPlayerId?: number } | null>(null);
+  const [nonNumberDrawStreakByPlayer, setNonNumberDrawStreakByPlayer] = useState<Record<number, number>>({});
 
   // --- OMEZENÍ TAHU ---
   const [isDiscarding, setIsDiscarding] = useState(false);
@@ -231,6 +276,11 @@ export function useGameEngine() {
 
   const performDraw = useCallback((count: number, playerIndex: number) => {
     let drawnCount = 0;
+    const activePlayerId = players[playerIndex]?.id;
+    let updatedNonNumberStreak = activePlayerId !== undefined
+      ? (nonNumberDrawStreakByPlayer[activePlayerId] ?? 0)
+      : 0;
+
     setPlayers(prev => {
       const next = JSON.parse(JSON.stringify(prev));
       const p = next[playerIndex];
@@ -246,16 +296,30 @@ export function useGameEngine() {
           currentDeck = [...currentDiscard].sort(() => Math.random() - 0.5);
           currentDiscard = [];
         }
-        const drawn = currentDeck.pop();
+        const antiStreakBoost = getAntiStreakNumberBoost(updatedNonNumberStreak);
+        const drawn = drawCardWithNumberBias(currentDeck, NUMBER_DRAW_BOOST + antiStreakBoost);
         if (drawn) {
           p.hand.push({ ...drawn, id: `h-${drawn.symbol}-${Date.now()}-${Math.random().toString(36).substring(2, 5)}` });
           drawnCount += 1;
+          if (cardsDatabase[drawn.symbol]?.type === 'number') {
+            updatedNonNumberStreak = 0;
+          } else {
+            updatedNonNumberStreak += 1;
+          }
         }
       }
       setDeck(currentDeck);
       setDiscardPile(currentDiscard);
       return next;
     });
+
+    if (activePlayerId !== undefined) {
+      setNonNumberDrawStreakByPlayer(prev => ({
+        ...prev,
+        [activePlayerId]: updatedNonNumberStreak,
+      }));
+    }
+
     if (drawnCount > 0) {
       updatePlayerStats(playerIndex, stats => {
         const currentTurnDraw = stats.currentTurnDraw + drawnCount;
@@ -266,7 +330,7 @@ export function useGameEngine() {
         };
       });
     }
-  }, [deck, discardPile, updatePlayerStats]);
+  }, [deck, discardPile, nonNumberDrawStreakByPlayer, players, updatePlayerStats]);
 
   const applyPendingHandSwap = useCallback(() => {
     if (!pendingHandSwap) return;
@@ -452,46 +516,38 @@ export function useGameEngine() {
 
         // Kontrola nového počtu karet (po odebrání)
         const handLimit = 5;
-        if (p.hand.length <= handLimit) {
+        if (tutorialActive && p.hand.length <= handLimit) {
           setIsDiscarding(false);
-          if (tutorialActive) {
-            if (!tutorialTwosAdded && tutorialStep === 2) {
-              const firstPlayerId = next[0]?.id;
-              const firstPlayerIndex = next.findIndex((player: Player) => player.id === firstPlayerId);
-              if (firstPlayerIndex > -1) {
-                const firstPlayerHand = next[firstPlayerIndex].hand;
-                const hasPowerCard = firstPlayerHand.some((card: GameCard) => card.symbol === 'a^b');
-                const twoCount = firstPlayerHand.filter((card: GameCard) => card.symbol === '2').length;
+          if (!tutorialTwosAdded && tutorialStep === 2) {
+            const firstPlayerId = next[0]?.id;
+            const firstPlayerIndex = next.findIndex((player: Player) => player.id === firstPlayerId);
+            if (firstPlayerIndex > -1) {
+              const firstPlayerHand = next[firstPlayerIndex].hand;
+              const hasPowerCard = firstPlayerHand.some((card: GameCard) => card.symbol === 'a^b');
+              const twoCount = firstPlayerHand.filter((card: GameCard) => card.symbol === '2').length;
 
-                // Build queue of cards to deal one-by-one
-                const queueCards: GameCard[] = [];
-                if (!hasPowerCard) queueCards.push(createTutorialStepCard('a^b', 't1-step3'));
-                if (twoCount < 2) queueCards.push(createTutorialStepCard('2', 't1-step3'));
+              // Build queue of cards to deal one-by-one
+              const queueCards: GameCard[] = [];
+              if (!hasPowerCard) queueCards.push(createTutorialStepCard('a^b', 't1-step3'));
+              if (twoCount < 2) queueCards.push(createTutorialStepCard('2', 't1-step3'));
 
-                // Deal first card immediately, queue the rest
-                if (queueCards.length > 0) {
-                  firstPlayerHand.push(queueCards[0]);
-                  setTutorialCardQueue(queueCards.slice(1));
-                }
+              // Deal first card immediately, queue the rest
+              if (queueCards.length > 0) {
+                firstPlayerHand.push(queueCards[0]);
+                setTutorialCardQueue(queueCards.slice(1));
               }
-              setTutorialTwosAdded(true);
-              setTutorialStep(3);
             }
-            setHasModifiedBoardThisTurn(false);
-            setPlaysThisTurn(0);
-          } else {
-            // Přechod k dalšímu hráči
-            setTimeout(() => {
-              applyPendingHandSwap();
-              setIsHandoff(true);
-            }, 300);
+            setTutorialTwosAdded(true);
+            setTutorialStep(3);
           }
+          setHasModifiedBoardThisTurn(false);
+          setPlaysThisTurn(0);
         }
       }
 
       return next;
     });
-  }, [applyPendingHandSwap, tutorialActive, tutorialAllowedDiscardIds, tutorialStep, tutorialTwosAdded, isDiscarding]);
+  }, [tutorialActive, tutorialAllowedDiscardIds, tutorialStep, tutorialTwosAdded, isDiscarding]);
 
   const nextTurn = () => {
     setBracketMode(null);
@@ -1041,8 +1097,6 @@ export function useGameEngine() {
       }
       const slotCard = players[currentPlayerIndex].hand.find(c => c.id === active.id);
       if (!slotCard) {
-        if (difficulty !== 'VŠ') return;
-
         const p = players[currentPlayerIndex];
         const { removed, newCards } = removeCardRecursively(p.board, active.id as string);
         if (!removed || removed.locked) return;
@@ -1341,7 +1395,7 @@ export function useGameEngine() {
               currentDeck = [...currentDiscard].sort(() => Math.random() - 0.5);
               currentDiscard = [];
             }
-            const drawn = currentDeck.pop();
+            const drawn = drawCardWithNumberBias(currentDeck);
             if (drawn) {
               drawnCards.push({
                 ...drawn,
@@ -1666,23 +1720,37 @@ export function useGameEngine() {
 
     // Deal 5 cards to each player
     const deckCopy = [...initialDeck];
+    const openingNonNumberStreakByPlayerId: Record<number, number> = {};
+
     newPlayers.forEach(player => {
+      let nonNumberStreak = 0;
       for (let i = 0; i < 5; i++) {
-        const drawn = deckCopy.pop();
+        const antiStreakBoost = getAntiStreakNumberBoost(nonNumberStreak);
+        const drawn = drawCardWithNumberBias(deckCopy, NUMBER_DRAW_BOOST + antiStreakBoost);
         if (drawn) {
           player.hand.push({ ...drawn, id: `h-${drawn.symbol}-${Date.now()}-${Math.random().toString(36).substring(2, 5)}` });
+          if (cardsDatabase[drawn.symbol]?.type === 'number') {
+            nonNumberStreak = 0;
+          } else {
+            nonNumberStreak += 1;
+          }
         }
       }
+      openingNonNumberStreakByPlayerId[player.id] = nonNumberStreak;
     });
 
     // Starting player draws 6th card
-    const drawn = deckCopy.pop();
+    const startPlayer = newPlayers[0];
+    const startPlayerStreak = openingNonNumberStreakByPlayerId[startPlayer.id] ?? 0;
+    const drawn = drawCardWithNumberBias(deckCopy, NUMBER_DRAW_BOOST + getAntiStreakNumberBoost(startPlayerStreak));
     if (drawn) {
       newPlayers[0].hand.push({ ...drawn, id: `h-${drawn.symbol}-${Date.now()}-${Math.random().toString(36).substring(2, 5)}` });
+      openingNonNumberStreakByPlayerId[startPlayer.id] = cardsDatabase[drawn.symbol]?.type === 'number' ? 0 : startPlayerStreak + 1;
     }
 
     setDeck(deckCopy);
     setPlayers(newPlayers);
+    setNonNumberDrawStreakByPlayer(openingNonNumberStreakByPlayerId);
     resetGameStats(newPlayers);
     setPendingHandSwap(null);
     setGamePhase('PLAYING');
@@ -1776,6 +1844,7 @@ export function useGameEngine() {
     setPlaysThisTurn(0);
     resetGameStats(newPlayers);
     setPendingHandSwap(null);
+    setNonNumberDrawStreakByPlayer({});
 
     setTutorialAllowedDiscardIds(discardableIds);
     setTutorialActive(true);
@@ -1810,6 +1879,7 @@ export function useGameEngine() {
     setGameStats(null);
     setGameSummaryOpen(false);
     setPendingHandSwap(null);
+    setNonNumberDrawStreakByPlayer({});
     setGamePhase('PICK_MODE');
   };
 
@@ -1831,6 +1901,7 @@ export function useGameEngine() {
     setGameStats(null);
     setGameSummaryOpen(false);
     setPendingHandSwap(null);
+    setNonNumberDrawStreakByPlayer({});
     setGamePhase('PICK_MODE');
   };
 

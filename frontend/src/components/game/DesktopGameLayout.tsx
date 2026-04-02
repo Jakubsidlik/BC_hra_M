@@ -917,8 +917,8 @@ export function DesktopGameLayout({ currentPlayer, state, actions, tutorialRefer
                 fontFamily: "'Merienda', cursive",
               }}
             >
-              <span className="material-symbols-outlined text-lg">hourglass_empty</span>
-              {isDiscarding ? 'Hotovo' : 'Ukončit tah'}
+              <span className="material-symbols-outlined text-lg">{isDiscarding ? 'skip_next' : 'hourglass_empty'}</span>
+              {isDiscarding ? 'Předat tah' : 'Ukončit tah'}
             </button>
           </div>
         </section>
