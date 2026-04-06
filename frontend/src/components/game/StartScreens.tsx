@@ -1,8 +1,74 @@
 import { Button } from "@/components/ui/button";
 import { usePWAInstall } from "@/hooks/usePWAInstall";
+import { cardsDatabase } from "@/data/cardsDB";
 
 // Použití BASE_URL pro správné načítání na GitHub Pages
 const BASE = import.meta.env.BASE_URL;
+
+type RulesCardType = 'number' | 'operator' | 'variable' | 'function' | 'syntax';
+
+type RulesEffectEntry = {
+  id: string;
+  name: string;
+  description: string;
+  count: number;
+  carriers: Array<{ symbol: string; type: RulesCardType; count: number }>;
+};
+
+const computeEffectsCatalog = (): { totalCards: number; effects: RulesEffectEntry[] } => {
+  let totalCards = 0;
+  const effectMap = new Map<string, RulesEffectEntry>();
+
+  Object.entries(cardsDatabase).forEach(([symbol, cardData]) => {
+    if (cardData.count <= 0) return;
+    totalCards += cardData.count;
+
+    const effects = [cardData.effects?.optionA, cardData.effects?.optionB];
+    const uniqueEffectsOnCard = new Set<string>();
+
+    effects.forEach((effect) => {
+      if (!effect) return;
+      if (uniqueEffectsOnCard.has(effect.id)) return;
+      uniqueEffectsOnCard.add(effect.id);
+
+      const existing = effectMap.get(effect.id);
+      if (existing) {
+        existing.count += cardData.count;
+        existing.carriers.push({
+          symbol,
+          type: cardData.type as RulesCardType,
+          count: cardData.count,
+        });
+        return;
+      }
+
+      effectMap.set(effect.id, {
+        id: effect.id,
+        name: effect.name,
+        description: effect.description,
+        count: cardData.count,
+        carriers: [
+          {
+            symbol,
+            type: cardData.type as RulesCardType,
+            count: cardData.count,
+          },
+        ],
+      });
+    });
+  });
+
+  const effects = Array.from(effectMap.values())
+    .map((effect) => ({
+      ...effect,
+      carriers: [...effect.carriers].sort((a, b) => a.symbol.localeCompare(b.symbol, 'cs')),
+    }))
+    .sort((a, b) => a.id.localeCompare(b.id, 'cs', { numeric: true }));
+
+  return { totalCards, effects };
+};
+
+const rulesEffectsCatalog = computeEffectsCatalog();
 
 // --- HLAVNÍ MENU ---
 export function MainMenu({ onPlay, onRules }: { onPlay: () => void, onRules: () => void }) {
@@ -64,6 +130,48 @@ export function MainMenu({ onPlay, onRules }: { onPlay: () => void, onRules: () 
             alt="Zástupce"
             className="w-6 h-6 object-contain rounded"
           />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+export function GameModeSelection({ onSelect, onBack }: { onSelect: (mode: 'CLASSIC' | 'SHARED_GOAL') => void, onBack: () => void }) {
+  return (
+    <div
+      className="min-h-screen flex flex-col items-center justify-center p-8 border-16px border-amber-950/90 relative overflow-hidden bg-cover bg-center shadow-[inset_0_0_120px_rgba(0,0,0,0.7)]"
+      style={{ backgroundImage: `url('${BASE}tabule.svg')` }}
+    >
+      <div className="absolute inset-0 bg-black/30 pointer-events-none" />
+
+      <div className="relative z-10 flex flex-col items-center w-full max-w-4xl">
+        <h2 className="text-5xl md:text-7xl font-black italic text-slate-100 mb-12 opacity-95 text-center">
+          Vyber herní režim...
+        </h2>
+
+        <div className="flex flex-col items-center gap-6 w-full max-w-3xl mb-16 md:gap-8">
+          <Button
+            size="lg"
+            className="w-[55%] mx-auto bg-emerald-600/20 hover:bg-emerald-600/40 text-emerald-100 font-black text-2xl py-8 rounded-3xl border-4 border-emerald-400/50 hover:border-emerald-400 transition-all shadow-xl md:w-full md:text-4xl md:py-10"
+            onClick={() => onSelect('CLASSIC')}
+          >
+            KLASICKÝ
+          </Button>
+          <Button
+            size="lg"
+            className="w-[55%] mx-auto bg-emerald-600/20 hover:bg-emerald-600/40 text-emerald-100 font-black text-2xl py-8 rounded-3xl border-4 border-emerald-400/50 hover:border-emerald-400 transition-all shadow-xl md:w-full md:text-4xl md:py-10"
+            onClick={() => onSelect('SHARED_GOAL')}
+          >
+            SPOLEČNÝ CÍL
+          </Button>
+        </div>
+
+        <Button
+          variant="ghost"
+          className="text-slate-400 hover:text-white text-xl font-bold"
+          onClick={onBack}
+        >
+          ← ZPĚT DO MENU
         </Button>
       </div>
     </div>
@@ -240,7 +348,8 @@ export function RulesScreen({ onBack }: { onBack: () => void }) {
                 </div>
               </div>
               <div className="mt-6 space-y-3 text-sm md:text-base bg-black/30 p-4 border border-slate-700/50 rounded-xl">
-                <p>Na konci tahu musí mít hráč v ruce max. 5 karet. Jinak přejde do režimu odhazování.</p>
+                <p>Po stisku tlačítka Ukončit tah se vždy aktivuje režim odhazování/předání tahu.</p>
+                <p>Předání tahu je možné až ve chvíli, kdy má hráč v ruce maximálně 5 karet.</p>
                 <p>Karty s efektem nabídnou volbu: aktivovat destruktivní/výhodný efekt (a odhodit), nebo kartu pasivně zadrátovat na tabuli.</p>
               </div>
               </section>
@@ -266,98 +375,83 @@ export function RulesScreen({ onBack }: { onBack: () => void }) {
                 <p className="mb-4">Při formální rovnosti stiskni tlačítko Q.E.D.</p>
                 <div className="bg-black/40 border border-slate-700 p-4 rounded-xl space-y-3 text-sm">
                   <p>✅ <span className="text-emerald-400 font-bold">Správné řešení:</span> Engine (SymPy) formálně potvrdí identitu = L s R. Vítězíte.</p>
-                  <p>❌ <span className="text-red-400 font-bold">Chybný důkaz:</span> Hráčovo L se lissí. Penalizace – L je pohlceno odpadem a hráč tak ztratí svůj dosavadní pokrok.</p>
+                  <p>❌ <span className="text-red-400 font-bold">Chybný důkaz:</span> Hráčovo L se liší. Penalizace – L je pohlceno odpadem a hráč tak ztratí svůj dosavadní pokrok.</p>
+                </div>
+              </section>
+
+              <section>
+                <h3 className="text-3xl font-bold text-emerald-400 border-b border-emerald-400/30 pb-2 mb-4 italic">9. Herní režimy</h3>
+                <div className="space-y-4 text-sm md:text-base">
+                  <div className="rounded-xl border border-emerald-400/30 bg-emerald-500/10 p-4">
+                    <p className="font-bold uppercase tracking-wide text-emerald-300">Klasický režim</p>
+                    <p className="mt-2 text-slate-200">
+                      Každý hráč má vlastní cíl R. Vyhrává ten, kdo první prokáže rovnost L = R pomocí Q.E.D.
+                    </p>
+                  </div>
+                  <div className="rounded-xl border border-yellow-400/30 bg-yellow-500/10 p-4">
+                    <p className="font-bold uppercase tracking-wide text-yellow-300">Režim Společný cíl</p>
+                    <p className="mt-2 text-slate-200">
+                      Všichni hráči sdílí stejné R. Každý hráč má vlastní odpočet tahů (ZŠ: 20, SŠ/VŠ: 30). Po vyčerpání všech odpočtů vyhrává nejmenší odchylka od společného cíle.
+                    </p>
+                  </div>
+                </div>
+              </section>
+
+              <section>
+                <h3 className="text-3xl font-bold text-emerald-400 border-b border-emerald-400/30 pb-2 mb-4 italic">10. Obtížnosti podle režimu</h3>
+                <div className="space-y-4 text-sm md:text-base">
+                  <div className="rounded-xl border border-emerald-400/30 bg-emerald-500/10 p-4">
+                    <p className="font-bold text-emerald-300 mb-2">Klasický režim</p>
+                    <ul className="space-y-2 text-slate-200">
+                      <li><strong>ZŠ:</strong> výsledek je číslo z intervalu -99..99, nebo člen x..99x / y..99y.</li>
+                      <li><strong>SŠ, VŠ:</strong> výsledek je z množiny -99..999, -99x..99x, -99y..99y, -99e..99e, -99π..99π.</li>
+                    </ul>
+                  </div>
+                  <div className="rounded-xl border border-yellow-400/30 bg-yellow-500/10 p-4">
+                    <p className="font-bold text-yellow-300 mb-2">Režim Společný cíl</p>
+                    <ul className="space-y-2 text-slate-200">
+                      <li><strong>ZŠ:</strong> společný výsledek je 0..99.</li>
+                      <li><strong>SŠ, VŠ:</strong> společný výsledek je -99..99, -99x..99x, -99y..99y, -99e..99e, -99π..99π.</li>
+                    </ul>
+                  </div>
                 </div>
               </section>
             </div>
 
             <div className="space-y-12">
               <section>
-                <h3 className="text-3xl font-bold text-emerald-400 border-b border-emerald-400/30 pb-2 mb-6 italic">Specifické Herní Efekty</h3>
-              <div className="bg-black/30 p-5 rounded-2xl border border-slate-700/50 shadow-lg space-y-6 text-sm md:text-base">
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  <div className="p-3 bg-slate-800/40 rounded-lg">
-                    <p className="text-emerald-300 font-bold uppercase text-xs mb-1 tracking-wider">0–9 Čísla | 👤</p>
-                    <p className="text-slate-300 text-xs">Bonus: Dobrání 1 karty navíc v příštím tahu.</p>
-                  </div>
-                  <div className="p-3 bg-slate-800/40 rounded-lg">
-                    <p className="text-emerald-300 font-bold uppercase text-xs mb-1 tracking-wider">π (Pí) | ➔👤</p>
-                    <p className="text-slate-300 text-xs">Výměna tvé karty z L za jakoukoliv kartu z L oponenta.</p>
-                  </div>
-                  <div className="p-3 bg-slate-800/40 rounded-lg">
-                    <p className="text-emerald-300 font-bold uppercase text-xs mb-1 tracking-wider">e (Euler) | ✨👤</p>
-                    <p className="text-slate-300 text-xs">Transformace: Okamžité nahrazení cíle R libovolného hráče (nový los z R poolu).</p>
-                  </div>
-                  <div className="p-3 bg-slate-800/40 rounded-lg">
-                    <p className="text-emerald-300 font-bold uppercase text-xs mb-1 tracking-wider">x / y | ➔👤</p>
-                    <p className="text-slate-300 text-xs">Ničitel: Oponent odhodí všechny zbraně daného druhu (y = číslice, x = operace).</p>
+                <h3 className="text-3xl font-bold text-emerald-400 border-b border-emerald-400/30 pb-2 mb-4 italic">11. Efekty karet a jejich zastoupení</h3>
+                <div className="bg-black/30 p-5 rounded-2xl border border-slate-700/50 shadow-lg space-y-4 text-sm md:text-base">
+                  <p className="text-slate-300 text-xs">
+                    Přehled níže uvádí všechny efekty ve hře: co dělají, které karty je nesou, jakého jsou typu a kolikrát jsou ve hře zastoupené.
+                    Celkový počet všech karet v databázi hry: <span className="font-bold text-white">{rulesEffectsCatalog.totalCards}</span>.
+                  </p>
+
+                  <div className="space-y-3">
+                    {rulesEffectsCatalog.effects.map((effect) => (
+                      <div key={effect.id} className="rounded-lg border border-slate-600/40 bg-slate-800/40 p-3">
+                        <div className="flex flex-wrap items-center gap-2 justify-between mb-1">
+                          <p className="font-bold text-cyan-200">
+                            {effect.id} • {effect.name}
+                          </p>
+                          <span className="rounded-full border border-emerald-400/40 bg-emerald-500/15 px-2 py-0.5 text-xs font-bold text-emerald-200">
+                            {effect.count}x ve hře
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-300 mb-2">{effect.description}</p>
+                        <p className="text-xs text-slate-200">
+                          <span className="font-semibold text-slate-100">Karty:</span>{' '}
+                          {effect.carriers.map((carrier, index) => (
+                            <span key={`${effect.id}-${carrier.symbol}-${index}`}>
+                              {index > 0 ? ', ' : ''}
+                              <span className="text-white">{carrier.symbol}</span>
+                            </span>
+                          ))}
+                        </p>
+                      </div>
+                    ))}
                   </div>
                 </div>
-
-                <div className="h-px bg-slate-700/50 w-full" />
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  <div className="p-3 bg-orange-900/20 border border-orange-500/20 rounded-lg">
-                    <p className="text-orange-400 font-bold uppercase text-xs mb-1">+ (Součet) | ➔👤</p>
-                    <p className="text-slate-300 text-xs">Klíště: Následující hráč je nucen pod pohrůžkou použít operaci v tahu!</p>
-                  </div>
-                  <div className="p-3 bg-orange-900/20 border border-orange-500/20 rounded-lg">
-                    <p className="text-orange-400 font-bold uppercase text-xs mb-1">- (Rozdíl) | ✨👤</p>
-                    <p className="text-slate-300 text-xs">Krádež: Odstraní vybranému oponentovi náhodnou kartu z ruky.</p>
-                  </div>
-                  <div className="p-3 bg-orange-900/20 border border-orange-500/20 rounded-lg">
-                    <p className="text-orange-400 font-bold uppercase text-xs mb-1">* (Násobení) | 👤</p>
-                    <p className="text-slate-300 text-xs">Zdvojnásobení počtu dobíraných karet v příštím tahu (2x navíc).</p>
-                  </div>
-                  <div className="p-3 bg-orange-900/20 border border-orange-500/20 rounded-lg">
-                    <p className="text-orange-400 font-bold uppercase text-xs mb-1">/ (Dělení) | 👤</p>
-                    <p className="text-slate-300 text-xs">Vize: Náhled na 3 vrchní karty balíčku a svobodné určení jejich navázání.</p>
-                  </div>
-                  <div className="p-3 bg-orange-900/20 border border-orange-500/20 rounded-lg">
-                    <p className="text-orange-400 font-bold uppercase text-xs mb-1">a^b | ➔👤</p>
-                    <p className="text-slate-300 text-xs">Stasis: Následující hráč zcela přeskakuje příští tah.</p>
-                  </div>
-                  <div className="p-3 bg-orange-900/20 border border-orange-500/20 rounded-lg">
-                    <p className="text-orange-400 font-bold uppercase text-xs mb-1">sqrt (Odmocnina) | ➔👤</p>
-                    <p className="text-slate-300 text-xs">Mulligan: Další hráč plně odhazuje ruku a re-drowuje stejný počet do ruky.</p>
-                  </div>
-                  <div className="p-3 bg-orange-900/20 border border-orange-500/20 rounded-lg">
-                    <p className="text-orange-400 font-bold uppercase text-xs mb-1">mod | ✨👤</p>
-                    <p className="text-slate-300 text-xs">Modulo destrukce: Oponentův cíl (R) se změní na zbytek po dělení číslem, které sám určíš ze své ruky.</p>
-                  </div>
-                  <div className="p-3 bg-orange-900/20 border border-orange-500/20 rounded-lg">
-                    <p className="text-orange-400 font-bold uppercase text-xs mb-1">n! (Faktoriál) | ➔👤</p>
-                    <p className="text-slate-300 text-xs">Restrikce akce: Soupeř smí udělat pouze 1 max move v dalším kole z ruky na tabuli.</p>
-                  </div>
-                </div>
-
-                <div className="h-px bg-slate-700/50 w-full" />
-
-                <div className="grid grid-cols-1 gap-5">
-                  <div className="p-3 bg-purple-900/20 border border-purple-500/20 rounded-lg">
-                    <p className="text-purple-400 font-bold uppercase text-xs mb-1">Vektorová, Skalární a Analytická Pokročilá Třída</p>
-                    <ul className="text-slate-300 text-xs space-y-2 mt-2">
-                      <li><span className="font-bold text-white">nCk:</span> Prohození cifer cíle (R) zasaženého soupeře!</li>
-                      <li><span className="font-bold text-white">log/log2:</span> Otrhané řetězce! Aktivní neomezená sekvence (můžeš házet, co chceš, bez restrikce jedné akce).</li>
-                      <li><span className="font-bold text-white">det (Determinant):</span> Velký reset stolu - Usmrtí plošně všechny doposavad přeživší efekty!</li>
-                      <li><span className="font-bold text-white">skalar (Skalární Součin):</span> Univerzální kamufláž za identitu '0' do jednoho slotu v dalším kole.</li>
-                      <li><span className="font-bold text-white">vektor (Vektorový Součin):</span> Velikost vektoru! Nárazové získání 3 karet, uchování pouze jedné volby!</li>
-                    </ul>
-                  </div>
-
-                  <div className="p-3 bg-cyan-900/20 border border-cyan-500/20 rounded-lg">
-                    <p className="text-cyan-400 font-bold uppercase text-xs mb-1">Goniometrické Globály (sin, cos, tg, cotg)</p>
-                    <p className="text-slate-300 text-xs mb-2">Masivní dopad na plynulost stolu, směrování kol nebo debuffy všech najednou:</p>
-                    <ul className="text-slate-300 text-xs space-y-1">
-                      <li><span className="text-indigo-300">Předání po směru:</span> sin(π, 2π, π/2, 3π/2), tg(π, π/4). Všechny ruční zbraně (karty v ruce) jdou o 1 místo napřed.</li>
-                      <li><span className="text-indigo-300">Předání proti směru:</span> cos(π, 2π, π/2, 3π/2), cotg(π/2, π/4). Reversní ruka u všech na stole.</li>
-                      <li><span className="text-rose-300">Daňové Ztráty Dobírání:</span> π/3, π/6 — Odepření zisku všech vašich oponentů v budoucích chvílích o 1 kartu!</li>
-                    </ul>
-                  </div>
-                </div>
-
-              </div>
               </section>
             </div>
           </div>
@@ -368,7 +462,7 @@ export function RulesScreen({ onBack }: { onBack: () => void }) {
         <div className="mt-4 flex justify-center pt-4 pb-4">
           <Button
             variant="ghost"
-            className="text-slate-400 hover:text-white text-xl font-bold bg-black/40 backdrop-blur py-6 px-10 border border-slate-700"
+            className="text-slate-400 hover:text-white text-xl font-bold"
             onClick={onBack}
           >
             ← ZPĚT DO MENU

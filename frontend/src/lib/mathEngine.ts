@@ -172,3 +172,24 @@ export function evaluateExpression(expression: string, target_r: string, modifie
         };
     }
 }
+
+export function evaluateExpressionValue(expression: string, modifiers: string[] = []): number | null {
+    try {
+        const cleaned = translateToNerdamer(expression);
+        let L = nerdamer(cleaned) as unknown as NerdamerExpr;
+
+        if (modifiers.includes("ABS_VALUE")) {
+            L = nerdamer(`abs(${L.text()})`) as unknown as NerdamerExpr;
+        }
+
+        const evaluated = L.evaluate().text();
+        const directNumber = Number(evaluated);
+        if (Number.isFinite(directNumber)) return directNumber;
+
+        const fallback = math.evaluate(evaluated);
+        if (typeof fallback === 'number' && Number.isFinite(fallback)) return fallback;
+        return null;
+    } catch {
+        return null;
+    }
+}

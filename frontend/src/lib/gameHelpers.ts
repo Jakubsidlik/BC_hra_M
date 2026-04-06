@@ -47,90 +47,34 @@ export type DifficultyMode = 'ZŠ' | 'SŠ' | 'VŠ';
 export function generatePersonalTargetR(difficulty: DifficultyMode): string {
   const randInt = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min;
   const pick = (arr: string[]) => arr[Math.floor(Math.random() * arr.length)];
-  const pickVar = () => pick(['x', 'y']);
-  const pickConstant = () => pick(['π', 'e']);
-  const withNegativeChance = (value: string) => {
-    if (value === '0') return value;
-    return Math.random() < 0.2 ? `-${value}` : value;
+  const formatTerm = (coefficient: number, symbol: string): string => {
+    if (coefficient === 1) return symbol;
+    if (coefficient === -1) return `-${symbol}`;
+    return `${coefficient}${symbol}`;
   };
 
   if (difficulty === 'ZŠ') {
-    const category = randInt(1, 4);
-    switch (category) {
-      case 1: return withNegativeChance(`${randInt(1, 9)}`);                           // jednociferné číslo
-      case 2: return withNegativeChance(`${randInt(10, 99)}`);                         // dvouciferné číslo
-      case 3: return withNegativeChance(`${randInt(100, 999)}`);                       // trojciferné číslo
-      case 4: return withNegativeChance(`${randInt(1, 9)}${pickVar()}`);               // jednociferné číslo a X/Y
+    // ZŠ: pouze -99..99 a kladné koeficienty x/y v rozsahu x..99x, y..99y
+    if (Math.random() < 0.5) {
+      return `${randInt(-99, 99)}`;
     }
+    const symbol = pick(['x', 'y']);
+    const coefficient = randInt(1, 99);
+    return formatTerm(coefficient, symbol);
   }
 
-  if (difficulty === 'SŠ') {
-    const category = randInt(1, 6);
-    switch (category) {
-      case 1: return withNegativeChance(`${randInt(10, 99)}`);                         // dvouciferné číslo
-      case 2: return withNegativeChance(`${randInt(100, 999)}`);                       // trojciferné číslo
-      case 3: return withNegativeChance(`${randInt(1, 9)}${pickVar()}`);               // jednociferné číslo a X/Y
-      case 4: return withNegativeChance(`${randInt(10, 99)}${pickVar()}`);             // dvouciferné číslo a X/Y
-      case 5: {
-        // kombinace čísla a konstanty
-        const num = randInt(1, 20);
-        const constant = pickConstant();
-        return withNegativeChance(`${num}${constant}`);
-      }
-      case 6: {
-        // kombinace čísla, konstanty a X/Y
-        const num = randInt(1, 10);
-        const constant = pickConstant();
-        const variable = pickVar();
-        return withNegativeChance(`${num}${constant}${variable}`);
-      }
+  if (difficulty === 'SŠ' || difficulty === 'VŠ') {
+    // SŠ/VŠ: -99..999, -99x..99x, -99y..99y, -99e..99e, -99π..99π
+    const category = pick(['number', 'x', 'y', 'e', 'π']);
+    if (category === 'number') {
+      return `${randInt(-99, 999)}`;
     }
-  }
 
-  if (difficulty === 'VŠ') {
-    const category = randInt(1, 4);
-    switch (category) {
-      case 1: return `${randInt(10, 99)}`;                                              // dvouciferné číslo
-      case 2: return `${randInt(10, 99)}${pickVar()}`;                                  // dvouciferné číslo a X/Y
-      case 3: {
-        // kombinace čísla a konstanty
-        const type = randInt(1, 3);
-        if (type === 1) {
-          // číslo * konstanta (např 8e, 2π)
-          return `${randInt(1, 20)}${pickConstant()}`;
-        } else if (type === 2) {
-          // jen konstanta
-          return pickConstant();
-        } else {
-          // konstanta * konstanta (π*e)
-          const c1 = pickConstant();
-          let c2 = pickConstant();
-          while (c2 === c1) c2 = pickConstant();
-          return `${c1}${c2}`;
-        }
-      }
-      case 4: {
-        // kombinace čísla, konstanty a X/Y
-        const type = randInt(1, 4);
-        const variable = pickVar();
-        if (type === 1) {
-          // číslo * konstanta * X
-          return `${randInt(1, 10)}${pickConstant()}${variable}`;
-        } else if (type === 2) {
-          // konstanta * X
-          return `${pickConstant()}${variable}`;
-        } else if (type === 3) {
-          // číslo * X
-          return `${randInt(1, 20)}${variable}`;
-        } else {
-          // konstanta * konstanta * X
-          const c1 = pickConstant();
-          let c2 = pickConstant();
-          while (c2 === c1) c2 = pickConstant();
-          return `${c1}${c2}${variable}`;
-        }
-      }
+    let coefficient = 0;
+    while (coefficient === 0) {
+      coefficient = randInt(-99, 99);
     }
+    return formatTerm(coefficient, category);
   }
 
   return "0";

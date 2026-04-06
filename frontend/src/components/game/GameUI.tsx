@@ -2,18 +2,36 @@ import * as React from 'react';
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { AppIcon } from '@/components/ui/AppIcon';
 import { cardsDatabase } from '@/data/cardsDB';
 import type { GameCard, Player } from '@/lib/effects';
 import { BoardArea } from './Cards';
 
 // --- TUTORIÁL OVERLAY ---
-export function TutorialOverlay({ active, step, onNext }: { active: boolean; step: number; onNext: () => void }) {
+export function TutorialOverlay({
+  active,
+  step,
+  onNext,
+  gameMode = 'CLASSIC',
+  sharedGoalTurnsRemaining,
+  sharedGoalTotalTurns = 30,
+}: {
+  active: boolean;
+  step: number;
+  onNext: () => void;
+  gameMode?: 'CLASSIC' | 'SHARED_GOAL';
+  sharedGoalTurnsRemaining?: number | null;
+  sharedGoalTotalTurns?: number;
+}) {
   if (!active) return null;
+
+  const classicIntroText = 'Projdeš si jednu krátkou ukázkovou hru. Cíl je sestavit výraz L = R a ověřit Q.E.D.';
+  const sharedGoalIntroText = 'Projdeš si ukázkovou hru režimu Společný cíl. Všichni hráči mají stejné R a omezený počet tahů. Po vyčerpání tahů vyhrává hráč s nejmenší vzdáleností |L - R| bez ohledu na znaménko. Pokud někdo kdykoli dosáhne přesně L = R, může kliknout na Q.E.D. a vyhraje okamžitě, i když ještě zbývají tahy.';
 
   const steps = [
     {
-      title: 'Vítej v tutoriálu',
-      text: 'Projdeš si jednu krátkou ukázkovou hru. Cíl je sestavit výraz L = R a ověřit Q.E.D.'
+      title: gameMode === 'SHARED_GOAL' ? 'Vítej v tutoriálu: Společný cíl' : 'Vítej v tutoriálu',
+      text: gameMode === 'SHARED_GOAL' ? sharedGoalIntroText : classicIntroText,
     },
     {
       title: 'Efekty karet',
@@ -50,6 +68,12 @@ export function TutorialOverlay({ active, step, onNext }: { active: boolean; ste
         <div className="text-[10px] sm:text-xs text-slate-400">Krok {Math.min(step + 1, steps.length)} / {steps.length}</div>
       </div>
       <p className="mt-2 sm:mt-3 text-xs sm:text-sm text-slate-200">{content.text}</p>
+      {gameMode === 'SHARED_GOAL' && sharedGoalTurnsRemaining !== null && sharedGoalTurnsRemaining !== undefined && (
+        <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-500/10 px-3 py-1 text-[11px] sm:text-xs text-emerald-200">
+          <span className="uppercase tracking-[0.18em]">Zbývající počet kol</span>
+          <span className="font-black text-white">{sharedGoalTurnsRemaining} / {sharedGoalTotalTurns}</span>
+        </div>
+      )}
       {showNext && (
         <div className="mt-4 flex justify-end">
           <Button size="sm" className="bg-emerald-600 hover:bg-emerald-500" onClick={onNext}>Začít</Button>
@@ -73,8 +97,26 @@ interface EffectDialogProps {
 }
 
 // --- 1. VÍTĚZNÁ OBRAZOVKA (Q.E.D) ---
-export function VictoryScreen({ winner, onReset, onShowDetails }: { winner: Player | null, onReset: () => void, onShowDetails: () => void }) {
-  if (!winner) return null;
+type VictoryReason =
+  | { type: 'QED' }
+  | { type: 'SHARED_GOAL_TIMEOUT'; target: string; bestDistance: number | null; isDraw: boolean };
+
+export function VictoryScreen({ winner, victoryReason, sharedGoalTotalTurns = 30, onReset, onShowDetails }: { winner: Player[] | null, victoryReason?: VictoryReason | null, sharedGoalTotalTurns?: number, onReset: () => void, onShowDetails: () => void }) {
+  if (!winner || winner.length === 0) return null;
+  const isDraw = winner.length > 1;
+  const winnerNames = winner.map(player => player.name).join(', ');
+     const heading = victoryReason?.type === 'QED' ? 'QED' : 'Konec hry';
+
+  let resultText = `Hráč "${winner[0].name}" jako první zkonstruoval rovnost!`;
+  if (victoryReason?.type === 'SHARED_GOAL_TIMEOUT') {
+    if (isDraw) {
+      resultText = `Po vyčerpání ${sharedGoalTotalTurns} tahů každého hráče došlo k remíze mezi hráči: ${winnerNames}.`;
+    } else if (typeof victoryReason.bestDistance === 'number') {
+      resultText = `Po vyčerpání ${sharedGoalTotalTurns} tahů každého hráče byl cíli ${victoryReason.target} nejblíže hráč "${winner[0].name}" (odchylka ${victoryReason.bestDistance}).`;
+    } else {
+      resultText = `Po vyčerpání ${sharedGoalTotalTurns} tahů každého hráče se nepodařilo určit nejbližšího hráče. Hra končí remízou.`;
+    }
+  }
   return (
     <div className="fixed inset-0 z-100 flex flex-col items-center justify-center px-6 text-center select-none overflow-hidden min-h-dvh" style={{ background: 'radial-gradient(circle at center 40%, #2e7a42 0%, #1a4225 50%, #141e17 90%)', backgroundColor: '#141e17', backgroundAttachment: 'fixed', backgroundSize: 'cover' }}>
       <div className="absolute inset-0 pointer-events-none overflow-hidden flex items-center justify-center opacity-30">
@@ -85,17 +127,17 @@ export function VictoryScreen({ winner, onReset, onShowDetails }: { winner: Play
       <div className="z-10 flex flex-col items-center max-w-sm animate-in zoom-in duration-500">
         <div className="mb-6 relative">
           <div className="absolute -inset-24 blur-[120px] rounded-full" style={{ backgroundColor: 'rgba(57, 149, 81, 0.32)' }}></div>
-          <h1 className="text-8xl md:text-9xl font-bold relative animate-bounce" style={{ fontFamily: "'Merienda', cursive", color: '#60d984', filter: 'drop-shadow(0 0 15px rgba(96, 217, 132, 0.5))' }}>QED</h1>
+             <h1 className="text-8xl md:text-9xl font-bold relative animate-bounce" style={{ fontFamily: "'Merienda', cursive", color: '#60d984', filter: 'drop-shadow(0 0 15px rgba(96, 217, 132, 0.5))' }}>{heading}</h1>
         </div>
         <p className="text-xl md:text-2xl text-slate-100 leading-relaxed px-4 drop-shadow-md" style={{ fontFamily: "'Merienda', cursive" }}>
-          Hráč <span className="font-bold" style={{ color: '#60d984' }}>"{winner.name}"</span> jako první zkonstruoval rovnost!
+             {resultText}
         </p>
         <div className="mt-16 w-full max-w-70 flex flex-col gap-4">
           <button onClick={onReset} className="w-full flex items-center justify-center gap-2 text-white font-bold py-4 px-8 rounded-xl transition-all shadow-lg active:scale-95" style={{ backgroundColor: '#399551' }}>
-            <span className="material-symbols-outlined">play_arrow</span> Další hra
+            <AppIcon name="play_arrow" className="text-base" /> Další hra
           </button>
           <button onClick={onShowDetails} className="w-full flex items-center justify-center gap-2 text-slate-100 font-semibold py-4 px-8 rounded-xl transition-all border" style={{ backgroundColor: 'rgba(57, 149, 81, 0.4)', borderColor: 'rgba(57, 149, 81, 0.5)' }}>
-            <span className="material-symbols-outlined">menu_book</span> Detail hry
+            <AppIcon name="menu_book" className="text-base" /> Detail hry
           </button>
         </div>
       </div>
@@ -190,7 +232,7 @@ export function GameSummaryDialog({
   };
 
   return (
-    <div className="fixed inset-0 z-[200] bg-slate-950/95 flex items-center justify-center p-6">
+    <div className="fixed inset-0 z-200 bg-slate-950/95 flex items-center justify-center p-6">
       <div className="w-full max-w-5xl rounded-2xl border border-white/10 bg-slate-900/80 backdrop-blur-md p-6 text-slate-100">
         <div className="flex items-start justify-between gap-4">
           <div>
@@ -270,7 +312,7 @@ export function GameSummaryDialog({
 export function HandoffScreen({ isHandoff, players, nextIndex, onReveal }: { isHandoff: boolean, players: Player[], nextIndex: number, onReveal: () => void }) {
   if (!isHandoff) return null;
   return (
-    <div className="fixed inset-0 bg-slate-950 z-[200] flex flex-col items-center justify-center text-white text-center p-4">
+    <div className="fixed inset-0 bg-slate-950 z-200 flex flex-col items-center justify-center text-white text-center p-4">
       <style>{`
         @keyframes shrinkBar {
           0% { width: 100%; }
@@ -313,7 +355,7 @@ export function TargetingOverlay({
   const targetPlayer = players.find((p: Player) => p.id === targetingMode.targetPlayerId);
 
   return (
-    <div className="fixed inset-0 bg-slate-950/95 z-[200] flex flex-col items-center justify-center p-8 backdrop-blur-md animate-in fade-in duration-300">
+    <div className="fixed inset-0 bg-slate-950/95 z-200 flex flex-col items-center justify-center p-8 backdrop-blur-md animate-in fade-in duration-300">
       <div className="text-center mb-12">
         <Badge variant="outline" className="mb-4 border-red-500 text-red-500 px-4 py-1 animate-pulse">TARGET ACQUIRED</Badge>
         <h2 className="text-6xl text-white font-black mb-4 tracking-tighter uppercase font-chalk">Zaměřování</h2>
@@ -360,7 +402,7 @@ export function EffectDialog({
             onClick={onClose}
             className="text-slate-400 hover:text-white transition-colors p-1"
           >
-            <span className="material-symbols-outlined text-xl">close</span>
+            <AppIcon name="close" className="text-xl" />
           </button>
           <DialogTitle className="sr-only">
             {effectStep === 'CHOOSE_EFFECT' ? 'Využití karty' : 'Cíl útoku'}
