@@ -4,6 +4,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { cardsDatabase } from '@/data/cardsDB';
 import { getBorderColor, getSpecialSlots } from '@/lib/gameHelpers';
 import { BoardDropZone, type SlotDropData } from '@/components/game/Cards';
+import { AppIcon } from '@/components/ui/AppIcon';
 import type { GameCard, Player } from '@/lib/effects';
 
 const BASE = import.meta.env.BASE_URL;
@@ -272,7 +273,7 @@ function MobileDiscardSlot({ discardCount, isDiscarding, palette }: MobileDiscar
       `}
     >
       <div className="absolute inset-0 rotate-12 translate-y-2" style={{ background: `${palette.primary}0d` }} />
-      <span className="material-symbols-outlined text-2xl text-white/40 relative z-10">delete</span>
+      <AppIcon name="delete" className="text-2xl text-white/40 relative z-10" />
       <span className="text-[10px] uppercase tracking-tighter text-white/50 font-bold mt-1 relative z-10">
         {discardCount > 0 ? `Odhoz (${discardCount})` : 'Odhoz'}
       </span>
@@ -311,7 +312,7 @@ function DraggableBoardCard({
   const specialSlots = getSpecialSlots(card.symbol);
   const slotKeys = specialSlots.map(slot => slot.key);
   const hasFourSlots = slotKeys.length === 4;
-  const hasLeftRightSlots = slotKeys.length === 2 && slotKeys.includes('a' as any) && slotKeys.includes('b' as any);
+  const hasLeftRightSlots = slotKeys.length === 2 && slotKeys.includes('a') && slotKeys.includes('b');
   const hasTwoSlots = slotKeys.length === 2 && !hasLeftRightSlots;
   const hasOneSlot = slotKeys.length === 1;
 
@@ -420,7 +421,7 @@ function DraggableBoardCard({
             const nextVar = derivativeVar === 'x' ? 'y' : 'x';
             onDerivativeVariableChange?.(card.id, nextVar);
           }}
-          className="absolute z-20 right-0.5 top-0.5 origin-top-right scale-[1.5] rounded-full border border-white/30 bg-slate-900/90 px-1 py-0.5 text-[8px] font-black text-white"
+          className="absolute z-20 left-0.5 bottom-0.5 origin-bottom-left scale-[1.5] rounded-full border border-white/30 bg-slate-900/90 px-1 py-0.5 text-[8px] font-black text-white"
         >
           {derivativeLabel}
         </button>
@@ -433,7 +434,7 @@ function DraggableBoardCard({
             const nextVar = seriesVar === 'x' ? 'y' : 'x';
             onSeriesVariableChange?.(card.id, nextVar);
           }}
-          className="absolute z-20 right-0.5 top-0.5 origin-top-right scale-[1.5] rounded-full border border-white/30 bg-slate-900/90 px-1 py-0.5 text-[8px] font-black text-white"
+          className="absolute z-20 left-0.5 bottom-0.5 origin-bottom-left scale-[1.5] rounded-full border border-white/30 bg-slate-900/90 px-1 py-0.5 text-[8px] font-black text-white"
         >
           {seriesVar}
         </button>
@@ -446,7 +447,7 @@ function DraggableBoardCard({
             const nextVar = limitVar === 'x' ? 'y' : 'x';
             onLimitVariableChange?.(card.id, nextVar);
           }}
-          className="absolute z-20 right-0.5 top-0.5 origin-top-right scale-[1.5] rounded-full border border-white/30 bg-slate-900/90 px-1 py-0.5 text-[8px] font-black text-white"
+          className="absolute z-20 left-0.5 bottom-0.5 origin-bottom-left scale-[1.5] rounded-full border border-white/30 bg-slate-900/90 px-1 py-0.5 text-[8px] font-black text-white"
         >
           {limitVar}
         </button>
@@ -582,7 +583,7 @@ function DraggableBoardCard({
 // ==========================================
 // MOBILE BOARD DROP ZONE
 // ==========================================
-function MobileBoardDropZone({ id, palette }: { id: string; palette: ThemePalette }) {
+function MobileBoardDropZone({ id, palette, bottomInset = 0 }: { id: string; palette: ThemePalette; bottomInset?: number }) {
   const { setNodeRef, isOver } = useDroppable({ id });
   return (
     <div
@@ -590,8 +591,12 @@ function MobileBoardDropZone({ id, palette }: { id: string; palette: ThemePalett
       className="absolute inset-0 rounded-lg transition-all duration-300 z-10"
       style={
         isOver
-          ? { background: `${palette.primary}18`, boxShadow: `inset 0 0 0 2px ${palette.primary}80` }
-          : {}
+          ? {
+              bottom: `${bottomInset}px`,
+              background: `${palette.primary}18`,
+              boxShadow: `inset 0 0 0 2px ${palette.primary}80`,
+            }
+          : { bottom: `${bottomInset}px` }
       }
     />
   );
@@ -731,27 +736,43 @@ function TutorialReferenceRow({ cards, palette }: { cards: GameCard[]; palette: 
     <div className="flex flex-wrap items-center justify-center gap-1 rounded-lg px-2 py-1" style={{ background: `${palette.bgDark}aa` }}>
       {cards.map(card => {
         const cardData = cardsDatabase[card.symbol];
+        const slotCard = card.slotCards
+          ? (card.slotCards.single ?? Object.values(card.slotCards).find((candidate): candidate is GameCard => !!candidate) ?? null)
+          : null;
+        const slotCardData = slotCard ? cardsDatabase[slotCard.symbol] : null;
         return (
-          <div
-            key={card.id}
-            className={`relative w-7 h-10 rounded border-2 bg-slate-800 flex items-center justify-center origin-center scale-[1.2] ${getBorderColor(card.symbol)}`}
-          >
-            {cardData?.image ? (
-              <img
-                src={`${BASE}${cardData.image.replace(/^\//, '')}`}
-                alt={card.symbol}
-
-                decoding="async"
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <span className="text-[9px] font-chalk text-white">{card.symbol}</span>
-            )}
-            {card.exponent && (
-              <div className="absolute -top-2 -right-2 w-4 h-5 rounded border border-white/50 bg-slate-900 flex items-center justify-center">
-                <span className="text-[8px] font-chalk text-white">{card.exponent.symbol}</span>
+          <div key={card.id} className="relative w-7 h-10 origin-center scale-[1.2]">
+            {slotCard && (
+              <div className={`absolute left-1/2 w-7 h-10 rounded border-2 bg-slate-800 flex items-center justify-center -translate-x-1/2 -top-[20%] z-0 ${getBorderColor(slotCard.symbol)}`}>
+                {slotCardData?.image ? (
+                  <img
+                    src={`${BASE}${slotCardData.image.replace(/^\//, '')}`}
+                    alt={slotCard.symbol}
+                    decoding="async"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span className="text-[9px] font-chalk text-white">{slotCard.symbol}</span>
+                )}
               </div>
             )}
+            <div className={`relative z-10 w-7 h-10 rounded border-2 bg-slate-800 flex items-center justify-center ${getBorderColor(card.symbol)}`}>
+              {cardData?.image ? (
+                <img
+                  src={`${BASE}${cardData.image.replace(/^\//, '')}`}
+                  alt={card.symbol}
+                  decoding="async"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <span className="text-[9px] font-chalk text-white">{card.symbol}</span>
+              )}
+              {card.exponent && (
+                <div className="absolute -top-2 -right-2 w-4 h-5 rounded border border-white/50 bg-slate-900 flex items-center justify-center">
+                  <span className="text-[8px] font-chalk text-white">{card.exponent.symbol}</span>
+                </div>
+              )}
+            </div>
           </div>
         );
       })}
@@ -789,6 +810,8 @@ export function MobileGameLayout({ currentPlayer, state, actions, tutorialRefere
   const sharedGoalProgress = showSharedGoalTracker
     ? Math.max(0, Math.min(100, (sharedGoalTurnsRemaining! / totalSharedTurns) * 100))
     : 0;
+  const sharedGoalBoardBottomInset = showSharedGoalTracker ? 30 : 0;
+  const sharedGoalBelowBoardLift = showSharedGoalTracker ? 20 : 0;
 
   return (
     <div
@@ -829,7 +852,7 @@ export function MobileGameLayout({ currentPlayer, state, actions, tutorialRefere
                 onClick={actions.handleDiscardExpression}
                 title="Vymazat tabuli L (spotřebuje tah)"
               >
-                <span className="material-symbols-outlined text-3xl">ink_eraser</span>
+                <AppIcon name="ink_eraser" className="text-3xl" />
               </button>
 
               <div className="relative group/menu">
@@ -837,7 +860,7 @@ export function MobileGameLayout({ currentPlayer, state, actions, tutorialRefere
                   className="text-white p-2 hover:bg-white/10 rounded-lg transition-colors"
                   onClick={actions.openLeaveGameConfirm}
                 >
-                  <span className="material-symbols-outlined text-3xl">menu</span>
+                  <AppIcon name="menu" className="text-3xl" />
                 </button>
                 {showEffectDebug && (
                   <div className="pointer-events-none absolute left-0 top-full mt-2 hidden w-72 max-w-[85vw] rounded-lg border border-emerald-400/30 bg-black/85 p-3 text-[11px] text-emerald-100 shadow-xl backdrop-blur-sm group-hover/menu:block">
@@ -878,7 +901,7 @@ export function MobileGameLayout({ currentPlayer, state, actions, tutorialRefere
         {showSharedGoalTracker && (
           <section className="w-full rounded-xl border border-white/15 bg-black/25 px-3 py-2">
             <div className="mb-2 flex items-center justify-between text-[10px] uppercase tracking-[0.15em] text-emerald-200">
-              <span>Společný cíl</span>
+              <span>Společný cíl: tahy hráče</span>
               <span>{sharedGoalTurnsRemaining} / {totalSharedTurns} tahů</span>
             </div>
             <div className="h-2.5 w-full overflow-hidden rounded-full bg-white/10">
@@ -892,18 +915,25 @@ export function MobileGameLayout({ currentPlayer, state, actions, tutorialRefere
 
         {/* CHALKBOARD — board + target */}
         <section className="relative group">
-          <MobileBoardDropZone id="main-board" palette={palette} />
           <div
-            className={`w-full border-4 shadow-2xl flex items-center justify-center relative rounded-lg p-4 transition-colors duration-700 ${isDraggingCard ? 'overflow-visible' : 'overflow-hidden'}`}
+            className="relative w-full"
             style={{
-              borderColor: `${palette.primary}66`,
-              backgroundColor: palette.bgMid,
-              backgroundImage: `radial-gradient(circle, ${palette.bgDot} 1px, transparent 1px)`,
-              backgroundSize: '30px 30px',
               aspectRatio: '4/3',
               minHeight: '180px',
             }}
           >
+            <MobileBoardDropZone id="main-board" palette={palette} bottomInset={sharedGoalBoardBottomInset} />
+            <div
+              className={`inset-x-0 top-0 border-4 shadow-2xl flex items-center justify-center relative rounded-lg p-4 transition-colors duration-700 ${isDraggingCard ? 'overflow-visible' : 'overflow-hidden'}`}
+              style={{
+                position: 'absolute',
+                bottom: `${sharedGoalBoardBottomInset}px`,
+                borderColor: `${palette.primary}66`,
+                backgroundColor: palette.bgMid,
+                backgroundImage: `radial-gradient(circle, ${palette.bgDot} 1px, transparent 1px)`,
+                backgroundSize: '30px 30px',
+              }}
+            >
             {/* Overlay */}
             <div
               className="absolute inset-0 opacity-20 pointer-events-none"
@@ -913,7 +943,9 @@ export function MobileGameLayout({ currentPlayer, state, actions, tutorialRefere
             {/* Board cards */}
             <div className="z-10 flex flex-col items-center gap-2 w-full" style={{ minHeight: '5rem', paddingBottom: '2.5rem' }}>
               {tutorialReferenceBoard && tutorialReferenceBoard.length > 0 && (
-                <TutorialReferenceRow cards={tutorialReferenceBoard} palette={palette} />
+                <div className="-mt-2.5">
+                  <TutorialReferenceRow cards={tutorialReferenceBoard} palette={palette} />
+                </div>
               )}
               <div className={`flex items-stretch gap-0 flex-wrap w-full ${(hasVsLockedCard || showDxDy) ? 'justify-start' : 'justify-center'}`}>
                 {currentPlayer.board.length === 0 ? (
@@ -970,7 +1002,7 @@ export function MobileGameLayout({ currentPlayer, state, actions, tutorialRefere
                               const nextVar = integralCard!.integralVariable === 'y' ? 'x' : 'y';
                               actions.setIntegralVariable(integralCard!.id, nextVar);
                             }}
-                            className="absolute z-20 right-0.5 top-0.5 origin-top-right scale-[1.5] rounded-full border border-white/30 bg-slate-900/90 px-1 py-0.5 text-[8px] font-black text-white hover:bg-white/20 transition-colors cursor-pointer"
+                            className="absolute z-20 left-0.5 top-1/2 -translate-y-1/2 origin-left scale-[1.5] rounded-full border border-white/30 bg-slate-900/90 px-1 py-0.5 text-[8px] font-black text-white hover:bg-white/20 transition-colors cursor-pointer"
                           >
                             {integralCard!.integralVariable === 'y' ? 'y' : 'x'}
                           </button>
@@ -1023,10 +1055,11 @@ export function MobileGameLayout({ currentPlayer, state, actions, tutorialRefere
               </div>
             </div>
           </div>
+          </div>
         </section>
 
         {/* ACTION BUTTONS */}
-        <section className="flex flex-col items-center gap-3">
+        <section className="flex flex-col items-center gap-3" style={{ transform: `translateY(-${sharedGoalBelowBoardLift}px)` }}>
           <div className="flex items-stretch gap-3 mx-auto" style={{ width: `calc(3 * ${FULL_CARD_W} + 2 * 1rem)` }}>
             <button
               onClick={actions.checkMathEngine}
@@ -1056,14 +1089,14 @@ export function MobileGameLayout({ currentPlayer, state, actions, tutorialRefere
                 fontFamily: "'Merienda', cursive",
               }}
             >
-              <span className="material-symbols-outlined text-lg">{isDiscarding ? 'skip_next' : 'hourglass_empty'}</span>
+              <AppIcon name={isDiscarding ? 'skip_next' : 'hourglass_empty'} className="text-lg" />
               {isDiscarding ? 'Předat tah' : 'Ukončit tah'}
             </button>
           </div>
         </section>
 
         {/* UTILITY CARD ROW */}
-        <section className="flex justify-center gap-4 px-4 py-2" style={{ position: 'relative', zIndex: 1 }}>
+        <section className="flex justify-center gap-4 px-4 py-2" style={{ position: 'relative', zIndex: 1, transform: `translateY(-${sharedGoalBelowBoardLift}px)` }}>
 
           {/* Závorky */}
           <BracketCard
@@ -1103,7 +1136,7 @@ export function MobileGameLayout({ currentPlayer, state, actions, tutorialRefere
       {/* ── FOOTER (hand fan) ── */}
       <footer
         className="mt-auto pt-2 px-4 transition-colors duration-700"
-        style={{ background: `linear-gradient(to top, ${palette.bgMid} 0%, transparent 100%)`, position: 'relative', zIndex: 60, paddingBottom: 'calc(1rem + 10px)' }}
+        style={{ background: `linear-gradient(to top, ${palette.bgMid} 0%, transparent 100%)`, position: 'relative', zIndex: 60, paddingBottom: 'calc(1rem + 10px)', transform: `translateY(-${sharedGoalBelowBoardLift}px)` }}
       >
         <div className="relative h-44 max-w-lg mx-auto flex justify-center items-end select-none" style={{ transform: 'translateY(-85px)' }}>
           {handCards.map((card, index) => (

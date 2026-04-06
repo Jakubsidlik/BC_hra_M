@@ -141,6 +141,7 @@ export default function App() {
       <VictoryScreen
         winner={state.winner}
         victoryReason={state.victoryReason}
+        sharedGoalTotalTurns={state.sharedGoalTotalTurns}
         onReset={actions.returnToModeSelect}
         onShowDetails={actions.openGameSummary}
       />
@@ -153,6 +154,9 @@ export default function App() {
         active={state.tutorialActive}
         step={state.tutorialStep}
         onNext={() => actions.setTutorialStep(state.tutorialStep + 1)}
+        gameMode={state.gameMode}
+        sharedGoalTurnsRemaining={state.sharedGoalTurnsRemaining}
+        sharedGoalTotalTurns={state.sharedGoalTotalTurns}
       />
       <LeaveGameDialog
         open={state.leaveGameConfirmOpen}

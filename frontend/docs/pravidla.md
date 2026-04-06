@@ -12,6 +12,30 @@ Cílem je konstrukce formálně správné rovnosti **L = R**.
 - **L (tabule):** hráčem vytvořený řetězec hodnot, operací, závorek a proměnných
 - **R (výsledek):** cílová hodnota určená na začátku hry dle obtížnosti
 
+## 2A. Herní mód: Společný cíl
+V módu **Společný cíl** mají všichni hráči stejnou cílovou hodnotu **R**, ale každý hráč má vlastní odpočet tahů podle obtížnosti:
+
+- **ZŠ: 20 tahů**
+- **SŠ: 30 tahů**
+- **VŠ: 30 tahů**
+
+- Odpočet se odečítá samostatně každému hráči při ukončení jeho kola.
+- Pokud je hráčův tah přeskočen efektem karty, započítá se to také jako uplynulý tah.
+- Jakmile všichni hráči vyčerpají své tahy, hra se vyhodnotí podle vzdálenosti jejich výrazu od společného cíle R.
+- Vyhrává hráč (nebo více hráčů při remíze) s nejmenší odchylkou.
+
+## 2B. Obtížnosti a generování R
+
+### Klasický režim
+- **ZŠ:** R je číslo z intervalu `-99..99`, nebo člen `x..99x` / `y..99y`.
+- **SŠ:** R je z množiny `-99..999`, `-99x..99x`, `-99y..99y`, `-99e..99e`, `-99π..99π`.
+- **VŠ:** stejné jako SŠ. Pokud je zamčená VŠ karta `∏`, cílové R se losuje jako složené číslo podle pravidel sekvenčního produktu.
+
+### Režim Společný cíl
+- **ZŠ:** společné R je `0..99`.
+- **SŠ:** společné R je z množiny `-99..99`, `-99x..99x`, `-99y..99y`, `-99e..99e`, `-99π..99π`.
+- **VŠ:** stejné jako SŠ. Pokud je společná VŠ karta `∏`, společné R je složené číslo. Všichni hráči sdílí stejnou zamčenou VŠ kartu.
+
 ## 3. Příprava hry
 1. Každý hráč obdrží fixní sadu: **3 páry závorek** `()`, `[]`, `{}` a kartu `=`.
 2. Tyto fixní karty netvoří součást dobíracího balíčku.
@@ -53,12 +77,10 @@ Pokud hráč prohlásí Q.E.D., následuje kontrola:
 - **Libovolný hráč**
 - **Všichni hráči / všichni soupeři** (dle popisu karty)
 
-## 8. Doporučené obtížnosti
-- **ZŠ:** `1–9`, `10–99`, `100–999`, `x–9x`, `y–9y`
-- **SŠ:** `10–99`, `100–999`, `x–99x`, `y–99y`, kombinace hodnot, kombinace hodnot a proměnné
-- **VŠ:** `10–99`, `100–999`; navíc pro derivaci a integrál `x–99x`, `y–99y`
-
-> Při zvolení VŠ obtížnosti si hráč vylosuje operaci z VŠ balíčku, kterou položí na tabuli. Tuto kartu musí využít a nelze ji odebrat ani nahradit.
+## 8. Konec tahu a odhazování
+- Stisk tlačítka **Ukončit tah** vždy aktivuje režim odhazování / předání tahu.
+- Hráč může odhazovat karty z ruky do odhazovacího balíčku.
+- Tah lze předat až ve chvíli, kdy má hráč v ruce nejvýše **5 karet**.
 
 ## 9. Obsah balení
 - **Hodnoty (142 ks):** `0–9` (90 ks), `π` (5 ks), `e` (5 ks), `x` (10 ks), `y` (10 ks), goniometrické funkce (22 ks)
