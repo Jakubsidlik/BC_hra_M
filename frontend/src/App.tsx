@@ -1,5 +1,5 @@
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { DndContext, useSensor, useSensors, MouseSensor, TouchSensor, pointerWithin, type DragStartEvent, type DragEndEvent } from '@dnd-kit/core';
 import { snapCenterToCursor } from '@dnd-kit/modifiers';
 import { Toaster } from "sonner";
@@ -9,9 +9,6 @@ import { useGameEngine } from '@/hooks/useGameEngine';
 import { cardsDatabase } from '@/data/cardsDB';
 import { useDeviceType } from '@/hooks/useDeviceType';
 import { preloadCardImages } from '@/lib/preloadCardImages';
-
-// Preload all card SVG images immediately on app startup
-preloadCardImages();
 
 // Importy Komponent
 import { 
@@ -34,6 +31,10 @@ import { TabletGameLayout } from '@/components/game/TabletGameLayout';
 import { DesktopGameLayout } from '@/components/game/DesktopGameLayout';
 
 export default function App() {
+  useEffect(() => {
+    preloadCardImages();
+  }, []);
+
   // 1. NAČTENÍ LOGIKY Z CUSTOM HOOKU
   const { state, actions } = useGameEngine();
   const deviceType = useDeviceType();
