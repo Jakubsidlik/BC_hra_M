@@ -21,6 +21,9 @@ const errorMessage = (error: unknown): string => {
 function translateToNerdamer(expr: string): string {
     let result = expr;
 
+    // Nerdamer interpretuje [] jako list/vektor; ve hře mají [] a {} fungovat jako běžné závorky.
+    result = result.replace(/[[{]/g, '(').replace(/[}\]]/g, ')');
+
     // 1. Python mocniny -> standardní stříška
     result = result.replace(/\*\*/g, '^');
 

@@ -1,7 +1,7 @@
 '0':
   symbol: '0'
   type: number
-  count: 4
+  count: 10
   image: /svg/0.svg
   canHaveExponent: true
   hasEffect: true
@@ -14,7 +14,7 @@
 '1':
   symbol: '1'
   type: number
-  count: 6
+  count: 10
   image: /svg/1.svg
   canHaveExponent: true
   hasEffect: true
@@ -298,7 +298,7 @@ int:
 ∑:
   symbol: ∑
   type: operator
-  count: 4
+  count: 3
   image: /svg/sum.svg
   slots:
     - upper
@@ -313,7 +313,7 @@ log:
   hasEffect: true
   effects:
     optionA:
-      id: EFF_017
+      id: EFF_014
       name: Neomezené hraní
       description: Můžeš tento tah hrát libovolný počet karet.
       target: SELF
@@ -325,7 +325,7 @@ sin(2π):
   hasEffect: true
   effects:
     optionA:
-      id: EFF_018
+      id: EFF_015
       name: Předání po
       description: Všichni hráči si předají karty v ruce po směru.
       target: ALL
@@ -337,7 +337,7 @@ sin(π/6):
   hasEffect: true
   effects:
     optionA:
-      id: EFF_026
+      id: EFF_021
       name: Ztráta karty
       description: Všichni soupeři si v příštím tahu doberou o 1 kartu méně.
       target: ALL
@@ -349,7 +349,7 @@ sin(π/4):
   hasEffect: true
   effects:
     optionA:
-      id: EFF_026
+      id: EFF_021
       name: Ztráta karty
       description: Všichni soupeři si v příštím tahu doberou o 1 kartu méně.
       target: ALL
@@ -361,7 +361,7 @@ sin(π/3):
   hasEffect: true
   effects:
     optionA:
-      id: EFF_026
+      id: EFF_021
       name: Ztráta karty
       description: Všichni soupeři si v příštím tahu doberou o 1 kartu méně.
       target: ALL
@@ -373,7 +373,7 @@ sin(π/2):
   hasEffect: true
   effects:
     optionA:
-      id: EFF_018
+      id: EFF_015
       name: Předání po
       description: Všichni hráči si předají karty v ruce po směru.
       target: ALL
@@ -385,7 +385,7 @@ sin(π):
   hasEffect: true
   effects:
     optionA:
-      id: EFF_018
+      id: EFF_015
       name: Předání po
       description: Všichni hráči si předají karty v ruce po směru.
       target: ALL
@@ -397,7 +397,7 @@ sin(3π/2):
   hasEffect: true
   effects:
     optionA:
-      id: EFF_018
+      id: EFF_015
       name: Předání po
       description: Všichni hráči si předají karty v ruce po směru.
       target: ALL
@@ -409,7 +409,7 @@ cos(2π):
   hasEffect: true
   effects:
     optionA:
-      id: EFF_019
+      id: EFF_016
       name: Předání proti
       description: Všichni hráči si předají karty v ruce proti směru.
       target: ALL
@@ -421,7 +421,7 @@ cos(π/6):
   hasEffect: true
   effects:
     optionA:
-      id: EFF_026
+      id: EFF_021
       name: Ztráta karty
       description: Všichni soupeři si v příštím tahu doberou o 1 kartu méně.
       target: ALL
@@ -433,7 +433,7 @@ cos(π/4):
   hasEffect: true
   effects:
     optionA:
-      id: EFF_026
+      id: EFF_021
       name: Ztráta karty
       description: Všichni soupeři si v příštím tahu doberou o 1 kartu méně.
       target: ALL
@@ -445,7 +445,7 @@ cos(π/3):
   hasEffect: true
   effects:
     optionA:
-      id: EFF_026
+      id: EFF_021
       name: Ztráta karty
       description: Všichni soupeři si v příštím tahu doberou o 1 kartu méně.
       target: ALL
@@ -457,7 +457,7 @@ cos(π/2):
   hasEffect: true
   effects:
     optionA:
-      id: EFF_019
+      id: EFF_016
       name: Předání proti
       description: Všichni hráči si předají karty v ruce proti směru.
       target: ALL
@@ -469,7 +469,7 @@ cos(π):
   hasEffect: true
   effects:
     optionA:
-      id: EFF_019
+      id: EFF_016
       name: Předání proti
       description: Všichni hráči si předají karty v ruce proti směru.
       target: ALL
@@ -481,7 +481,7 @@ cos(3π/2):
   hasEffect: true
   effects:
     optionA:
-      id: EFF_019
+      id: EFF_016
       name: Předání proti
       description: Všichni hráči si předají karty v ruce proti směru.
       target: ALL
@@ -493,7 +493,7 @@ tg(π/6):
   hasEffect: true
   effects:
     optionA:
-      id: EFF_026
+      id: EFF_021
       name: Ztráta karty
       description: Všichni soupeři si v příštím tahu doberou o 1 kartu méně.
       target: ALL
@@ -505,7 +505,7 @@ tg(π/4):
   hasEffect: true
   effects:
     optionA:
-      id: EFF_020
+      id: EFF_017
       name: Předání po (tg)
       description: Všichni hráči si předají karty v ruce po směru.
       target: ALL
@@ -517,7 +517,7 @@ tg(π/3):
   hasEffect: true
   effects:
     optionA:
-      id: EFF_026
+      id: EFF_021
       name: Ztráta karty
       description: Všichni soupeři si v příštím tahu doberou o 1 kartu méně.
       target: ALL
@@ -529,7 +529,7 @@ tg(π):
   hasEffect: true
   effects:
     optionA:
-      id: EFF_020
+      id: EFF_017
       name: Předání po (tg)
       description: Všichni hráči si předají karty v ruce po směru.
       target: ALL
@@ -541,7 +541,7 @@ cotg(π/6):
   hasEffect: true
   effects:
     optionA:
-      id: EFF_026
+      id: EFF_021
       name: Ztráta karty
       description: Všichni soupeři si v příštím tahu doberou o 1 kartu méně.
       target: ALL
@@ -553,7 +553,7 @@ cotg(π/4):
   hasEffect: true
   effects:
     optionA:
-      id: EFF_021
+      id: EFF_018
       name: Předání proti (cotg)
       description: Všichni hráči si předají karty v ruce proti směru.
       target: ALL
@@ -565,7 +565,7 @@ cotg(π/3):
   hasEffect: true
   effects:
     optionA:
-      id: EFF_026
+      id: EFF_021
       name: Ztráta karty
       description: Všichni soupeři si v příštím tahu doberou o 1 kartu méně.
       target: ALL
@@ -577,7 +577,7 @@ cotg(π/2):
   hasEffect: true
   effects:
     optionA:
-      id: EFF_021
+      id: EFF_018
       name: Předání proti (cotg)
       description: Všichni hráči si předají karty v ruce proti směru.
       target: ALL
@@ -592,14 +592,14 @@ nCk:
   hasEffect: true
   effects:
     optionA:
-      id: EFF_022
+      id: EFF_019
       name: Prohození cifer
       description: Prohození cifer v R cílového oponenta.
       target: OPPONENT
 ∏:
   symbol: ∏
   type: operator
-  count: 2
+  count: 3
   image: /svg/velkepi.svg
   slots:
     - upper
@@ -607,7 +607,7 @@ nCk:
 lim:
   symbol: lim
   type: operator
-  count: 2
+  count: 3
   image: /svg/lim.svg
   slots:
     - single
@@ -624,7 +624,7 @@ det:
   hasEffect: true
   effects:
     optionA:
-      id: EFF_024
+      id: EFF_020
       name: Zrušení efektů
       description: Zrušení všech aktivních efektů vyložených karet u všech hráčů.
       target: ALL
@@ -653,7 +653,7 @@ skalar:
   hasEffect: true
   effects:
     optionA:
-      id: EFF_027
+      id: EFF_022
       name: Univerzální nula
       description: V příštím tahu můžeš zahrát libovolnou kartu z ruky jako 0.
       target: SELF
@@ -668,7 +668,7 @@ vektor:
   hasEffect: true
   effects:
     optionA:
-      id: EFF_028
+      id: EFF_023
       name: Velikost vektoru
       description: Ihned dobereš 3 karty, 1 si necháš a 2 zahodíš.
       target: SELF

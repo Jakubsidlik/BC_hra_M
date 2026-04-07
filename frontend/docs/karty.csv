@@ -21,18 +21,18 @@ a^b;Mocnina;operator;4;1;EFF_010;Následující hráč přeskakuje svůj tah.;0;
 sqrt;Odmocnina;operator;4;1;EFF_011;Odhození celého obsahu ruky a dobrání nových karet.;0;0;1;0
 mod;Modulo;operator;4;1;EFF_012;Hodnota R zvoleného hráče se mění na R (mod lib. číslo z ruky).;0;0;1;0
 n!;Faktoriál;operator;2;1;EFF_013;Následující hráč nesmí v příštím tahu vyložit více než 1 kartu.;0;1;0;0
-d/dx;Derivace;operator;3;1;EFF_014;Odstranění všech konstant a proměnných z L zvoleného hráče.;0;0;1;0
-int;Integrál;operator;3;1;EFF_015;Okamžité nahrazení celého cíle R libovolného hráče novým losem.;0;0;1;0
-sum;Sumace;operator;4;1;EFF_016;Žádný z hráčů nesmí celé další kolo použít kartu operace;0;0;0;1
-log;Logaritmus při základu 2;operator;2;1;EFF_017;Můžeš tento tah hrát libovolný počet karet.;1;0;0;0
-sin;Sinus;number;3;1;EFF_018;Všichni hráči si předají karty v ruce po směru.;0;0;0;1
-cos;Kosinus;number;3;1;EFF_019;Všichni hráči si předají karty v ruce proti směru.;0;0;0;1
-tg;Tangens;number;2;1;EFF_020;Všichni hráči si předají karty v ruce po směru.;0;0;0;1
-cotg;Kotangens;number;2;1;EFF_021;Všichni hráči si předají karty v ruce proti směru.;0;0;0;1
-nCk;Kombinační číslo;operator;4;1;EFF_022; Prohození cifer v R cílového oponenta;0;0;1;0
-prod;Sekvenční součin;operator;2;1;EFF_023;Žádný z hráčů nesmí celé další kolo použít kartu čísla;0;0;0;1
-lim;Limita;operator;2;1;EFF_024;Zrušení všech aktivních efektů vyložených karet u všech hráčů;0;0;0;1
-det;Determinant;operator;2;1;EFF_025;Změní pořadí tahů hráčů na opačné.;0;0;0;1
+d/dx;Derivace;operator;3;1;EFF_024;Odstranění všech konstant a proměnných z L zvoleného hráče.;0;0;1;0
+int;Integrál;operator;3;1;EFF_025;Okamžité nahrazení celého cíle R libovolného hráče novým losem.;0;0;1;0
+sum;Sumace;operator;4;1;EFF_026;Žádný z hráčů nesmí celé další kolo použít kartu operace;0;0;0;1
+log;Logaritmus při základu 2;operator;2;1;EFF_014;Můžeš tento tah hrát libovolný počet karet.;1;0;0;0
+sin;Sinus;number;3;1;EFF_015;Všichni hráči si předají karty v ruce po směru.;0;0;0;1
+cos;Kosinus;number;3;1;EFF_016;Všichni hráči si předají karty v ruce proti směru.;0;0;0;1
+tg;Tangens;number;2;1;EFF_017;Všichni hráči si předají karty v ruce po směru.;0;0;0;1
+cotg;Kotangens;number;2;1;EFF_018;Všichni hráči si předají karty v ruce proti směru.;0;0;0;1
+nCk;Kombinační číslo;operator;4;1;EFF_019; Prohození cifer v R cílového oponenta;0;0;1;0
+prod;Sekvenční součin;operator;2;1;EFF_027;Žádný z hráčů nesmí celé další kolo použít kartu čísla;0;0;0;1
+lim;Limita;operator;2;1;EFF_020;Zrušení všech aktivních efektů vyložených karet u všech hráčů;0;0;0;1
+det;Determinant;operator;2;1;EFF_028;Změní pořadí tahů hráčů na opačné.;0;0;0;1
 (;Levá závorka;syntax;0;0;;;;;;
 );Pravá závorka;syntax;0;0;;;;;;
 =;Rovná se;syntax;0;0;;;;;;

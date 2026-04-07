@@ -1228,11 +1228,11 @@ export function useGameEngine() {
       // --- ENFORCE RESTRICTION FLAGS ---
       const cardData = cardsDatabase[cardToPlaceWithDxDy.symbol];
 
-      // EFF_016: operationLock — nesmí hrát operace
+      // EFF_026: operationLock — nesmí hrát operace
       if (pStatus?.operationLock && cardData?.type === 'operator') {
         return toast.error("Tento tah nesmíš hrát kartu operace! (Zákaz operací ∑)");
       }
-      // EFF_023: numberLock — nesmí hrát čísla
+      // EFF_027: numberLock — nesmí hrát čísla
       if (pStatus?.numberLock && cardData?.type === 'number') {
         return toast.error("Tento tah nesmíš hrát číslo! (Zákaz čísel ∏)");
       }
@@ -1330,7 +1330,7 @@ export function useGameEngine() {
         // --- 2. OKAMŽITÉ AKCE ---
         // EFF_001 a EFF_008 jsou čistě "next turn" efekty přes status.extraDraw (applyEffectLogic)
 
-        if (activeId === 'EFF_028') {
+        if (activeId === 'EFF_023') {
           let currentDeck = [...deck];
           let currentDiscard = [...discardPile];
           const drawnCards: GameCard[] = [];
@@ -1409,7 +1409,7 @@ export function useGameEngine() {
         }
 
         if (metadata?.turnOrderReversed) {
-          // EFF_025: pořadí hráčů bylo obráceno — najdeme nový index aktivního hráče
+          // EFF_028: pořadí hráčů bylo obráceno — najdeme nový index aktivního hráče
           const activePlayerId = players[currentPlayerIndex].id;
           const resultPlayers = Array.isArray(effectResult) ? effectResult : effectResult.players;
           const newActiveIndex = resultPlayers.findIndex((p: { id: number }) => p.id === activePlayerId);
@@ -1439,7 +1439,7 @@ export function useGameEngine() {
   const handleMinigamePick = useCallback((id: string) => {
     if (!minigameMode) return;
 
-    if (minigameMode.effectId === 'EFF_028') {
+    if (minigameMode.effectId === 'EFF_023') {
       const selected = id !== 'CANCEL'
         ? minigameMode.cards.find((c: GameCard) => c.id === id)
         : undefined;
@@ -1622,6 +1622,17 @@ export function useGameEngine() {
       return `${Math.floor(Math.random() * (99 - 9 + 1)) + 9}`;
     };
 
+    const generateIntegralTargetR = (): string => {
+      const category = ['number', 'x', 'y', 'e'][Math.floor(Math.random() * 4)];
+      if (category === 'number') {
+        return `${Math.floor(Math.random() * 100)}`;
+      }
+
+      const maxCoefficient = category === 'e' ? 9 : 99;
+      const coefficient = Math.floor(Math.random() * maxCoefficient) + 1;
+      return coefficient === 1 ? category : `${coefficient}${category}`;
+    };
+
     const productTargetPool = buildProductTargetPool();
 
     const generateCompositeTargetR = (): string => {
@@ -1654,6 +1665,8 @@ export function useGameEngine() {
 
         if (picked === '∏') {
           player.targetR = generateCompositeTargetR();
+        } else if (picked === 'int') {
+          player.targetR = generateIntegralTargetR();
         } else if (picked === '∑') {
           player.targetR = generateNumericTargetR();
         } else if (picked === 'lim') {
