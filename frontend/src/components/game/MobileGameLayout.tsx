@@ -158,6 +158,11 @@ const FULL_CARD_W = '5.5rem';
 const FULL_CARD_H = '8.44rem';
 const VS_CARD_SYMBOLS = new Set(['int', 'd/dx', '∑', '∏', 'lim']);
 
+type DragStyle = React.CSSProperties & {
+  WebkitUserDrag?: 'none';
+  WebkitTouchCallout?: 'none';
+};
+
 // ==========================================
 // MINI HAND CARD (fan footer)
 // ==========================================
@@ -170,9 +175,10 @@ interface MiniHandCardProps {
   onSelect?: (id: string) => void;
   isSelected?: boolean;
   palette: ThemePalette;
+  isIOS?: boolean;
 }
 
-function MiniHandCard({ card, index, total, isDiscarding, onDiscard, onSelect, isSelected = false, palette }: MiniHandCardProps) {
+function MiniHandCard({ card, index, total, isDiscarding, onDiscard, onSelect, isSelected = false, palette, isIOS = false }: MiniHandCardProps) {
   const cardData = cardsDatabase[card.symbol];
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: card.id,
@@ -190,9 +196,9 @@ function MiniHandCard({ card, index, total, isDiscarding, onDiscard, onSelect, i
   const selectedTransform = `rotate(0deg) translateY(-6rem) translateX(${translateX}px) scale(2.25)`;
   const normalTransform = `rotate(${rotation}deg) translateY(${fanTranslateY}px) translateX(${translateX}px)`;
 
-  const style: React.CSSProperties = {
-    transform: transform
-      ? CSS.Translate.toString(transform)
+  const style: DragStyle = {
+    transform: transform 
+      ? (isIOS ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : CSS.Translate.toString(transform))
       : isSelected ? selectedTransform : normalTransform,
     zIndex: isDragging ? 199 : isSelected ? 199 : 60 + index,
     position: 'absolute',
@@ -203,7 +209,16 @@ function MiniHandCard({ card, index, total, isDiscarding, onDiscard, onSelect, i
     marginLeft: '-2.75rem',
     backgroundColor: palette.bgMid,
     borderColor: isDragging ? palette.primary : `${palette.primary}66`,
-    boxShadow: isDragging ? `0 0 25px ${palette.glow}` : undefined,
+    boxShadow: isDragging && !isIOS ? `0 0 25px ${palette.glow}` : undefined,
+    ...(isIOS
+      ? {
+          touchAction: 'none' as const,
+          WebkitUserDrag: 'none' as const,
+          WebkitTouchCallout: 'none' as const,
+          backfaceVisibility: 'hidden' as const,
+          willChange: isDragging ? 'transform' : 'auto',
+        }
+      : {}),
   };
 
   const borderColor = getBorderColor(card.symbol);
@@ -222,9 +237,9 @@ function MiniHandCard({ card, index, total, isDiscarding, onDiscard, onSelect, i
         onSelect?.(card.id);
       }}
       style={style}
-      className={`rounded-xl border-2 shadow-xl select-none overflow-hidden
-        transition-all duration-300 origin-bottom
-        ${isDragging ? 'scale-110 ring-2 ring-white/30' : ''}
+      className={`rounded-xl border-2 shadow-xl select-none overflow-hidden origin-bottom
+        ${isIOS ? (isDragging ? 'transition-none' : 'transition-[transform,box-shadow,border-color] duration-200') : 'transition-all duration-300'}
+        ${isDragging ? (isIOS ? 'scale-[1.02] ring-0' : 'scale-110 ring-2 ring-white/30') : ''}
         ${isDiscarding
           ? 'cursor-pointer border-red-500! animate-pulse'
           : 'cursor-grab active:cursor-grabbing hover:-translate-y-6'}
@@ -236,9 +251,9 @@ function MiniHandCard({ card, index, total, isDiscarding, onDiscard, onSelect, i
           <img
             src={`${BASE}${cardData.image.replace(/^\//, '')}`}
             alt={card.symbol}
-
             decoding="async"
-            className="w-full h-full object-cover"
+            draggable={false}
+            className="w-full h-full object-cover select-none pointer-events-none"
           />
         ) : (
           <span className="text-4xl font-chalk text-white">{card.symbol}</span>
@@ -299,6 +314,7 @@ function DraggableBoardCard({
   onSeriesVariableChange,
   onLimitVariableChange,
   isSlot,
+  isIOS = false,
 }: {
   card: GameCard;
   palette: ThemePalette;
@@ -307,6 +323,7 @@ function DraggableBoardCard({
   onSeriesVariableChange?: (cardId: string, variable: 'x' | 'y') => void;
   onLimitVariableChange?: (cardId: string, variable: 'x' | 'y') => void;
   isSlot?: boolean;
+  isIOS?: boolean;
 }) {
   const cardData = cardsDatabase[card.symbol];
   const specialSlots = getSpecialSlots(card.symbol);
@@ -390,16 +407,25 @@ function DraggableBoardCard({
   const smallSize = { width: BOARD_CARD_W, height: BOARD_CARD_H };
   const dragSize = { width: DRAG_CARD_W, height: DRAG_CARD_H };
   const baseSize = isVsCard ? { width: VS_CARD_W, height: VS_CARD_H } : smallSize;
-  const style: React.CSSProperties = {
-    ...(isSlot ? { width: '100%', height: '100%' } : (isDragging ? dragSize : baseSize)),
+  const style: DragStyle = {
+    ...(isSlot ? { width: '100%', height: '100%' } : (isDragging ? dragSize : baseSize)), 
     backgroundColor: `${palette.bgDark}cc`,
     borderColor: isDragging ? palette.primary : 'rgba(255,255,255,0.25)',
     transform: transform
-      ? `${CSS.Translate.toString(transform)}${isSlotOver ? ' scale(2)' : ''}`
+      ? `${isIOS ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : CSS.Translate.toString(transform)}${isSlotOver ? ' scale(2)' : ''}`
       : (isSlotOver ? 'scale(2)' : undefined),
     zIndex: isDragging ? 99999 : undefined,
     opacity: isDragging ? 0.5 : 1,
-    boxShadow: isDragging ? '0 0 20px rgba(255,255,255,0.8)' : undefined,
+    boxShadow: isDragging && !isIOS ? '0 0 20px rgba(255,255,255,0.8)' : undefined,
+    ...(isIOS
+      ? {
+          touchAction: 'none' as const,
+          WebkitUserDrag: 'none' as const,
+          WebkitTouchCallout: 'none' as const,
+          backfaceVisibility: 'hidden' as const,
+          willChange: isDragging ? 'transform' : 'auto',
+        }
+      : {}),
   };
 
   return (
@@ -407,7 +433,8 @@ function DraggableBoardCard({
       ref={setNodeRef}
       {...listeners}
       {...attributes}
-      className={`rounded-md border-2 flex items-center justify-center shadow-md transition-colors duration-700 relative
+      className={`rounded-md border-2 flex items-center justify-center shadow-md relative
+        ${isIOS ? (isDragging ? 'transition-none' : 'transition-[transform,box-shadow,border-color] duration-200') : 'transition-colors duration-700'}
         ${card.locked ? 'cursor-default' : 'cursor-grab active:cursor-grabbing hover:border-red-400/60 hover:scale-105'}
       `}
       style={style}
@@ -517,22 +544,22 @@ function DraggableBoardCard({
         <>
           {ulKey && card.slotCards?.[ulKey] && (
             <div className="absolute" style={{ left: '20%', top: '-20%', transform: 'translateX(-50%)', zIndex: -1, width: smallSize.width, height: smallSize.height }}>
-              <DraggableBoardCard card={card.slotCards[ulKey]!} palette={palette} hasModifiedBoardThisTurn={hasModifiedBoardThisTurn} isSlot={true} />
+              <DraggableBoardCard card={card.slotCards[ulKey]!} palette={palette} hasModifiedBoardThisTurn={hasModifiedBoardThisTurn} isSlot={true} isIOS={isIOS} />
             </div>
           )}
           {urKey && card.slotCards?.[urKey] && (
             <div className="absolute" style={{ left: '80%', top: '-20%', transform: 'translateX(-50%)', zIndex: -2, width: smallSize.width, height: smallSize.height }}>
-              <DraggableBoardCard card={card.slotCards[urKey]!} palette={palette} hasModifiedBoardThisTurn={hasModifiedBoardThisTurn} isSlot={true} />
+              <DraggableBoardCard card={card.slotCards[urKey]!} palette={palette} hasModifiedBoardThisTurn={hasModifiedBoardThisTurn} isSlot={true} isIOS={isIOS} />
             </div>
           )}
           {llKey && card.slotCards?.[llKey] && (
             <div className="absolute" style={{ left: '20%', top: '80%', transform: 'translateX(-50%)', zIndex: -1, width: smallSize.width, height: smallSize.height }}>
-              <DraggableBoardCard card={card.slotCards[llKey]!} palette={palette} hasModifiedBoardThisTurn={hasModifiedBoardThisTurn} isSlot={true} />
+              <DraggableBoardCard card={card.slotCards[llKey]!} palette={palette} hasModifiedBoardThisTurn={hasModifiedBoardThisTurn} isSlot={true} isIOS={isIOS} />
             </div>
           )}
           {lrKey && card.slotCards?.[lrKey] && (
             <div className="absolute" style={{ left: '80%', top: '80%', transform: 'translateX(-50%)', zIndex: -2, width: smallSize.width, height: smallSize.height }}>
-              <DraggableBoardCard card={card.slotCards[lrKey]!} palette={palette} hasModifiedBoardThisTurn={hasModifiedBoardThisTurn} isSlot={true} />
+              <DraggableBoardCard card={card.slotCards[lrKey]!} palette={palette} hasModifiedBoardThisTurn={hasModifiedBoardThisTurn} isSlot={true} isIOS={isIOS} />
             </div>
           )}
         </>
@@ -541,12 +568,12 @@ function DraggableBoardCard({
         <>
           {topSlotKey && card.slotCards?.[topSlotKey] && (
             <div className="absolute left-1/2" style={{ top: '-20%', transform: 'translateX(-50%)', zIndex: -2, width: smallSize.width, height: smallSize.height }}>
-              <DraggableBoardCard card={card.slotCards[topSlotKey]!} palette={palette} hasModifiedBoardThisTurn={hasModifiedBoardThisTurn} isSlot={true} />
+              <DraggableBoardCard card={card.slotCards[topSlotKey]!} palette={palette} hasModifiedBoardThisTurn={hasModifiedBoardThisTurn} isSlot={true} isIOS={isIOS} />
             </div>
           )}
           {bottomSlotKey && card.slotCards?.[bottomSlotKey] && (
             <div className="absolute left-1/2" style={{ top: '80%', transform: 'translateX(-50%)', zIndex: -1, width: smallSize.width, height: smallSize.height }}>
-              <DraggableBoardCard card={card.slotCards[bottomSlotKey]!} palette={palette} hasModifiedBoardThisTurn={hasModifiedBoardThisTurn} isSlot={true} />
+              <DraggableBoardCard card={card.slotCards[bottomSlotKey]!} palette={palette} hasModifiedBoardThisTurn={hasModifiedBoardThisTurn} isSlot={true} isIOS={isIOS} />
             </div>
           )}
         </>
@@ -555,12 +582,12 @@ function DraggableBoardCard({
         <>
           {leftSlotKey && card.slotCards?.[leftSlotKey] && (
             <div className="absolute top-1/2" style={{ left: '-20%', transform: 'translateY(-50%)', zIndex: -1, width: smallSize.width, height: smallSize.height }}>
-              <DraggableBoardCard card={card.slotCards[leftSlotKey]!} palette={palette} hasModifiedBoardThisTurn={hasModifiedBoardThisTurn} isSlot={true} />
+              <DraggableBoardCard card={card.slotCards[leftSlotKey]!} palette={palette} hasModifiedBoardThisTurn={hasModifiedBoardThisTurn} isSlot={true} isIOS={isIOS} />
             </div>
           )}
           {rightSlotKey && card.slotCards?.[rightSlotKey] && (
             <div className="absolute top-1/2" style={{ right: '-20%', transform: 'translateY(-50%)', zIndex: -1, width: smallSize.width, height: smallSize.height }}>
-              <DraggableBoardCard card={card.slotCards[rightSlotKey]!} palette={palette} hasModifiedBoardThisTurn={hasModifiedBoardThisTurn} isSlot={true} />
+              <DraggableBoardCard card={card.slotCards[rightSlotKey]!} palette={palette} hasModifiedBoardThisTurn={hasModifiedBoardThisTurn} isSlot={true} isIOS={isIOS} />
             </div>
           )}
         </>
@@ -568,11 +595,11 @@ function DraggableBoardCard({
 
       {!isDragging && hasOneSlot && card.slotCards?.[slotKeys[0]] && (
         <div className="absolute left-1/2" style={{ top: '-20%', transform: 'translateX(-50%)', zIndex: -1, width: smallSize.width, height: smallSize.height }}>
-          <DraggableBoardCard card={card.slotCards[slotKeys[0]]!} palette={palette} hasModifiedBoardThisTurn={hasModifiedBoardThisTurn} isSlot={true} />
+          <DraggableBoardCard card={card.slotCards[slotKeys[0]]!} palette={palette} hasModifiedBoardThisTurn={hasModifiedBoardThisTurn} isSlot={true} isIOS={isIOS} />
         </div>
       )}
       {cardData?.image ? (
-        <img src={`${BASE}${cardData.image.replace(/^\//, '')}`} alt={card.symbol} decoding="async" className="w-full h-full object-cover pointer-events-none" />
+        <img src={`${BASE}${cardData.image.replace(/^\//, '')}`} alt={card.symbol} decoding="async" draggable={false} className="w-full h-full object-cover pointer-events-none select-none" />
       ) : (
         <span className="text-2xl font-chalk text-white">{card.symbol}</span>
       )}
@@ -610,9 +637,10 @@ interface BracketCardProps {
   bracketMode: { leftInsertPosition: number; pairIndex: number } | null;
   palette: ThemePalette;
   onCancel: () => void;
+  isIOS?: boolean;
 }
 
-function BracketCard({ syntax, bracketMode, palette, onCancel }: BracketCardProps) {
+function BracketCard({ syntax, bracketMode, palette, onCancel, isIOS = false }: BracketCardProps) {
   const openSymbols = ['(', '[', '{'];
   const closeSymbols = [')', ']', '}'];
   const firstOpen = syntax.find(c => openSymbols.includes(c.symbol));
@@ -635,15 +663,24 @@ function BracketCard({ syntax, bracketMode, palette, onCancel }: BracketCardProp
           ref={setNodeRef}
           {...listeners}
           {...attributes}
-          className="relative overflow-hidden rounded-md border-2 border-yellow-400/80 shadow-sm flex items-center justify-center cursor-grab active:cursor-grabbing"
+          className={`relative overflow-hidden rounded-md border-2 border-yellow-400/80 shadow-sm flex items-center justify-center cursor-grab active:cursor-grabbing ${isIOS ? (isDragging ? 'transition-none' : 'transition-[transform,box-shadow,border-color] duration-200') : 'transition-all'}`}
           style={{
             width: FULL_CARD_W,
             height: FULL_CARD_H,
             backgroundColor: isDragging ? `${palette.bgDark}cc` : `${palette.bgMid}dd`,
-            boxShadow: `0 0 12px rgba(250,204,21,0.5)`,
-            transform: transform ? `translate(${transform.x}px,${transform.y}px)` : undefined,
+            boxShadow: isIOS ? 'none' : `0 0 12px rgba(250,204,21,0.5)`,
+            transform: transform ? (isIOS ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : CSS.Translate.toString(transform)) : undefined,
             zIndex: isDragging ? 99999 : undefined,
-          }}
+            ...(isIOS
+              ? {
+                  touchAction: 'none' as const,
+                  WebkitUserDrag: 'none' as const,
+                  WebkitTouchCallout: 'none' as const,
+                  backfaceVisibility: 'hidden' as const,
+                  willChange: isDragging ? 'transform' : 'auto',
+                }
+              : {}),
+          } as DragStyle}
         >
           {closeCardData?.image ? (
             <img src={`${BASE}${closeCardData.image.replace(/^\//, '')}`} alt={closeSymbol ?? undefined} decoding="async" className="w-full h-full object-cover" />
@@ -667,8 +704,9 @@ function BracketCard({ syntax, bracketMode, palette, onCancel }: BracketCardProp
       ref={setNodeRef}
       {...(exhausted ? {} : listeners)}
       {...(exhausted ? {} : attributes)}
-      className={`relative overflow-hidden rounded-md border-2 shadow-sm flex items-center justify-center transition-transform
-        ${exhausted ? 'opacity-40 cursor-not-allowed' : 'cursor-grab active:cursor-grabbing hover:scale-105'}
+      className={`relative overflow-hidden rounded-md border-2 shadow-sm flex items-center justify-center
+        ${isIOS ? (isDragging ? 'transition-none' : 'transition-[transform,box-shadow,border-color] duration-200') : 'transition-transform'}
+        ${exhausted ? 'opacity-40 cursor-not-allowed' : `cursor-grab active:cursor-grabbing ${isIOS ? '' : 'hover:scale-105'}`}
       `}
       style={{
         width: FULL_CARD_W,
@@ -676,16 +714,25 @@ function BracketCard({ syntax, bracketMode, palette, onCancel }: BracketCardProp
         backgroundColor: `${palette.bgDark}cc`,
         borderColor: exhausted ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.6)',
         boxShadow: exhausted ? 'none' : `0 0 10px ${palette.glow}`,
-        transform: transform ? `translate(${transform.x}px,${transform.y}px)` : undefined,
+        transform: transform ? (isIOS ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : CSS.Translate.toString(transform)) : undefined,
         zIndex: isDragging ? 99999 : undefined,
-      }}
+        ...(isIOS
+          ? {
+              touchAction: 'none' as const,
+              WebkitUserDrag: 'none' as const,
+              WebkitTouchCallout: 'none' as const,
+              backfaceVisibility: 'hidden' as const,
+              willChange: isDragging ? 'transform' : 'auto',
+            }
+          : {}),
+      } as DragStyle}
     >
       {exhausted ? (
         <span className="text-[9px] uppercase tracking-tight text-white/30 font-bold text-center px-1">Závorky vyčerpány</span>
       ) : (
         <>
           {cardsDatabase[firstOpen!.symbol]?.image ? (
-            <img src={`${BASE}${cardsDatabase[firstOpen!.symbol].image.replace(/^\//, '')}`} alt={firstOpen!.symbol} className="w-full h-full object-cover" />
+            <img src={`${BASE}${cardsDatabase[firstOpen!.symbol].image.replace(/^\//, '')}`} alt={firstOpen!.symbol} draggable={false} className="w-full h-full object-cover select-none pointer-events-none" />
           ) : (
             <span className="text-2xl font-chalk text-white leading-none">{firstOpen!.symbol}</span>
           )}
@@ -702,6 +749,7 @@ interface MobileGameLayoutProps {
   currentPlayer: Player;
   showEffectDebug?: boolean;
   debugEffectRows?: string[];
+  isIOS?: boolean;
   state: {
     deck: GameCard[];
     discardPile: GameCard[];
@@ -780,7 +828,7 @@ function TutorialReferenceRow({ cards, palette }: { cards: GameCard[]; palette: 
   );
 }
 
-export function MobileGameLayout({ currentPlayer, state, actions, tutorialReferenceBoard, showEffectDebug, debugEffectRows = [] }: MobileGameLayoutProps) {
+export function MobileGameLayout({ currentPlayer, state, actions, tutorialReferenceBoard, showEffectDebug, debugEffectRows = [], isIOS = false }: MobileGameLayoutProps) {
   const { discardPile, isDiscarding, hasModifiedBoardThisTurn, bracketMode, tutorialActive, gameMode, sharedGoalTurnsRemaining, sharedGoalTotalTurns } = state;
   const palette = getPalette(currentPlayer.theme);
   const canVerify = true;
@@ -987,6 +1035,7 @@ export function MobileGameLayout({ currentPlayer, state, actions, tutorialRefere
                               onDerivativeVariableChange={actions.setDerivativeVariable}
                               onSeriesVariableChange={actions.setSeriesVariable}
                               onLimitVariableChange={actions.setLimitVariable}
+                              isIOS={isIOS}
                             />
                           </div>
                           {/* Kurzor za každou kartou */}
@@ -1034,6 +1083,7 @@ export function MobileGameLayout({ currentPlayer, state, actions, tutorialRefere
                                   onDerivativeVariableChange={actions.setDerivativeVariable}
                                   onSeriesVariableChange={actions.setSeriesVariable}
                                   onLimitVariableChange={actions.setLimitVariable}
+                                  isIOS={isIOS}
                                 />
                               </div>
                               <BoardDropZone
@@ -1118,6 +1168,7 @@ export function MobileGameLayout({ currentPlayer, state, actions, tutorialRefere
             bracketMode={bracketMode}
             palette={palette}
             onCancel={actions.cancelBracketMode}
+            isIOS={isIOS}
           />
 
           {/* Discard zone */}
@@ -1161,6 +1212,7 @@ export function MobileGameLayout({ currentPlayer, state, actions, tutorialRefere
               onSelect={(id) => setSelectedHandCardId(prev => (prev === id ? null : id))}
               isSelected={selectedHandCardId === card.id}
               palette={palette}
+              isIOS={isIOS}
             />
           ))}
         </div>
