@@ -56,21 +56,32 @@ V módu **Společný cíl** mají všichni hráči stejnou cílovou hodnotu **R*
 5. Zahajující hráč začne hru dobráním **šesté karty**.
 
 ## 4. Průběh hry
-Hráči se střídají po směru hodinových ručiček. Ve svém tahu může hráč z ruky vyložit maximálně 2 karty:
+Hráči se střídají po směru hodinových ručiček. Tah hráče běží od začátku jeho kola do potvrzení **Ukončit tah** (včetně povinného odhazování z ruky na limit 5 karet, pokud je potřeba).
 
-- 1 kartu čísla/proměnné/hodnoty
-- 1 kartu operace
+### 4.1 Co je počítáno jako tah
+- Vyložení karty z ruky do tabule.
+- Vložení karty z ruky do slotu/okénka (počítá se stejně jako vyložení do tabule).
+- Odhodit kartu z tabule do odhozu (včetně všech vnořených dětí a slotů).
+- Reset tabule: vyhodit celý výraz do odhozu.
+- Ve svém tahu může hráč z ruky vyložit maximálně 2 karty: 1 hodnotu/proměnnou a 1 operaci.
+- Ve stejném tahu nelze vyložit dvě karty ze stejné kategorie.
+- Pokud hráč vyloží obě kategorie v jednom tahu, v příštím tahu dobírá o 1 kartu navíc (standardně 2 místo 1).
+- Odhazovací/reset akci z tabule lze v jednom tahu provést maximálně 1x.
 
-Ve stejném tahu nelze vyložit dvě karty ze stejné kategorie. Pokud hráč vyloží obě kategorie v jednom tahu, v příštím tahu dobírá o 1 kartu navíc (standardně tedy 2 karty místo 1).
+### 4.2 Co není počítáno jako tah
+- Položení páru závorek se nepočítá do limitu vyložení 1 hodnota + 1 operace.
+- V jednom tahu lze uzavřít maximálně 1 pár závorek.
+- Přeskládání/přesunutí již vyložených karet uvnitř vlastní tabule (včetně přesunu do exponentu/slotu) se do limitu vyložení z ruky nepočítá.
+- Odhazování z ruky po stisku **Ukončit tah** (pro snížení ruky na max 5 karet) není vyložení z ruky ani odhoz z tabule.
 
-V rámci tahu hráč využije jednu nebo více akcí:
+### 4.3 Důležité kombinace a pořadí
+- Pokud hráč nejdřív vyloží kartu z ruky, už v tom tahu nemůže provést odhoz/reset z tabule.
+- Pokud hráč nejdřív provede odhoz/reset z tabule, už v tom tahu nemůže vykládat z ruky.
+- Když hráč přetáhne jednu závorku z aktivního páru z tabule do odhozu nebo zpět do prostoru závorek, vrátí se oba kusy páru do sady závorek.
+- Vrácené závorky se seřadí ve fixním pořadí `()[]{}.`
 
-- **Přidání:** vložit novou kartu z ruky do výrazu na tabuli
-- **Odebrání:** vzít jednu kartu z výrazu do odhazovacího balíčku či zpět do ruky
-- **Reset:** vyhodit celý výraz na tabuli do odhazovacího balíčku
-- **Q.E.D.:** prohlásit, že rovnost `L = R` platí, a zahájit ověření
-
-Hráč má během svého tahu právo přeskládat již vyložené karty ve svém výrazu. Toto přeskládání se nepočítá do limitu vyložení z ruky.
+### 4.4 Q.E.D.
+- Hráč může spustit Q.E.D., pokud chce ověřit, že rovnost `L = R` platí.
 
 ## 5. Ověření Q.E.D. a konec hry
 Pokud hráč prohlásí Q.E.D., následuje kontrola:
