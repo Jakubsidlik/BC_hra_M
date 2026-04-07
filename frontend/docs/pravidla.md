@@ -1,6 +1,6 @@
 # Pravidla hry: Math4fun
 
-> **Upozornění:** Tento herní systém respektuje zavedená matematická pravidla, definice, věty, logické důsledky a veškeré axiomatické systémy. Mechanika hry neumožňuje subjektivní interpretaci; vyžaduje se konstrukce výrazu v souladu s formální logikou.
+> **Upozornění:** Tento herní systém respektuje zavedená matematická pravidla, definice, věty, logické důsledky a veškeré axiomatické systémy. Mechanika hry neumožňuje subjektivní interpretaci; vyžaduje se konstrukce výrazu v souladu s formální logikou. Ověřování probíhá lokálně přes Nerdamer (s numerickým fallbackem Math.js).
 
 ---
 
@@ -13,50 +13,69 @@ Cílem je konstrukce formálně správné rovnosti **L = R**.
 - **R (výsledek):** cílová hodnota určená na začátku hry dle obtížnosti
 
 ## 2A. Herní mód: Společný cíl
-V módu **Společný cíl** mají všichni hráči stejnou cílovou hodnotu **R**, ale každý hráč má vlastní odpočet tahů podle obtížnosti:
+V módu **Společný cíl** mají všichni hráči stejnou cílovou hodnotu **R** a každý hráč má vlastní odpočet tahů:
 
-- **ZŠ: 20 tahů**
-- **SŠ: 30 tahů**
-- **VŠ: 30 tahů**
+- **Výchozí odpočet: 20 tahů na hráče**
+- **Ve Vlastní obtížnosti lze nastavit vlastní počet tahů na hráče**
 
 - Odpočet se odečítá samostatně každému hráči při ukončení jeho kola.
 - Pokud je hráčův tah přeskočen efektem karty, započítá se to také jako uplynulý tah.
 - Jakmile všichni hráči vyčerpají své tahy, hra se vyhodnotí podle vzdálenosti jejich výrazu od společného cíle R.
 - Vyhrává hráč (nebo více hráčů při remíze) s nejmenší odchylkou.
+- Pokud některý hráč kdykoliv přesně prokáže `L = R` přes Q.E.D., hra končí okamžitě jeho výhrou.
+
+## 2C. Tutoriál
+- Tutoriál je krátká řízená ukázková hra.
+- Cíl je pevně nastavený na **R = 11**.
+- Hra krokově vede práci s vyložením, odhazováním, závorkami i ověřením Q.E.D.
 
 ## 2B. Obtížnosti a generování R
 
 ### Klasický režim
-- **ZŠ:** R je číslo z intervalu `-99..99`, nebo člen `x..99x` / `y..99y`.
+- **Tutoriál:** řízená ukázková hra s pevným cílem `R = 11`.
+- **ZŠ:** R je číslo z intervalu `-99..99`, nebo člen `-9x..9x` / `-9y..9y` (bez `0x` a `0y`).
 - **SŠ:** R je z množiny `-99..999`, `-99x..99x`, `-99y..99y`, `-99e..99e`, `-99π..99π`.
 - **VŠ:** stejné jako SŠ. Pokud je zamčená VŠ karta `∏`, cílové R se losuje jako složené číslo podle pravidel sekvenčního produktu.
+- **Vlastní:** před volbou hráčů se otevře konfigurace balíčku. Hráč zvolí, které karty budou ve hře a kolik kopií každé karty bude v dobíracím balíčku. Bez výběru alespoň jedné karty nelze pokračovat.
 
 ### Režim Společný cíl
-- **ZŠ:** společné R je `0..99`.
+- **ZŠ:** společné R je `-99..99`, `-9x..9x`, `-9y..9y` (bez `0x` a `0y`).
 - **SŠ:** společné R je z množiny `-99..99`, `-99x..99x`, `-99y..99y`, `-99e..99e`, `-99π..99π`.
 - **VŠ:** stejné jako SŠ. Pokud je společná VŠ karta `∏`, společné R je složené číslo. Všichni hráči sdílí stejnou zamčenou VŠ kartu.
+- **Vlastní:** společný cíl i zamčené VŠ karty vycházejí z vlastní konfigurace. Lze zapnout vlastní počet tahů na hráče; při této volbě zůstává odpočtová lišta kol po celou hru zelená.
+
+### Chování VŠ zamčených karet ve Vlastní obtížnosti
+- Pokud je v konfiguraci vybraná právě jedna VŠ zamčená karta (`int`, `d/dx`, `∑`, `∏`, `lim`), dostanou ji všichni hráči.
+- Pokud jsou vybrané dvě nebo více těchto karet, každý hráč dostane náhodně jednu z vybraných karet.
 
 ## 3. Příprava hry
 1. Každý hráč obdrží fixní sadu: **3 páry závorek** `()`, `[]`, `{}` a kartu `=`.
 2. Tyto fixní karty netvoří součást dobíracího balíčku.
-3. Hráči zvolí obtížnost (ZŠ, SŠ, VŠ) a určí cílovou hodnotu **R**.
+3. Hráči zvolí obtížnost (Tutoriál, ZŠ, SŠ, VŠ, Vlastní) a určí cílovou hodnotu **R**.
 4. Zamíchá se hlavní balíček a každý hráč si dobere **5 karet**.
 5. Zahajující hráč začne hru dobráním **šesté karty**.
 
 ## 4. Průběh hry
-Hráči se střídají po směru hodinových ručiček. Ve svém tahu hráč využije jednu z akcí:
+Hráči se střídají po směru hodinových ručiček. Ve svém tahu může hráč z ruky vyložit maximálně 2 karty:
+
+- 1 kartu čísla/proměnné/hodnoty
+- 1 kartu operace
+
+Ve stejném tahu nelze vyložit dvě karty ze stejné kategorie. Pokud hráč vyloží obě kategorie v jednom tahu, v příštím tahu dobírá o 1 kartu navíc (standardně tedy 2 karty místo 1).
+
+V rámci tahu hráč využije jednu nebo více akcí:
 
 - **Přidání:** vložit novou kartu z ruky do výrazu na tabuli
 - **Odebrání:** vzít jednu kartu z výrazu do odhazovacího balíčku či zpět do ruky
 - **Reset:** vyhodit celý výraz na tabuli do odhazovacího balíčku
 - **Q.E.D.:** prohlásit, že rovnost `L = R` platí, a zahájit ověření
 
-Hráč má během svého tahu právo přeskládat již vyložené karty ve svém výrazu. Toto přeskládání se nepočítá jako tah.
+Hráč má během svého tahu právo přeskládat již vyložené karty ve svém výrazu. Toto přeskládání se nepočítá do limitu vyložení z ruky.
 
 ## 5. Ověření Q.E.D. a konec hry
 Pokud hráč prohlásí Q.E.D., následuje kontrola:
 
-- **Oponentský posudek:** první soupeř po levici i pravici provede kontrolu výpočtu
+- **Kontrola enginem:** lokální matematický engine ověří, zda platí `L = R`
 - **Správné řešení:** hráč je vítěz a hra končí
 - **Chybný důkaz:** hráč odstraní všechny karty ze své tabule do odhazovacího balíčku a hra pokračuje
 
@@ -83,10 +102,10 @@ Pokud hráč prohlásí Q.E.D., následuje kontrola:
 - Tah lze předat až ve chvíli, kdy má hráč v ruce nejvýše **5 karet**.
 
 ## 9. Obsah balení
-- **Hodnoty (142 ks):** `0–9` (90 ks), `π` (5 ks), `e` (5 ks), `x` (10 ks), `y` (10 ks), goniometrické funkce (22 ks)
+- **Hodnoty (152 ks):** `0–9` (100 ks), `π` (5 ks), `e` (5 ks), `x` (10 ks), `y` (10 ks), goniometrické funkce (22 ks)
 - **Operace ZŠ (96 ks):** `+` (20 ks), `-` (20 ks), `*` (20 ks), `:` (20 ks), `^` (8 ks), `√` (8 ks)
 - **Operace SŠ (40 ks):** `log2/log3/log10` (6 ks), `!` (4 ks), kombinace (4 ks), `| |` (6 ks), velikost vektoru (4 ks), modulo (6 ks), `det` (4 ks), skalární součin (6 ks)
 - **Operace VŠ (30 ks):** derivace (6 ks), `∫` (6 ks), `∑` (6 ks), `∏` (6 ks), limita (6 ks)
 - **Fixní karty (56 ks):** `=` (8 ks), karta goniometrické tabulky (1 ks), levé závorky (24 ks), pravé závorky (24 ks)
 
-**Celkem hra obsahuje 365 karet.**
+**Celkem hra obsahuje 375 karet.**

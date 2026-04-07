@@ -117,7 +117,7 @@ export function MainMenu({ onPlay, onRules }: { onPlay: () => void, onRules: () 
       </div>
 
       <div className="fixed bottom-6 left-6 z-20 text-slate-400 font-semibold text-sm leading-none">
-        VERZE: 4.9.0
+        VERZE: 5.0.0
       </div>
 
       {/* Tlačítko Zástupce vpravo dole */}
@@ -183,7 +183,7 @@ export function GameModeSelection({ onSelect, onBack }: { onSelect: (mode: 'CLAS
 }
 
 // --- VÝBĚR REŽIMU ---
-export function DifficultySelection({ onSelect, onBack }: { onSelect: (mode: 'TUTORIAL' | 'ZŠ' | 'SŠ' | 'VŠ') => void, onBack: () => void }) {
+export function DifficultySelection({ onSelect, onBack }: { onSelect: (mode: 'TUTORIAL' | 'ZŠ' | 'SŠ' | 'VŠ' | 'CUSTOM') => void, onBack: () => void }) {
   return (
     <div 
       className="min-h-screen flex flex-col items-center justify-center p-8 border-16px border-amber-950/90 relative overflow-hidden bg-cover bg-center shadow-[inset_0_0_120px_rgba(0,0,0,0.7)]"
@@ -225,15 +225,22 @@ export function DifficultySelection({ onSelect, onBack }: { onSelect: (mode: 'TU
           >
             VŠ
           </Button>
+          <Button
+            size="lg"
+            className="w-[45%] mx-auto bg-emerald-600/20 hover:bg-emerald-600/40 text-emerald-100 font-black text-[2.15rem] py-14 rounded-3xl border-4 border-emerald-400/50 hover:border-emerald-400 transition-all shadow-xl md:hidden"
+            onClick={() => onSelect('CUSTOM')}
+          >
+            VLASTNÍ
+          </Button>
           <div className="hidden md:flex flex-row justify-center gap-5 w-full">
-            {(['ZŠ', 'SŠ', 'VŠ'] as const).map((mode) => (
+            {(['ZŠ', 'SŠ', 'VŠ', 'CUSTOM'] as const).map((mode) => (
               <Button 
                 key={mode}
                 size="lg" 
-                className="flex-1 bg-emerald-600/20 hover:bg-emerald-600/40 text-emerald-100 font-black text-5xl py-20 rounded-3xl border-4 border-emerald-400/50 hover:border-emerald-400 transition-all shadow-xl" 
+                className="flex-1 font-black text-5xl py-20 rounded-3xl border-4 transition-all shadow-xl bg-emerald-600/20 hover:bg-emerald-600/40 text-emerald-100 border-emerald-400/50 hover:border-emerald-400"
                 onClick={() => onSelect(mode)}
               >
-                {mode}
+                {mode === 'CUSTOM' ? 'VLASTNÍ' : mode}
               </Button>
             ))}
           </div>
@@ -246,6 +253,273 @@ export function DifficultySelection({ onSelect, onBack }: { onSelect: (mode: 'TU
         >
           ← ZPĚT DO MENU
         </Button>
+      </div>
+    </div>
+  );
+}
+
+export function CustomDifficultySetupScreen({
+  gameMode,
+  cardSelection,
+  cardCounts,
+  sharedGoalTurnsEnabled,
+  sharedGoalTurns,
+  selectedCardCount,
+  onToggleCard,
+  onCountChange,
+  onToggleSharedGoalTurns,
+  onSharedGoalTurnsChange,
+  onConfirm,
+  onBack,
+}: {
+  gameMode: 'CLASSIC' | 'SHARED_GOAL';
+  cardSelection: Record<string, boolean>;
+  cardCounts: Record<string, number>;
+  sharedGoalTurnsEnabled: boolean;
+  sharedGoalTurns: number;
+  selectedCardCount: number;
+  onToggleCard: (symbol: string) => void;
+  onCountChange: (symbol: string, count: number) => void;
+  onToggleSharedGoalTurns: (enabled: boolean) => void;
+  onSharedGoalTurnsChange: (turns: number) => void;
+  onConfirm: () => void;
+  onBack: () => void;
+}) {
+  const naturalNumberSymbols = new Set(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']);
+  const zsOperatorSymbols = new Set(['+', '-', '*', '/', 'a^b', 'sqrt']);
+  const ssOperatorSymbols = new Set(['mod', 'n!', 'log', 'ln', 'log10', 'nCk', 'det', 'skalar', 'vektor']);
+  const vsOperatorSymbols = new Set(['d/dx', 'int', '∑', '∏', 'lim']);
+  const isGoniometrySymbol = (symbol: string) => /^(sin|cos|tg|cotg)\(/.test(symbol);
+
+  const cardRows = Object.entries(cardsDatabase)
+    .filter(([, data]) => data.count > 0 && data.type !== 'syntax')
+    .sort((a, b) => a[0].localeCompare(b[0], 'cs'))
+    .map(([symbol, data]) => ({
+      symbol,
+      label: symbol,
+      type: data.type,
+    }));
+
+  const categoryDefinitions: Array<{
+    key: 'number' | 'variable' | 'operator' | 'function';
+    title: string;
+    subcategories: Array<{
+      key: string;
+      title: string;
+      filter: (row: { symbol: string; label: string; type: string }) => boolean;
+    }>;
+  }> = [
+    {
+      key: 'number',
+      title: 'Hodnoty a konstanty',
+      subcategories: [
+        { key: 'natural', title: 'Přirozená čísla', filter: (row) => naturalNumberSymbols.has(row.symbol) },
+        { key: 'constants', title: 'Konstanty', filter: (row) => row.symbol === 'π' || row.symbol === 'e' },
+        { key: 'goniometry', title: 'Goniometrie', filter: (row) => isGoniometrySymbol(row.symbol) },
+        {
+          key: 'other-number',
+          title: 'Další hodnoty',
+          filter: (row) =>
+            row.type === 'number' &&
+            !naturalNumberSymbols.has(row.symbol) &&
+            row.symbol !== 'π' &&
+            row.symbol !== 'e' &&
+            !isGoniometrySymbol(row.symbol),
+        },
+      ],
+    },
+    {
+      key: 'variable',
+      title: 'Proměnné',
+      subcategories: [
+        { key: 'variables', title: 'Proměnné', filter: (row) => row.type === 'variable' },
+      ],
+    },
+    {
+      key: 'operator',
+      title: 'Operace',
+      subcategories: [
+        { key: 'zs-ops', title: 'ZŠ operace', filter: (row) => zsOperatorSymbols.has(row.symbol) },
+        { key: 'ss-ops', title: 'SŠ operace', filter: (row) => ssOperatorSymbols.has(row.symbol) },
+        { key: 'vs-ops', title: 'VŠ operace', filter: (row) => vsOperatorSymbols.has(row.symbol) },
+        {
+          key: 'other-ops',
+          title: 'Další operace',
+          filter: (row) =>
+            row.type === 'operator' &&
+            !zsOperatorSymbols.has(row.symbol) &&
+            !ssOperatorSymbols.has(row.symbol) &&
+            !vsOperatorSymbols.has(row.symbol),
+        },
+      ],
+    },
+    {
+      key: 'function',
+      title: 'Funkce',
+      subcategories: [
+        { key: 'functions', title: 'Funkce', filter: (row) => row.type === 'function' },
+      ],
+    },
+  ];
+
+  const categories = categoryDefinitions
+    .map((category) => {
+      const rows = cardRows.filter((row) => row.type === category.key);
+      if (rows.length === 0) {
+        return null;
+      }
+
+      const subcategories = category.subcategories
+        .map((subcategory) => ({
+          key: subcategory.key,
+          title: subcategory.title,
+          rows: rows.filter(subcategory.filter),
+        }))
+        .filter((subcategory) => subcategory.rows.length > 0);
+
+      return {
+        key: category.key,
+        title: category.title,
+        rows,
+        subcategories,
+      };
+    })
+    .filter((category): category is NonNullable<typeof category> => category !== null);
+
+  const handleCategorySelectionChange = (symbols: string[], shouldSelect: boolean) => {
+    symbols.forEach((symbol) => {
+      const isSelected = Boolean(cardSelection[symbol]);
+      if (shouldSelect && !isSelected) {
+        onToggleCard(symbol);
+      }
+      if (!shouldSelect && isSelected) {
+        onToggleCard(symbol);
+      }
+    });
+  };
+
+  return (
+    <div
+      className="min-h-screen flex flex-col items-center justify-center p-4 md:p-8 border-16px border-amber-950/90 relative overflow-hidden bg-cover bg-center shadow-[inset_0_0_120px_rgba(0,0,0,0.7)]"
+      style={{ backgroundImage: `url('${BASE}tabule.svg')` }}
+    >
+      <div className="absolute inset-0 bg-black/40 pointer-events-none" />
+
+      <div className="relative z-10 w-full max-w-6xl bg-black/40 backdrop-blur-md p-6 md:p-10 rounded-4xl border-4 border-white/10 shadow-xl overflow-y-auto max-h-[92vh]">
+        <div className="text-center mb-6">
+          <h1 className="text-4xl md:text-6xl font-black italic text-white tracking-tight">VLASTNÍ OBTÍŽNOST</h1>
+          <p className="text-slate-300 mt-2 text-sm md:text-base">
+            Vyber, které karty budou v dobíracím balíčku a kolikrát se v něm mají vyskytovat.
+          </p>
+        </div>
+
+        {gameMode === 'SHARED_GOAL' && (
+          <div className="mb-6 rounded-xl border border-emerald-400/30 bg-emerald-500/10 p-4">
+            <label className="inline-flex items-center gap-3 text-sm md:text-base font-bold text-emerald-200">
+              <input
+                type="checkbox"
+                checked={sharedGoalTurnsEnabled}
+                onChange={(e) => onToggleSharedGoalTurns(e.target.checked)}
+                className="h-4 w-4"
+              />
+              Vlastní počet tahů na hráče
+            </label>
+            {sharedGoalTurnsEnabled && (
+              <div className="mt-3 flex items-center gap-3">
+                <span className="text-xs uppercase tracking-[0.2em] text-emerald-200">Počet tahů</span>
+                <input
+                  type="number"
+                  min={1}
+                  max={200}
+                  value={sharedGoalTurns}
+                  onChange={(e) => onSharedGoalTurnsChange(Number(e.target.value))}
+                  className="w-24 rounded-lg border border-emerald-300/50 bg-black/30 px-3 py-2 text-white"
+                />
+              </div>
+            )}
+          </div>
+        )}
+
+        <div className="space-y-6">
+          {categories.map((category) => {
+            const rows = category.rows;
+            const categorySymbols = rows.map(({ symbol }) => symbol);
+            const allInCategorySelected = categorySymbols.every((symbol) => Boolean(cardSelection[symbol]));
+            return (
+              <section key={category.key} className="rounded-xl border border-white/10 bg-black/30 p-4 md:p-5">
+                <div className="mb-4 flex items-center justify-between gap-4">
+                  <h2 className="text-lg md:text-2xl font-black text-emerald-300">{category.title}</h2>
+                  <label className="inline-flex items-center gap-2 text-xs md:text-sm font-bold text-emerald-200 whitespace-nowrap">
+                    <input
+                      type="checkbox"
+                      checked={allInCategorySelected}
+                      onChange={(e) => handleCategorySelectionChange(categorySymbols, e.target.checked)}
+                      className="h-4 w-4"
+                    />
+                    Vybrat vše
+                  </label>
+                </div>
+                <div className="space-y-4">
+                  {category.subcategories.map((subcategory) => {
+                    const subcategorySymbols = subcategory.rows.map(({ symbol }) => symbol);
+                    const allInSubcategorySelected = subcategorySymbols.every((symbol) => Boolean(cardSelection[symbol]));
+                    return (
+                    <div key={`${category.key}-${subcategory.key}`}>
+                      <div className="mb-2 flex items-center justify-between gap-3">
+                        <h3 className="text-xs md:text-sm uppercase tracking-[0.2em] text-slate-300">{subcategory.title}</h3>
+                        <label className="inline-flex items-center gap-2 text-[11px] md:text-xs font-bold text-slate-300 whitespace-nowrap">
+                          <input
+                            type="checkbox"
+                            checked={allInSubcategorySelected}
+                            onChange={(e) => handleCategorySelectionChange(subcategorySymbols, e.target.checked)}
+                            className="h-4 w-4"
+                          />
+                          Vybrat vše
+                        </label>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {subcategory.rows.map(({ symbol, label }) => (
+                          <div key={symbol} className="flex items-center gap-3 rounded-lg border border-white/10 bg-black/30 px-3 py-2">
+                            <input
+                              type="checkbox"
+                              checked={Boolean(cardSelection[symbol])}
+                              onChange={() => onToggleCard(symbol)}
+                              className="h-4 w-4"
+                            />
+                            <span className="font-bold text-white min-w-16">{label}</span>
+                            <input
+                              type="number"
+                              min={0}
+                              max={999}
+                              value={cardCounts[symbol] ?? 0}
+                              onChange={(e) => onCountChange(symbol, Number(e.target.value))}
+                              className="ml-auto w-24 rounded-lg border border-white/20 bg-black/40 px-2 py-1 text-white"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    );
+                  })}
+                </div>
+              </section>
+            );
+          })}
+        </div>
+
+        <div className="mt-6 flex flex-col md:flex-row items-center justify-between gap-4">
+          <p className="text-sm text-slate-300">Vybraných druhů karet: <span className="font-black text-white">{selectedCardCount}</span></p>
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" className="text-slate-300 hover:text-white" onClick={onBack}>← ZPĚT</Button>
+            <Button
+              className="bg-emerald-600 hover:bg-emerald-500 text-white font-black"
+              onClick={onConfirm}
+              disabled={selectedCardCount <= 0}
+            >
+              POKRAČOVAT NA VÝBĚR HRÁČŮ
+            </Button>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -268,7 +542,7 @@ export function RulesScreen({ onBack }: { onBack: () => void }) {
         <div className="flex-1 overflow-y-auto pr-2 md:pr-6 text-slate-200 font-mono scrollbar-thin scrollbar-thumb-slate-600">
           
           <div className="bg-black/40 backdrop-blur-sm border border-slate-500/30 p-4 md:p-6 rounded-xl mb-10 italic text-slate-300 text-sm md:text-base">
-            <span className="text-emerald-400 font-bold uppercase">Upozornění:</span> Tento herní systém respektuje zavedená matematická pravidla, definice, věty, logické důsledky a veškeré axiomatické systémy. Mechanika hry neumožňuje subjektivní interpretaci; vyžaduje se konstrukce výrazu v souladu s formální logikou. Využívá knihovnu SymPy pro ověřování.
+            <span className="text-emerald-400 font-bold uppercase">Upozornění:</span> Tento herní systém respektuje zavedená matematická pravidla, definice, věty, logické důsledky a veškeré axiomatické systémy. Mechanika hry neumožňuje subjektivní interpretaci; vyžaduje se konstrukce výrazu v souladu s formální logikou. Ověřování běží lokálně přes Nerdamer s numerickým fallbackem v Math.js.
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 md:gap-16">
@@ -308,18 +582,18 @@ export function RulesScreen({ onBack }: { onBack: () => void }) {
                 </div>
                 
                 <div className="bg-emerald-900/10 p-4 rounded-lg border border-emerald-500/20">
-                  <p className="text-emerald-400 font-bold mb-2 uppercase text-xs">Aritmetické operátory ZŠ</p>
-                  <p className="text-slate-300">Součet (+), Rozdíl (-), Součin (*), Podíl (:).</p>
+                  <p className="text-emerald-400 font-bold mb-2 uppercase text-xs">ZŠ balíček</p>
+                  <p className="text-slate-300">Základní operace (+, -, *, :, a^b, √), čísla 0-9 a proměnné x/y. Konstanty π a e se v ZŠ nevyskytují.</p>
                 </div>
 
                 <div className="bg-blue-900/10 p-4 rounded-lg border border-blue-500/20">
-                  <p className="text-blue-400 font-bold mb-2 uppercase text-xs">Pokročilé funkce SŠ</p>
-                  <p className="text-slate-300">Mocnina (a^b), Odmocnina (sqrt), Logaritmy (ln, log10, log2), Faktoriál (n!), Goniometrie (sin, cos, tg, cotg), Kombinatorika (nCk).</p>
+                  <p className="text-blue-400 font-bold mb-2 uppercase text-xs">SŠ balíček</p>
+                  <p className="text-slate-300">Rozšíření ZŠ o pokročilé operace (logaritmy, goniometrii, kombinace, determinant, skalar/vektor, absolutní hodnota) a konstanty π/e.</p>
                 </div>
 
                 <div className="bg-purple-900/10 p-4 rounded-lg border border-purple-500/20">
-                  <p className="text-purple-400 font-bold mb-2 uppercase text-xs">Analytické operace VŠ</p>
-                  <p className="text-slate-300">Derivace (d/dx), Integrál (int), Sumace (∑), Produkt (∏), Limita (lim), Determinant (det), Skalární a Vektorový součin.</p>
+                  <p className="text-purple-400 font-bold mb-2 uppercase text-xs">VŠ a Vlastní</p>
+                  <p className="text-slate-300">VŠ navíc pracuje se zamčenou kartou jedné analytické operace (d/dx, int, ∑, ∏, lim). Vlastní obtížnost umožní ručně vybrat karty i jejich počty.</p>
                 </div>
               </div>
               </section>
@@ -328,7 +602,8 @@ export function RulesScreen({ onBack }: { onBack: () => void }) {
               <h3 className="text-3xl font-bold text-emerald-400 border-b border-emerald-400/30 pb-2 mb-4 italic">4. Příprava hry</h3>
               <ol className="list-decimal list-inside space-y-3 text-sm md:text-base">
                 <li>Každý obdrží 3 páry závorek ((), [], {"{}"}) a 1 operátor ekvivalence (=).</li>
-                <li>Určí se hodnota R dle zvolené obtížnosti (ZŠ, SŠ, VŠ).</li>
+                <li>Zvolí se režim (Klasický / Společný cíl) a obtížnost (Tutoriál, ZŠ, SŠ, VŠ, Vlastní).</li>
+                <li>Určí se cílová hodnota R podle zvoleného režimu a obtížnosti.</li>
                 <li>Hráči si doberou 5 počátečních karet ze společného balíčku.</li>
                 <li>Zahajující hráč začíná dobráním šesté karty na začátku tahu.</li>
               </ol>
@@ -336,7 +611,7 @@ export function RulesScreen({ onBack }: { onBack: () => void }) {
 
               <section>
               <h3 className="text-3xl font-bold text-emerald-400 border-b border-emerald-400/30 pb-2 mb-4 italic">5. Průběh tahu a Akce</h3>
-              <p className="text-sm italic mb-4">Matematik má v každém kole možnost provést 1 až vícero akcí dle zahraných karet:</p>
+              <p className="text-sm italic mb-4">Matematik může v jednom kole z ruky vyložit maximálně 2 karty: 1 kartu čísla/proměnné/hodnoty a 1 kartu operace.</p>
               <div className="space-y-4 text-sm md:text-base">
                 <div className="border-l-4 border-emerald-500 pl-4 bg-emerald-500/10 py-2">
                   <p className="font-bold text-emerald-200">Přidání výpočtu</p>
@@ -352,6 +627,7 @@ export function RulesScreen({ onBack }: { onBack: () => void }) {
                 </div>
               </div>
               <div className="mt-6 space-y-3 text-sm md:text-base bg-black/30 p-4 border border-slate-700/50 rounded-xl">
+                <p>Pokud hráč v jednom kole vyloží obě povolené kategorie (hodnota + operace), v příštím tahu dobírá o 1 kartu navíc (tedy standardně 2).</p>
                 <p>Po stisku tlačítka Ukončit tah se vždy aktivuje režim odhazování/předání tahu.</p>
                 <p>Předání tahu je možné až ve chvíli, kdy má hráč v ruce maximálně 5 karet.</p>
                 <p>Karty s efektem nabídnou volbu: aktivovat destruktivní/výhodný efekt (a odhodit), nebo kartu pasivně zadrátovat na tabuli.</p>
@@ -378,13 +654,16 @@ export function RulesScreen({ onBack }: { onBack: () => void }) {
                 <h3 className="text-3xl font-bold text-emerald-400 border-b border-emerald-400/30 pb-2 mb-4 italic">8. Ukončení a Q.E.D.</h3>
                 <p className="mb-4">Při formální rovnosti stiskni tlačítko Q.E.D.</p>
                 <div className="bg-black/40 border border-slate-700 p-4 rounded-xl space-y-3 text-sm">
-                  <p>✅ <span className="text-emerald-400 font-bold">Správné řešení:</span> Engine (SymPy) formálně potvrdí identitu = L s R. Vítězíte.</p>
+                  <p>✅ <span className="text-emerald-400 font-bold">Správné řešení:</span> Engine (Nerdamer + Math.js fallback) potvrdí shodu L s R. Vítězíte.</p>
                   <p>❌ <span className="text-red-400 font-bold">Chybný důkaz:</span> Hráčovo L se liší. Penalizace – L je pohlceno odpadem a hráč tak ztratí svůj dosavadní pokrok.</p>
                 </div>
               </section>
 
+            </div>
+
+            <div className="space-y-12">
               <section>
-                <h3 className="text-3xl font-bold text-emerald-400 border-b border-emerald-400/30 pb-2 mb-4 italic">9. Herní režimy</h3>
+                <h3 className="text-3xl font-bold text-emerald-400 border-b border-emerald-400/30 pb-2 mb-4 italic">Herní režimy</h3>
                 <div className="space-y-4 text-sm md:text-base">
                   <div className="rounded-xl border border-emerald-400/30 bg-emerald-500/10 p-4">
                     <p className="font-bold uppercase tracking-wide text-emerald-300">Klasický režim</p>
@@ -395,36 +674,37 @@ export function RulesScreen({ onBack }: { onBack: () => void }) {
                   <div className="rounded-xl border border-yellow-400/30 bg-yellow-500/10 p-4">
                     <p className="font-bold uppercase tracking-wide text-yellow-300">Režim Společný cíl</p>
                     <p className="mt-2 text-slate-200">
-                      Všichni hráči sdílí stejné R. Každý hráč má vlastní odpočet tahů (ZŠ: 20, SŠ/VŠ: 30). Po vyčerpání všech odpočtů vyhrává nejmenší odchylka od společného cíle.
+                      Všichni hráči sdílí stejné R. Každý hráč má vlastní odpočet tahů (výchozí 20). Po vyčerpání všech odpočtů vyhrává nejmenší odchylka od společného cíle.
                     </p>
                   </div>
                 </div>
               </section>
 
               <section>
-                <h3 className="text-3xl font-bold text-emerald-400 border-b border-emerald-400/30 pb-2 mb-4 italic">10. Obtížnosti podle režimu</h3>
+                <h3 className="text-3xl font-bold text-emerald-400 border-b border-emerald-400/30 pb-2 mb-4 italic">Obtížnosti podle režimu</h3>
                 <div className="space-y-4 text-sm md:text-base">
                   <div className="rounded-xl border border-emerald-400/30 bg-emerald-500/10 p-4">
                     <p className="font-bold text-emerald-300 mb-2">Klasický režim</p>
                     <ul className="space-y-2 text-slate-200">
-                      <li><strong>ZŠ:</strong> výsledek je číslo z intervalu -99..99, nebo člen x..99x / y..99y.</li>
+                      <li><strong>Tutoriál:</strong> krátká ukázková hra s pevně daným cílem R = 11 a řízenými kroky.</li>
+                      <li><strong>ZŠ:</strong> výsledek je číslo z intervalu -99..99, nebo člen -9x..9x / -9y..9y (bez 0x a 0y).</li>
                       <li><strong>SŠ, VŠ:</strong> výsledek je z množiny -99..999, -99x..99x, -99y..99y, -99e..99e, -99π..99π.</li>
+                      <li><strong>Vlastní:</strong> výsledky i karty se řídí tím, co si hráč navolí v konfiguraci. Pokud je vybraná jedna VŠ zamčená karta (int, d/dx, ∑, ∏, lim), dostanou ji všichni; pokud je jich vybraných více, každý hráč dostane náhodně jednu z nich.</li>
                     </ul>
                   </div>
                   <div className="rounded-xl border border-yellow-400/30 bg-yellow-500/10 p-4">
                     <p className="font-bold text-yellow-300 mb-2">Režim Společný cíl</p>
                     <ul className="space-y-2 text-slate-200">
-                      <li><strong>ZŠ:</strong> společný výsledek je 0..99.</li>
+                      <li><strong>ZŠ:</strong> společný výsledek je -99..99, -9x..9x, -9y..9y (bez 0x a 0y).</li>
                       <li><strong>SŠ, VŠ:</strong> společný výsledek je -99..99, -99x..99x, -99y..99y, -99e..99e, -99π..99π.</li>
+                      <li><strong>Vlastní:</strong> společný cíl i zamčené VŠ karty se řídí vlastní konfigurací. Lze nastavit vlastní počet tahů na hráče; při této volbě zůstává odpočtová lišta kol po celou hru zelená.</li>
                     </ul>
                   </div>
                 </div>
               </section>
-            </div>
 
-            <div className="space-y-12">
               <section>
-                <h3 className="text-3xl font-bold text-emerald-400 border-b border-emerald-400/30 pb-2 mb-4 italic">11. Efekty karet a jejich zastoupení</h3>
+                <h3 className="text-3xl font-bold text-emerald-400 border-b border-emerald-400/30 pb-2 mb-4 italic">Efekty karet a jejich zastoupení</h3>
                 <div className="bg-black/30 p-5 rounded-2xl border border-slate-700/50 shadow-lg space-y-4 text-sm md:text-base">
                   <p className="text-slate-300 text-xs">
                     Přehled níže uvádí všechny efekty ve hře: co dělají, které karty je nesou, jakého jsou typu a kolikrát jsou ve hře zastoupené.

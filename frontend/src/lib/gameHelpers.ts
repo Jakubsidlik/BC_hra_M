@@ -54,12 +54,15 @@ export function generatePersonalTargetR(difficulty: DifficultyMode): string {
   };
 
   if (difficulty === 'ZŠ') {
-    // ZŠ: pouze -99..99 a kladné koeficienty x/y v rozsahu x..99x, y..99y
+    // ZŠ: -99..99 a členy -9x..9x / -9y..9y (bez nulového koeficientu)
     if (Math.random() < 0.5) {
       return `${randInt(-99, 99)}`;
     }
     const symbol = pick(['x', 'y']);
-    const coefficient = randInt(1, 99);
+    let coefficient = 0;
+    while (coefficient === 0) {
+      coefficient = randInt(-9, 9);
+    }
     return formatTerm(coefficient, symbol);
   }
 

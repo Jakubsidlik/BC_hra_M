@@ -583,6 +583,7 @@ interface TabletGameLayoutProps {
     gameMode?: 'CLASSIC' | 'SHARED_GOAL';
     sharedGoalTurnsRemaining?: number | null;
     sharedGoalTotalTurns?: number;
+    sharedGoalTrackerForceGreen?: boolean;
     bracketMode: { leftInsertPosition: number; pairIndex: number } | null;
     tutorialActive?: boolean;
     tutorialStep?: number;
@@ -652,7 +653,7 @@ function TutorialReferenceRow({ cards, palette }: { cards: GameCard[]; palette: 
 }
 
 export function TabletGameLayout({ currentPlayer, state, actions, tutorialReferenceBoard, showEffectDebug, debugEffectRows = [] }: TabletGameLayoutProps) {
-  const { discardPile, isDiscarding, hasModifiedBoardThisTurn, bracketMode, tutorialActive, gameMode, sharedGoalTurnsRemaining, sharedGoalTotalTurns } = state;
+  const { discardPile, isDiscarding, hasModifiedBoardThisTurn, bracketMode, tutorialActive, gameMode, sharedGoalTurnsRemaining, sharedGoalTotalTurns, sharedGoalTrackerForceGreen } = state;
   const palette = getTabletPalette(currentPlayer.theme);
   const canVerify = true;
   const integralVar = findIntegralVariable(currentPlayer.board);
@@ -680,14 +681,18 @@ export function TabletGameLayout({ currentPlayer, state, actions, tutorialRefere
   const totalSharedTurns = sharedGoalTotalTurns ?? 20;
   const sharedGoalTurnsLeft = showSharedGoalTracker ? Math.max(0, sharedGoalTurnsRemaining ?? 0) : 0;
   const sharedGoalProgressBase = sharedGoalTurnsLeft === 0 ? 1 : sharedGoalTurnsLeft;
-  const sharedGoalBarColorClass = sharedGoalTurnsLeft <= 5
+  const sharedGoalBarColorClass = sharedGoalTrackerForceGreen
+    ? 'bg-emerald-500'
+    : sharedGoalTurnsLeft <= 5
     ? 'bg-red-500'
     : sharedGoalTurnsLeft <= 10
       ? 'bg-orange-500'
       : sharedGoalTurnsLeft <= 15
         ? 'bg-yellow-400'
         : 'bg-emerald-500';
-  const sharedGoalMetaTextColorClass = sharedGoalTurnsLeft <= 5
+  const sharedGoalMetaTextColorClass = sharedGoalTrackerForceGreen
+    ? 'text-emerald-200'
+    : sharedGoalTurnsLeft <= 5
     ? 'text-red-200'
     : sharedGoalTurnsLeft <= 10
       ? 'text-orange-200'
@@ -821,7 +826,7 @@ export function TabletGameLayout({ currentPlayer, state, actions, tutorialRefere
                 backgroundSize: '30px 30px',
               }}
             >
-            {currentPlayer.board.length === 0 && (
+            {currentPlayer.board.length === 0 && !tutorialActive && (
               <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none">
                 <span
                   className="uppercase tracking-[0.2em] text-xl pointer-events-none select-none italic"

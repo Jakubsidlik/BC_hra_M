@@ -50,6 +50,17 @@ type VictoryReason =
   | { type: 'QED' }
   | { type: 'SHARED_GOAL_TIMEOUT'; target: string; bestDistance: number | null; isDraw: boolean };
 
+type TurnPlayCounts = {
+  value: number;
+  operator: number;
+};
+
+type CustomDifficultyConfig = {
+  deckCounts: Record<string, number>;
+  sharedGoalTurns: number | null;
+  forceGreenTracker: boolean;
+};
+
 const MAX_SLOT_DIGITS = 5;
 const NUMBER_DRAW_BOOST = 0.15;
 const ANTI_STREAK_THRESHOLD = 3;
@@ -57,6 +68,24 @@ const ANTI_STREAK_BASE_BOOST = 0.08;
 const ANTI_STREAK_STEP_BOOST = 0.02;
 const ANTI_STREAK_MAX_BOOST = 0.15;
 const getSharedGoalTotalTurns = (): number => 20;
+const VS_SPECIAL_SYMBOLS = ['int', 'd/dx', '∑', '∏', 'lim'] as const;
+const CUSTOMIZABLE_CARD_SYMBOLS = Object.entries(cardsDatabase)
+  .filter(([, cardData]) => cardData.count > 0 && cardData.type !== 'syntax')
+  .map(([symbol]) => symbol);
+
+const createDefaultCustomCardCounts = (): Record<string, number> => {
+  return CUSTOMIZABLE_CARD_SYMBOLS.reduce<Record<string, number>>((acc, symbol) => {
+    acc[symbol] = cardsDatabase[symbol]?.count ?? 0;
+    return acc;
+  }, {});
+};
+
+const createDefaultCustomCardSelection = (): Record<string, boolean> => {
+  return CUSTOMIZABLE_CARD_SYMBOLS.reduce<Record<string, boolean>>((acc, symbol) => {
+    acc[symbol] = false;
+    return acc;
+  }, {});
+};
 
 const decrementSharedGoalTurn = (turnMap: Record<number, number>, playerId: number, totalTurns: number): Record<number, number> => {
   const currentRemaining = turnMap[playerId] ?? totalTurns;
@@ -179,10 +208,17 @@ const createTutorialStepCard = (symbol: string, prefix: string): GameCard => ({
 
 export function useGameEngine() {
   // --- STAVY JÁDRA ---
-  const [gamePhase, setGamePhase] = useState<'MENU' | 'RULES' | 'PICK_MODE' | 'PICK_DIFFICULTY' | 'SETUP' | 'PLAYING'>('MENU');
+  const [gamePhase, setGamePhase] = useState<'MENU' | 'RULES' | 'PICK_MODE' | 'PICK_DIFFICULTY' | 'CUSTOM_DIFFICULTY' | 'SETUP' | 'PLAYING'>('MENU');
   const [gameMode, setGameMode] = useState<GameMode>('CLASSIC');
   const [difficulty, setDifficulty] = useState<DifficultyMode>('ZŠ');
-  const sharedGoalTotalTurns = getSharedGoalTotalTurns();
+  const [sharedGoalTotalTurns, setSharedGoalTotalTurns] = useState(getSharedGoalTotalTurns());
+  const [sharedGoalTrackerForceGreen, setSharedGoalTrackerForceGreen] = useState(false);
+  const [isCustomDifficulty, setIsCustomDifficulty] = useState(false);
+  const [customDifficultyConfig, setCustomDifficultyConfig] = useState<CustomDifficultyConfig | null>(null);
+  const [customCardSelection, setCustomCardSelection] = useState<Record<string, boolean>>(createDefaultCustomCardSelection);
+  const [customCardCounts, setCustomCardCounts] = useState<Record<string, number>>(createDefaultCustomCardCounts);
+  const [customSharedGoalTurnsEnabled, setCustomSharedGoalTurnsEnabled] = useState(false);
+  const [customSharedGoalTurns, setCustomSharedGoalTurns] = useState(getSharedGoalTotalTurns());
   const [players, setPlayers] = useState<Player[]>([]);
   const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
   const [deck, setDeck] = useState<GameCard[]>([]);
@@ -223,6 +259,7 @@ export function useGameEngine() {
   const [isDiscarding, setIsDiscarding] = useState(false);
   const [hasModifiedBoardThisTurn, setHasModifiedBoardThisTurn] = useState(false);
   const [playsThisTurn, setPlaysThisTurn] = useState(0);
+  const [turnPlayCounts, setTurnPlayCounts] = useState<TurnPlayCounts>({ value: 0, operator: 0 });
 
   // ==========================================
   // 1. REKURZIVNÍ LOGIKA (Kaskády)
@@ -293,6 +330,92 @@ export function useGameEngine() {
     setGameStats(createGameStats(playerList));
     setGameSummaryOpen(false);
   }, []);
+
+  const selectedCustomCardCount = Object.entries(customCardSelection).filter(([symbol, selected]) => {
+    if (!selected) return false;
+    const count = customCardCounts[symbol] ?? 0;
+    return count > 0;
+  }).length;
+
+  const toggleCustomCardSelection = useCallback((symbol: string) => {
+    setCustomCardSelection(prev => ({
+      ...prev,
+      [symbol]: !prev[symbol],
+    }));
+  }, []);
+
+  const updateCustomCardCount = useCallback((symbol: string, nextCount: number) => {
+    const normalized = Number.isFinite(nextCount) ? Math.max(0, Math.min(999, Math.floor(nextCount))) : 0;
+    setCustomCardCounts(prev => ({
+      ...prev,
+      [symbol]: normalized,
+    }));
+  }, []);
+
+  const openCustomDifficultySetup = useCallback(() => {
+    setIsCustomDifficulty(true);
+    setGamePhase('CUSTOM_DIFFICULTY');
+  }, []);
+
+  const closeCustomDifficultySetup = useCallback(() => {
+    setGamePhase('PICK_DIFFICULTY');
+  }, []);
+
+  const clearCustomDifficultyConfiguration = useCallback(() => {
+    setIsCustomDifficulty(false);
+    setCustomDifficultyConfig(null);
+    setCustomCardSelection(createDefaultCustomCardSelection());
+    setCustomCardCounts(createDefaultCustomCardCounts());
+    setCustomSharedGoalTurnsEnabled(false);
+    setCustomSharedGoalTurns(getSharedGoalTotalTurns());
+    setSharedGoalTrackerForceGreen(false);
+  }, []);
+
+  const confirmCustomDifficultySetup = useCallback(() => {
+    const deckCounts = Object.entries(customCardSelection).reduce<Record<string, number>>((acc, [symbol, selected]) => {
+      if (!selected) return acc;
+      const count = Math.max(0, Math.floor(customCardCounts[symbol] ?? 0));
+      if (count > 0) {
+        acc[symbol] = count;
+      }
+      return acc;
+    }, {});
+
+    if (Object.keys(deckCounts).length === 0) {
+      toast.error('Vyber alespoň jednu kartu do dobíracího balíčku.');
+      return;
+    }
+
+    const sharedGoalTurns = customSharedGoalTurnsEnabled
+      ? Math.max(1, Math.floor(customSharedGoalTurns))
+      : null;
+
+    setCustomDifficultyConfig({
+      deckCounts,
+      sharedGoalTurns,
+      forceGreenTracker: sharedGoalTurns !== null,
+    });
+
+    // Vlastní režim může obsahovat VŠ mechaniky; interně používáme VŠ chování enginu.
+    setDifficulty('VŠ');
+    setIsCustomDifficulty(true);
+    setGamePhase('SETUP');
+  }, [customCardSelection, customCardCounts, customSharedGoalTurnsEnabled, customSharedGoalTurns]);
+
+  const getTurnPlayBucket = useCallback((symbol: string): keyof TurnPlayCounts => {
+    const cardType = cardsDatabase[symbol]?.type;
+    return cardType === 'operator' ? 'operator' : 'value';
+  }, []);
+
+  const registerTurnPlay = useCallback((symbol: string) => {
+    const bucket = getTurnPlayBucket(symbol);
+    setHasModifiedBoardThisTurn(true);
+    setPlaysThisTurn(prev => prev + 1);
+    setTurnPlayCounts(prev => ({
+      ...prev,
+      [bucket]: prev[bucket] + 1,
+    }));
+  }, [getTurnPlayBucket]);
 
   const resolveSharedGoalTimeout = useCallback(() => {
     if (sharedGoalTarget === null) return;
@@ -440,10 +563,14 @@ export function useGameEngine() {
   const finalizeTurn = useCallback(() => {
     applyPendingHandSwap();
     setIsDiscarding(false);
+    const completedDualPlay = turnPlayCounts.value >= 1 && turnPlayCounts.operator >= 1;
     setPlayers(prev => {
       const next = JSON.parse(JSON.stringify(prev));
       if (next[currentPlayerIndex]?.status) {
         next[currentPlayerIndex].status.playAnyAsZeroReady = false;
+        if (completedDualPlay) {
+          next[currentPlayerIndex].status.extraDraw = (next[currentPlayerIndex].status.extraDraw || 0) + 1;
+        }
       }
       return next;
     });
@@ -471,12 +598,13 @@ export function useGameEngine() {
       }));
       setHasModifiedBoardThisTurn(false);
       setPlaysThisTurn(0);
+      setTurnPlayCounts({ value: 0, operator: 0 });
       performDraw(1, currentPlayerIndex);
       return;
     }
 
     setIsHandoff(true);
-  }, [applyPendingHandSwap, players, currentPlayerIndex, performDraw, updatePlayerStats, gameMode, sharedGoalTurnsRemainingByPlayer, resolveSharedGoalTimeout, sharedGoalTotalTurns]);
+  }, [applyPendingHandSwap, players, currentPlayerIndex, performDraw, updatePlayerStats, gameMode, sharedGoalTurnsRemainingByPlayer, resolveSharedGoalTimeout, sharedGoalTotalTurns, turnPlayCounts]);
 
   const handleDiscardExpression = () => {
     if (hasModifiedBoardThisTurn) return toast.error("Již jsi provedl akci za tento tah!");
@@ -563,6 +691,7 @@ export function useGameEngine() {
       setIsDiscarding(false);
       setHasModifiedBoardThisTurn(false);
       setPlaysThisTurn(0);
+      setTurnPlayCounts({ value: 0, operator: 0 });
       setTutorialStep(3);
       return;
     }
@@ -570,6 +699,7 @@ export function useGameEngine() {
     if (tutorialActive && tutorialStep === 3) {
       const p = players[currentPlayerIndex];
       const handLimit = 5;
+      const completedDualPlay = turnPlayCounts.value >= 1 && turnPlayCounts.operator >= 1;
       if (!hasModifiedBoardThisTurn) {
         toast.error("V tomto kole nejdřív vylož 1 kartu na tabuli.");
         return;
@@ -596,21 +726,59 @@ export function useGameEngine() {
 
       setHasModifiedBoardThisTurn(false);
       setPlaysThisTurn(0);
+      setTurnPlayCounts({ value: 0, operator: 0 });
       setIsDiscarding(false);
 
-      // Deal from tutorial queue first, then random
-      if (tutorialCardQueue.length > 0) {
-        const [nextCard, ...rest] = tutorialCardQueue;
+      // Tutorial respects the same next-turn bonus for dual play (1 operator + 1 value).
+      let drawsRemaining = completedDualPlay ? 2 : 1;
+      let queuedCardsDealt = 0;
+      const describeCardCount = (count: number, one: string, few: string, many: string): string => {
+        const mod100 = count % 100;
+        const mod10 = count % 10;
+        const cardWord = (mod100 >= 11 && mod100 <= 14)
+          ? 'karet'
+          : mod10 === 1
+            ? 'karta'
+            : mod10 >= 2 && mod10 <= 4
+              ? 'karty'
+              : 'karet';
+        const adjective = (mod100 >= 11 && mod100 <= 14)
+          ? many
+          : mod10 === 1
+            ? one
+            : mod10 >= 2 && mod10 <= 4
+              ? few
+              : many;
+        return `${count} ${adjective} ${cardWord}`;
+      };
+
+      if (tutorialCardQueue.length > 0 && drawsRemaining > 0) {
+        const cardsFromQueue = tutorialCardQueue.slice(0, drawsRemaining);
+        const rest = tutorialCardQueue.slice(cardsFromQueue.length);
         setPlayers(prev => {
           const next = JSON.parse(JSON.stringify(prev));
-          next[currentPlayerIndex].hand.push(nextCard);
+          next[currentPlayerIndex].hand.push(...cardsFromQueue);
           return next;
         });
         setTutorialCardQueue(rest);
-        toast.info("Kolo ukončeno. Přidána připravená karta.");
+        queuedCardsDealt = cardsFromQueue.length;
+        drawsRemaining -= cardsFromQueue.length;
+      }
+
+      if (drawsRemaining > 0) {
+        performDraw(drawsRemaining, currentPlayerIndex);
+      }
+
+      if (queuedCardsDealt > 0 && drawsRemaining > 0) {
+        const queuedText = describeCardCount(queuedCardsDealt, 'připravená', 'připravené', 'připravených');
+        const randomText = describeCardCount(drawsRemaining, 'náhodná', 'náhodné', 'náhodných');
+        toast.info(`Kolo ukončeno. Dobrání: ${queuedText} a ${randomText}.`);
+      } else if (queuedCardsDealt > 0) {
+        const queuedText = describeCardCount(queuedCardsDealt, 'připravená', 'připravené', 'připravených');
+        toast.info(`Kolo ukončeno. Dobrání: ${queuedText}.`);
       } else {
-        performDraw(1, currentPlayerIndex);
-        toast.info("Kolo ukončeno. Přidána 1 náhodná karta.");
+        const randomText = describeCardCount(completedDualPlay ? 2 : 1, 'náhodná', 'náhodné', 'náhodných');
+        toast.info(`Kolo ukončeno. Dobrání: ${randomText}.`);
       }
       return;
     }
@@ -722,6 +890,7 @@ export function useGameEngine() {
     setIsHandoff(false);
     setHasModifiedBoardThisTurn(false);
     setPlaysThisTurn(0);
+    setTurnPlayCounts({ value: 0, operator: 0 });
     updatePlayerStats(nextIdx, stats => ({
       ...stats,
       currentTurnDraw: 0,
@@ -896,11 +1065,10 @@ export function useGameEngine() {
     }));
 
     if (countAsAction) {
-      setHasModifiedBoardThisTurn(true);
-      setPlaysThisTurn(prev => prev + 1);
+      registerTurnPlay(cardWithSlots.symbol);
     }
     setPendingEffect(null);
-  }, [currentPlayerIndex, updatePlayerStats]);
+  }, [currentPlayerIndex, registerTurnPlay, updatePlayerStats]);
 
   const addCardToSlotFromHand = useCallback((
     card: GameCard,
@@ -971,11 +1139,10 @@ export function useGameEngine() {
     }));
 
     if (countAsAction) {
-      setHasModifiedBoardThisTurn(true);
-      setPlaysThisTurn((prevCount: number) => prevCount + 1);
+      registerTurnPlay(card.symbol);
     }
     setPendingEffect(null);
-  }, [players, currentPlayerIndex, updatePlayerStats]);
+  }, [players, currentPlayerIndex, registerTurnPlay, updatePlayerStats]);
 
   const placePendingEffectCard = useCallback((effectState: PendingEffectState) => {
     if (effectState.slotPlacement) {
@@ -1225,8 +1392,6 @@ export function useGameEngine() {
     }
 
     const slotData = over.data.current as SlotDropData | undefined;
-    const isSpecialTargetDrop = overId.startsWith('drop-exponent-') || !!(slotData?.slotKey && slotData?.parentId);
-    const isVsSpecialMove = difficulty === 'VŠ' && isSpecialTargetDrop;
 
     const isDragCardWithSlots = (cardId: string): boolean => {
       const inHand = players[currentPlayerIndex].hand.find(c => c.id === cardId);
@@ -1292,7 +1457,13 @@ export function useGameEngine() {
         }
         return;
       }
-      if (hasModifiedBoardThisTurn) return toast.error("Za kolo smíš z ruky provést pouze 1 akci!");
+      const totalTurnPlays = turnPlayCounts.value + turnPlayCounts.operator;
+      if (totalTurnPlays >= 2) return toast.error("V tomto tahu už jsi vyložil maximum (1 hodnota/proměnná a 1 operace).");
+      if (turnPlayCounts.value >= 1) return toast.error("V tomto tahu už jsi zahrál kartu čísla/proměnné/hodnoty.");
+      const currentStatus = players[currentPlayerIndex].status;
+      if (currentStatus?.playLimit !== null && currentStatus?.playLimit !== undefined && playsThisTurn >= currentStatus.playLimit) {
+        return toast.error("Tento tah už nesmíš vyložit další kartu!");
+      }
 
       const slotCardData = cardsDatabase[slotCard.symbol];
       if (slotCardData?.type === 'operator' || slotCardData?.type === 'syntax') {
@@ -1350,13 +1521,6 @@ export function useGameEngine() {
       if (draggedCardData?.type !== 'operator') {
         return toast.error("Musíš hrát kartu operace! Tak ti nařídil soupeř (+).");
       }
-    }
-
-    if (pStatus?.playLimit !== null && pStatus?.playLimit !== undefined && playsThisTurn >= pStatus.playLimit && !isVsSpecialMove) {
-      return toast.error("Tento tah už nesmíš vyložit další kartu!");
-    }
-    if (hasModifiedBoardThisTurn && !isOnlyOnBoard && !pStatus?.infinitePlays && !isVsSpecialMove) {
-      return toast.error("Za kolo smíš z ruky provést pouze 1 akci!");
     }
 
     // DŮLEŽITÉ: Pokud se karta nenajde, zkusíme ji z active.data
@@ -1418,6 +1582,25 @@ export function useGameEngine() {
       ? { ...transformedCardToPlace, afterDxDy: placeAfterDxDy }
       : transformedCardToPlace;
 
+    if (!isOnlyOnBoard && isFromHand) {
+      if (pStatus?.playLimit !== null && pStatus?.playLimit !== undefined && playsThisTurn >= pStatus.playLimit) {
+        return toast.error("Tento tah už nesmíš vyložit další kartu!");
+      }
+
+      const totalTurnPlays = turnPlayCounts.value + turnPlayCounts.operator;
+      if (totalTurnPlays >= 2) {
+        return toast.error("V tomto tahu už jsi vyložil maximum (1 hodnota/proměnná a 1 operace).");
+      }
+
+      const bucket = getTurnPlayBucket(cardToPlaceWithDxDy.symbol);
+      if (turnPlayCounts[bucket] >= 1) {
+        if (bucket === 'operator') {
+          return toast.error("V tomto tahu už jsi zahrál kartu operace.");
+        }
+        return toast.error("V tomto tahu už jsi zahrál kartu čísla/proměnné/hodnoty.");
+      }
+    }
+
     if (wildcardConsumed) {
       setPlayers(prev => {
         const next = JSON.parse(JSON.stringify(prev));
@@ -1437,11 +1620,11 @@ export function useGameEngine() {
       // --- ENFORCE RESTRICTION FLAGS ---
       const cardData = cardsDatabase[cardToPlaceWithDxDy.symbol];
 
-      // EFF_016: operationLock — nesmí hrát operace
+      // EFF_026: operationLock — nesmí hrát operace
       if (pStatus?.operationLock && cardData?.type === 'operator') {
         return toast.error("Tento tah nesmíš hrát kartu operace! (Zákaz operací ∑)");
       }
-      // EFF_023: numberLock — nesmí hrát čísla
+      // EFF_027: numberLock — nesmí hrát čísla
       if (pStatus?.numberLock && cardData?.type === 'number') {
         return toast.error("Tento tah nesmíš hrát číslo! (Zákaz čísel ∏)");
       }
@@ -1492,7 +1675,7 @@ export function useGameEngine() {
         // Úmyslně se ZDE NEVOLÁ setHasModifiedBoardThisTurn(true)!
         setPendingEffect(null);
       } else {
-        addCardToGameState(cardToPlaceWithDxDy, targetId, insertPosition, { countAsAction: !isVsSpecialMove });
+        addCardToGameState(cardToPlaceWithDxDy, targetId, insertPosition, { countAsAction: true });
       }
     }
   }, [
@@ -1506,6 +1689,8 @@ export function useGameEngine() {
     updatePlayerStats,
     difficulty,
     playsThisTurn,
+    turnPlayCounts,
+    getTurnPlayBucket,
     removeCardRecursively,
     tutorialActive,
     tutorialStep,
@@ -1539,7 +1724,7 @@ export function useGameEngine() {
         // --- 2. OKAMŽITÉ AKCE ---
         // EFF_001 a EFF_008 jsou čistě "next turn" efekty přes status.extraDraw (applyEffectLogic)
 
-        if (activeId === 'EFF_028') {
+        if (activeId === 'EFF_023') {
           let currentDeck = [...deck];
           let currentDiscard = [...discardPile];
           const drawnCards: GameCard[] = [];
@@ -1626,7 +1811,7 @@ export function useGameEngine() {
         }
 
         if (metadata?.turnOrderReversed) {
-          // EFF_025: pořadí hráčů bylo obráceno — najdeme nový index aktivního hráče
+          // EFF_028: pořadí hráčů bylo obráceno — najdeme nový index aktivního hráče
           const activePlayerId = players[currentPlayerIndex].id;
           const resultPlayers = Array.isArray(effectResult) ? effectResult : effectResult.players;
           const newActiveIndex = resultPlayers.findIndex((p: { id: number }) => p.id === activePlayerId);
@@ -1656,7 +1841,7 @@ export function useGameEngine() {
   const handleMinigamePick = useCallback((id: string) => {
     if (!minigameMode) return;
 
-    if (minigameMode.effectId === 'EFF_028') {
+    if (minigameMode.effectId === 'EFF_023') {
       const selected = id !== 'CANCEL'
         ? minigameMode.cards.find((c: GameCard) => c.id === id)
         : undefined;
@@ -1793,12 +1978,24 @@ export function useGameEngine() {
   };
 
   const handleStartGame = (configuredPlayers: { name: string, theme: string }[]) => {
-    const initialDeck = generateFilteredDeck(difficulty);
-    const vsCards = ['int', 'd/dx', '∑', '∏', 'lim'];
+    const isCustomGame = isCustomDifficulty && customDifficultyConfig !== null;
+    const vsCards = [...VS_SPECIAL_SYMBOLS];
     const isSharedGoalMode = gameMode === 'SHARED_GOAL';
-    const sharedLockedVsSymbol = difficulty === 'VŠ' && isSharedGoalMode
+    const customVsSymbols = isCustomGame
+      ? vsCards.filter(symbol => (customDifficultyConfig?.deckCounts[symbol] ?? 0) > 0)
+      : [];
+    const sharedLockedVsSymbol = !isCustomGame && difficulty === 'VŠ' && isSharedGoalMode
       ? vsCards[Math.floor(Math.random() * vsCards.length)]
       : undefined;
+    const initialDeck = isCustomGame
+      ? Object.entries(customDifficultyConfig!.deckCounts).flatMap(([symbol, count]) => {
+          const total = Math.max(0, Math.floor(count));
+          return Array.from({ length: total }, (_, index) => ({
+            id: `custom-${symbol}-${index}-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+            symbol,
+          }));
+        }).sort(() => Math.random() - 0.5)
+      : generateFilteredDeck(difficulty);
 
     const hasAtLeastThreePrimeFactors = (value: number): boolean => {
       let remainder = value;
@@ -1846,6 +2043,28 @@ export function useGameEngine() {
       return `${productTargetPool[randomIndex]}`;
     };
 
+    const generateNumericTargetR = (): string => {
+      const isThreeDigit = Math.random() < 0.5;
+      const min = isThreeDigit ? 100 : 10;
+      const max = isThreeDigit ? 999 : 99;
+      return `${Math.floor(Math.random() * (max - min + 1)) + min}`;
+    };
+
+    const generateLimitTargetR = (): string => {
+      return `${Math.floor(Math.random() * (99 - 9 + 1)) + 9}`;
+    };
+
+    const generateIntegralTargetR = (): string => {
+      const category = ['number', 'x', 'y', 'e'][Math.floor(Math.random() * 4)];
+      if (category === 'number') {
+        return `${Math.floor(Math.random() * 100)}`;
+      }
+
+      const maxCoefficient = category === 'e' ? 9 : 99;
+      const coefficient = Math.floor(Math.random() * maxCoefficient) + 1;
+      return coefficient === 1 ? category : `${coefficient}${category}`;
+    };
+
     const generateSharedSsLikeTarget = (): string => {
       const plainNumber = Math.floor(Math.random() * 199) - 99;
       if (Math.random() < 0.5) return `${plainNumber}`;
@@ -1858,9 +2077,42 @@ export function useGameEngine() {
       return `${coefficient}${symbol}`;
     };
 
+    const generateCustomTargetR = (): string => {
+      const enabledSymbols = new Set(
+        Object.entries(customDifficultyConfig?.deckCounts ?? {})
+          .filter(([, count]) => count > 0)
+          .map(([symbol]) => symbol)
+      );
+
+      const variables = ['x', 'y', 'e', 'π'].filter(symbol => enabledSymbols.has(symbol));
+      if (variables.length === 0 || Math.random() < 0.5) {
+        return `${Math.floor(Math.random() * 199) - 99}`;
+      }
+
+      const symbol = variables[Math.floor(Math.random() * variables.length)];
+      let coefficient = 0;
+      while (coefficient === 0) {
+        coefficient = Math.floor(Math.random() * 199) - 99;
+      }
+      if (coefficient === 1) return symbol;
+      if (coefficient === -1) return `-${symbol}`;
+      return `${coefficient}${symbol}`;
+    };
+
     const generateSharedTargetR = (lockedVsSymbol?: string): string => {
+      if (isCustomGame) {
+        if (customVsSymbols.length === 1) {
+          const onlyVs = customVsSymbols[0];
+          if (onlyVs === '∏') return generateCompositeTargetR();
+          if (onlyVs === 'int') return generateIntegralTargetR();
+          if (onlyVs === '∑') return generateNumericTargetR();
+          if (onlyVs === 'lim') return generateLimitTargetR();
+        }
+        return generateCustomTargetR();
+      }
+
       if (difficulty === 'ZŠ') {
-        return `${Math.floor(Math.random() * 100)}`;
+        return generatePersonalTargetR('ZŠ');
       }
 
       if (difficulty === 'SŠ') {
@@ -1869,6 +2121,7 @@ export function useGameEngine() {
 
       if (difficulty === 'VŠ') {
         if (lockedVsSymbol === '∏') return generateCompositeTargetR();
+        if (lockedVsSymbol === 'int') return generateIntegralTargetR();
         return generateSharedSsLikeTarget();
       }
 
@@ -1876,9 +2129,9 @@ export function useGameEngine() {
     };
 
     const boostSharedTargetSymbolCards = (deck: GameCard[], target: string | null): GameCard[] => {
-      if (!isSharedGoalMode || !target) return deck;
+      if (!isSharedGoalMode || !target || difficulty === 'ZŠ' || isCustomGame) return deck;
 
-      let boostedDeck = [...deck];
+      const boostedDeck = [...deck];
       const symbolsToBoost: Array<'e' | 'π'> = ['e', 'π'];
 
       symbolsToBoost.forEach((symbol) => {
@@ -1903,7 +2156,7 @@ export function useGameEngine() {
 
     const newPlayers: Player[] = configuredPlayers.map((p, i) => ({
       id: i, name: p.name, theme: p.theme, hand: [], board: [],
-      targetR: initialSharedTarget ?? generatePersonalTargetR(difficulty),
+      targetR: initialSharedTarget ?? (isCustomGame ? generateCustomTargetR() : generatePersonalTargetR(difficulty)),
       syntax: [
         { id: `p${i}-l1`, symbol: '(' }, { id: `p${i}-r1`, symbol: ')' },  // Pár 1: kulaté
         { id: `p${i}-l2`, symbol: '[' }, { id: `p${i}-r2`, symbol: ']' },  // Pár 2: hranaté
@@ -1913,11 +2166,16 @@ export function useGameEngine() {
       status: { mathModifiers: [], extraTurn: false, frozen: false, extraDraw: 0, drawReduction: 0, notifications: [] }
     }));
 
-    if (difficulty === 'VŠ') {
+    const shouldAssignLockedVsCards = (difficulty === 'VŠ' && !isCustomGame) || (isCustomGame && customVsSymbols.length > 0);
+    if (shouldAssignLockedVsCards) {
       newPlayers.forEach((player, idx) => {
-        const picked = isSharedGoalMode
-          ? sharedLockedVsSymbol
-          : vsCards[Math.floor(Math.random() * vsCards.length)];
+        const picked = isCustomGame
+          ? (customVsSymbols.length === 1
+              ? customVsSymbols[0]
+              : customVsSymbols[Math.floor(Math.random() * customVsSymbols.length)])
+          : (isSharedGoalMode
+              ? sharedLockedVsSymbol
+              : vsCards[Math.floor(Math.random() * vsCards.length)]);
         if (!picked) return;
 
         player.board.push({
@@ -1927,8 +2185,22 @@ export function useGameEngine() {
           slotCards: createSlotCards(picked),
         });
 
-        if (!isSharedGoalMode && picked === '∏') {
+        if (!isSharedGoalMode && isCustomGame) {
+          if (picked === '∏') {
+            player.targetR = generateCompositeTargetR();
+          } else if (picked === 'int') {
+            player.targetR = generateIntegralTargetR();
+          } else if (picked === '∑') {
+            player.targetR = generateNumericTargetR();
+          } else if (picked === 'lim') {
+            player.targetR = generateLimitTargetR();
+          } else {
+            player.targetR = generateCustomTargetR();
+          }
+        } else if (!isSharedGoalMode && picked === '∏') {
           player.targetR = generateCompositeTargetR();
+        } else if (!isSharedGoalMode && picked === 'int') {
+          player.targetR = generateIntegralTargetR();
         }
       });
     }
@@ -1971,13 +2243,20 @@ export function useGameEngine() {
     setNonNumberDrawStreakByPlayer(openingNonNumberStreakByPlayerId);
     setVictoryReason(null);
     if (isSharedGoalMode) {
+      const configuredSharedTurns = isCustomGame && customDifficultyConfig
+        ? (customDifficultyConfig.sharedGoalTurns ?? getSharedGoalTotalTurns())
+        : getSharedGoalTotalTurns();
+      setSharedGoalTotalTurns(configuredSharedTurns);
+      setSharedGoalTrackerForceGreen(Boolean(isCustomGame && customDifficultyConfig?.forceGreenTracker));
       setSharedGoalTarget(initialSharedTarget);
       const initialSharedTurns = newPlayers.reduce<Record<number, number>>((acc, player) => {
-        acc[player.id] = sharedGoalTotalTurns;
+        acc[player.id] = configuredSharedTurns;
         return acc;
       }, {});
       setSharedGoalTurnsRemainingByPlayer(initialSharedTurns);
     } else {
+      setSharedGoalTotalTurns(getSharedGoalTotalTurns());
+      setSharedGoalTrackerForceGreen(false);
       setSharedGoalTarget(null);
       setSharedGoalTurnsRemainingByPlayer(null);
     }
@@ -1987,6 +2266,7 @@ export function useGameEngine() {
   };
 
   const handleStartTutorial = () => {
+    clearCustomDifficultyConfiguration();
     const tutorialGameMode: GameMode = gameMode === 'SHARED_GOAL' ? 'SHARED_GOAL' : 'CLASSIC';
     const tutorialTarget = 11;
     const tutorialSharedTurns = getSharedGoalTotalTurns();
@@ -2075,10 +2355,13 @@ export function useGameEngine() {
     setVictoryReason(null);
     setHasModifiedBoardThisTurn(false);
     setPlaysThisTurn(0);
+    setTurnPlayCounts({ value: 0, operator: 0 });
     resetGameStats(newPlayers);
     setPendingHandSwap(null);
     setNonNumberDrawStreakByPlayer({});
     setGameMode(tutorialGameMode);
+    setSharedGoalTotalTurns(tutorialSharedTurns);
+    setSharedGoalTrackerForceGreen(false);
     if (tutorialGameMode === 'SHARED_GOAL') {
       setSharedGoalTarget(`${tutorialTarget}`);
       setSharedGoalTurnsRemainingByPlayer({
@@ -2121,11 +2404,16 @@ export function useGameEngine() {
     setIsHandoff(false);
     setHasModifiedBoardThisTurn(false);
     setPlaysThisTurn(0);
+    setTurnPlayCounts({ value: 0, operator: 0 });
     setGameStats(null);
     setGameSummaryOpen(false);
     setPendingHandSwap(null);
     setNonNumberDrawStreakByPlayer({});
     setGameMode('CLASSIC');
+    setSharedGoalTotalTurns(getSharedGoalTotalTurns());
+    setSharedGoalTrackerForceGreen(false);
+    setIsCustomDifficulty(false);
+    setCustomDifficultyConfig(null);
     setSharedGoalTarget(null);
     setSharedGoalTurnsRemainingByPlayer(null);
     setGamePhase('PICK_MODE');
@@ -2147,11 +2435,16 @@ export function useGameEngine() {
     setIsHandoff(false);
     setHasModifiedBoardThisTurn(false);
     setPlaysThisTurn(0);
+    setTurnPlayCounts({ value: 0, operator: 0 });
     setGameStats(null);
     setGameSummaryOpen(false);
     setPendingHandSwap(null);
     setNonNumberDrawStreakByPlayer({});
     setGameMode('CLASSIC');
+    setSharedGoalTotalTurns(getSharedGoalTotalTurns());
+    setSharedGoalTrackerForceGreen(false);
+    setIsCustomDifficulty(false);
+    setCustomDifficultyConfig(null);
     setSharedGoalTarget(null);
     setSharedGoalTurnsRemainingByPlayer(null);
     setGamePhase('PICK_MODE');
@@ -2236,7 +2529,14 @@ export function useGameEngine() {
       deckPreviewMode, moduloMode,
       tutorialActive, tutorialStep, tutorialReferenceBoard,
       leaveGameConfirmOpen, gameSummaryOpen, gameStats,
-      sharedGoalTarget, sharedGoalTurnsRemaining, sharedGoalTotalTurns
+      sharedGoalTarget, sharedGoalTurnsRemaining, sharedGoalTotalTurns,
+      sharedGoalTrackerForceGreen,
+      isCustomDifficulty,
+      customCardSelection,
+      customCardCounts,
+      customSharedGoalTurnsEnabled,
+      customSharedGoalTurns,
+      selectedCustomCardCount
     },
     actions: {
       setGamePhase, setGameMode, setDifficulty, handleStartGame, handleStartTutorial, handleEndTurn, handleDiscard,
@@ -2248,7 +2548,15 @@ export function useGameEngine() {
       handleDeckPreviewConfirm, handleModuloSelect, setDeckPreviewMode, setModuloMode,
       setTutorialStep, resetTutorial, skipTutorial, returnToModeSelect,
       openLeaveGameConfirm, closeLeaveGameConfirm, confirmLeaveGame,
-      openGameSummary, closeGameSummary
+      openGameSummary, closeGameSummary,
+      toggleCustomCardSelection,
+      updateCustomCardCount,
+      setCustomSharedGoalTurnsEnabled,
+      setCustomSharedGoalTurns,
+      openCustomDifficultySetup,
+      closeCustomDifficultySetup,
+      confirmCustomDifficultySetup,
+      clearCustomDifficultyConfiguration
     }
   };
 }

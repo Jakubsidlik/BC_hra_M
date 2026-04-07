@@ -43,7 +43,7 @@ export function TutorialOverlay({
     },
     {
       title: 'Závorky a mocnina',
-      text: 'Do ruky dostáváš po jedné kartě za kolo. V každém kole polož 1 kartu na tabuli a klikni Ukončit tah. Postav výraz (2 + 3^2): polož 3, pak a^b a přetáhni 2 do okénka. Pokud překročíš limit 5 karet, nejdřív odhoď přebytek.'
+      text: 'Do ruky dostáváš karty po kolech. V jednom kole můžeš vyložit maximálně 1 hodnotu/proměnnou a 1 operaci. Postav výraz (2 + 3^2): polož 3, pak a^b a přetáhni 2 do okénka. Pokud překročíš limit 5 karet, nejdřív odhoď přebytek.'
     },
     {
       title: 'Ověření Q.E.D.',
@@ -57,6 +57,7 @@ export function TutorialOverlay({
 
   const content = steps[step] || steps[steps.length - 1];
   const showNext = step === 0 || step === 1;
+  const showTurnLimitCallout = step === 3;
 
   return (
     <div className="fixed left-1/2 top-16 sm:top-6 z-120 w-[82vw] sm:w-[92vw] max-w-xl -translate-x-1/2 rounded-2xl border border-white/10 bg-slate-950/85 p-3 sm:p-5 text-slate-100 shadow-2xl backdrop-blur-md">
@@ -68,6 +69,12 @@ export function TutorialOverlay({
         <div className="text-[10px] sm:text-xs text-slate-400">Krok {Math.min(step + 1, steps.length)} / {steps.length}</div>
       </div>
       <p className="mt-2 sm:mt-3 text-xs sm:text-sm text-slate-200">{content.text}</p>
+      {showTurnLimitCallout && (
+        <div className="mt-3 rounded-lg border border-emerald-400/40 bg-emerald-500/10 px-3 py-2 text-xs sm:text-sm text-emerald-100">
+          <p className="font-bold uppercase tracking-[0.15em] text-emerald-300">Pravidlo tahu</p>
+          <p className="mt-1">V jednom kole můžeš vyložit maximálně 1 kartu operace a 1 kartu hodnoty/proměnné. Dvě karty stejného typu v jednom kole vyložit nejdou.</p>
+        </div>
+      )}
       {gameMode === 'SHARED_GOAL' && sharedGoalTurnsRemaining !== null && sharedGoalTurnsRemaining !== undefined && (
         <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-500/10 px-3 py-1 text-[11px] sm:text-xs text-emerald-200">
           <span className="uppercase tracking-[0.18em]">Zbývající počet kol</span>
@@ -118,7 +125,7 @@ export function VictoryScreen({ winner, victoryReason, sharedGoalTotalTurns = 20
     }
   }
   return (
-    <div className="fixed inset-0 z-100 flex flex-col items-center justify-center px-6 text-center select-none overflow-hidden min-h-dvh" style={{ background: 'radial-gradient(circle at center 40%, #2e7a42 0%, #1a4225 50%, #141e17 90%)', backgroundColor: '#141e17', backgroundAttachment: 'fixed', backgroundSize: 'cover' }}>
+    <div className="fixed inset-0 flex flex-col items-center justify-center px-6 text-center select-none overflow-hidden min-h-dvh" style={{ zIndex: 100000, background: 'radial-gradient(circle at center 40%, #2e7a42 0%, #1a4225 50%, #141e17 90%)', backgroundColor: '#141e17', backgroundAttachment: 'fixed', backgroundSize: 'cover' }}>
       <div className="absolute inset-0 pointer-events-none overflow-hidden flex items-center justify-center opacity-30">
         <div className="absolute inset-0 flex flex-wrap content-start justify-center gap-4 -rotate-12 select-none pointer-events-none break-all text-2xl leading-relaxed tracking-widest scale-150 md:scale-125" style={{ color: '#399551', fontFamily: "'Merienda', cursive" }}>
           {'∫εℕ⊈∑∮ℤ∪λℚπℝ⊕ξ∩∏ωδ '.repeat(300)}
@@ -528,9 +535,9 @@ export function MinigameDialog({ minigameMode, onPick }: { minigameMode: Minigam
   if (!minigameMode) return null;
 
   const config: Record<string, { title: string; desc: string; color: string }> = {
-    'EFF_015': { title: "Vize budoucnosti", desc: "Získej jednu kartu. Zbytek určí příští tahy v balíčku.", color: "text-blue-400" },
-    'EFF_017': { title: "Rekurze odhazovacího pole", desc: "Vytáhni zapomenutou vědomost zpět do své ruky.", color: "text-purple-400" },
-    'EFF_028': { title: "Velikost vektoru", desc: "Vyber 1 ze 3 dobraných karet. Zbylé 2 se zahodí.", color: "text-cyan-400" }
+    'EFF_025': { title: "Vize budoucnosti", desc: "Získej jednu kartu. Zbytek určí příští tahy v balíčku.", color: "text-blue-400" },
+    'EFF_014': { title: "Rekurze odhazovacího pole", desc: "Vytáhni zapomenutou vědomost zpět do své ruky.", color: "text-purple-400" },
+    'EFF_023': { title: "Velikost vektoru", desc: "Vyber 1 ze 3 dobraných karet. Zbylé 2 se zahodí.", color: "text-cyan-400" }
   };
 
   const current = config[minigameMode.effectId] || { title: "Výběr karty", desc: "", color: "text-emerald-400" };

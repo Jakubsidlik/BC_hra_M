@@ -1,5 +1,5 @@
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { DndContext, useSensor, useSensors, MouseSensor, TouchSensor, pointerWithin, type DragStartEvent, type DragEndEvent } from '@dnd-kit/core';
 import { snapCenterToCursor } from '@dnd-kit/modifiers';
 import { Toaster } from "sonner";
@@ -23,7 +23,7 @@ import {
   LeaveGameDialog
 } from '@/components/game/GameUI';
 import { SetupScreen } from '@/components/game/SetupScreen';
-import { MainMenu, RulesScreen, DifficultySelection, GameModeSelection } from '@/components/game/StartScreens';
+import { MainMenu, RulesScreen, DifficultySelection, GameModeSelection, CustomDifficultySetupScreen } from '@/components/game/StartScreens';
 import { IntegralSetupDialog } from '@/components/game/IntegralSetupDialog';
 import { MobileGameLayout } from '@/components/game/MobileGameLayout';
 import { TabletGameLayout } from '@/components/game/TabletGameLayout';
@@ -47,11 +47,7 @@ export default function App() {
   const [tutorialOverlayHidden, setTutorialOverlayHidden] = useState(false);
   const activeModifiers = useMemo(() => (isMouseDrag ? [snapCenterToCursor] : []), [isMouseDrag]);
 
-  useEffect(() => {
-    if (!state.tutorialActive) {
-      setTutorialOverlayHidden(false);
-    }
-  }, [state.tutorialActive]);
+  const tutorialOverlayVisible = state.tutorialActive && !tutorialOverlayHidden;
 
   const tutorialToggleLabel = deviceType === 'phone'
     ? 'Instrukce'
@@ -92,10 +88,31 @@ export default function App() {
           actions.handleStartTutorial();
           return;
         }
+        if (m === 'CUSTOM') {
+          actions.openCustomDifficultySetup();
+          return;
+        }
+        actions.clearCustomDifficultyConfiguration();
         actions.setDifficulty(m);
         actions.setGamePhase('SETUP');
       }}
       onBack={() => actions.setGamePhase('PICK_MODE')}
+    />
+  );
+  if (state.gamePhase === 'CUSTOM_DIFFICULTY') return (
+    <CustomDifficultySetupScreen
+      gameMode={state.gameMode}
+      cardSelection={state.customCardSelection}
+      cardCounts={state.customCardCounts}
+      sharedGoalTurnsEnabled={state.customSharedGoalTurnsEnabled}
+      sharedGoalTurns={state.customSharedGoalTurns}
+      selectedCardCount={state.selectedCustomCardCount}
+      onToggleCard={actions.toggleCustomCardSelection}
+      onCountChange={actions.updateCustomCardCount}
+      onToggleSharedGoalTurns={actions.setCustomSharedGoalTurnsEnabled}
+      onSharedGoalTurnsChange={actions.setCustomSharedGoalTurns}
+      onConfirm={actions.confirmCustomDifficultySetup}
+      onBack={actions.closeCustomDifficultySetup}
     />
   );
   if (state.gamePhase === 'SETUP') return <SetupScreen onStart={actions.handleStartGame} onBack={() => actions.setGamePhase('MENU')} />;
@@ -151,7 +168,7 @@ export default function App() {
 
       {/* --- OVERLAY VRSTVY (Vítězství, Předání, Minihry) --- */}
       <VictoryScreen
-        winner={state.winner}
+        winner={state.gameSummaryOpen ? null : state.winner}
         victoryReason={state.victoryReason}
         sharedGoalTotalTurns={state.sharedGoalTotalTurns}
         onReset={actions.returnToModeSelect}
@@ -173,7 +190,7 @@ export default function App() {
         </button>
       )}
       <TutorialOverlay
-        active={state.tutorialActive && !tutorialOverlayHidden}
+        active={tutorialOverlayVisible}
         step={state.tutorialStep}
         onNext={() => actions.setTutorialStep(state.tutorialStep + 1)}
         gameMode={state.gameMode}

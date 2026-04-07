@@ -112,8 +112,8 @@ export const applyEffectLogic = (
     ? newPlayers.find((p: Player) => p.id === selectedTargetId)
     : newPlayers[nextPlayerIndex];
 
-  // Kontrola imunity — platí jen pro EFF_014 (derivace) a EFF_015 (integrál)
-  const immuneEffects = ['EFF_014', 'EFF_015'];
+  // Kontrola imunity — platí jen pro EFF_024 (derivace) a EFF_025 (integrál)
+  const immuneEffects = ['EFF_024', 'EFF_025'];
   if (targetPlayer && targetPlayer.id !== activePlayer.id && targetPlayer.status.immune && immuneEffects.includes(effectId)) {
     console.log(`Efekt ${effectId} zrušen: Hráč ${targetPlayer.name} má imunitu!`);
     if (activePlayer.status.notifications) {
@@ -123,7 +123,7 @@ export const applyEffectLogic = (
   }
 
   switch (effectId) {
-    // --- EFEKTY EFF_001 až EFF_025 (Podle karty.csv) ---
+    // --- EFEKTY EFF_001 až EFF_028 (Podle karty.csv) ---
 
     case "EFF_001": // Dobrání 1 karty navíc (0-9, π)
       activePlayer.status.extraDraw = (activePlayer.status.extraDraw || 0) + 1;
@@ -244,7 +244,7 @@ export const applyEffectLogic = (
       }
       break;
 
-    case "EFF_014": // d/dx: Odstranění všech konstant a proměnných z L oponenta
+    case "EFF_024": // d/dx: Odstranění všech konstant a proměnných z L oponenta
       if (targetPlayer) {
         const constantSymbols = ['π', 'e', 'x', 'y'];
         let removed = false;
@@ -270,49 +270,49 @@ export const applyEffectLogic = (
       }
       break;
 
-    case "EFF_015": // int: Okamžité nahrazení cíle R libovolného hráče novým losem
+    case "EFF_025": // int: Okamžité nahrazení cíle R libovolného hráče novým losem
       if (targetPlayer) {
         targetPlayer.targetR = generatePersonalTargetR(currentDifficulty);
         targetPlayer.status.notifications.push(`⚠️ Hráč ${activePlayer.name} ti kompletně změnil cíl R na: ${targetPlayer.targetR}`);
       }
       break;
 
-    case "EFF_016": // ∑: Žádný hráč nemůže celé kolo hrát operace (včetně aktivního hráče)
+    case "EFF_026": // ∑: Žádný hráč nemůže celé kolo hrát operace (včetně aktivního hráče)
       newPlayers.forEach((p: Player) => {
         p.status.operationLock = true;
       });
       newPlayers[currentPlayerIndex].status.notifications.push(`🔐 Zákaz operací pro všechny na příští kolo!`);
       break;
 
-    case "EFF_017": // log: Můžeš hrát libovolný počet karet
+    case "EFF_014": // log: Můžeš hrát libovolný počet karet
       activePlayer.status.infinitePlays = true;
       break;
 
-    case "EFF_018": // sin: Všichni si předají karty po směru (clockwise)
+    case "EFF_015": // sin: Všichni si předají karty po směru (clockwise)
       return {
         players: newPlayers,
         metadata: { handSwapDirection: 1 }
       };
 
-    case "EFF_019": // cos: Všichni si předají karty proti směru (counter-clockwise)
+    case "EFF_016": // cos: Všichni si předají karty proti směru (counter-clockwise)
       return {
         players: newPlayers,
         metadata: { handSwapDirection: -1 }
       };
 
-    case "EFF_020": // tg: Všichni si předají karty po směru
+    case "EFF_017": // tg: Všichni si předají karty po směru
       return {
         players: newPlayers,
         metadata: { handSwapDirection: 1 }
       };
 
-    case "EFF_021": // cotg: Všichni si předají karty proti směru
+    case "EFF_018": // cotg: Všichni si předají karty proti směru
       return {
         players: newPlayers,
         metadata: { handSwapDirection: -1 }
       };
 
-    case "EFF_022": // nCk: Prohození cifer v R cílového oponenta
+    case "EFF_019": // nCk: Prohození cifer v R cílového oponenta
       if (targetPlayer && typeof targetPlayer.targetR === 'number') {
         const digits = targetPlayer.targetR.toString().split('');
         digits.reverse();
@@ -321,14 +321,14 @@ export const applyEffectLogic = (
       }
       break;
 
-    case "EFF_023": // ∏: Žádný hráč nemůže celé kolo hrát čísla (včetně aktivního hráče)
+    case "EFF_027": // ∏: Žádný hráč nemůže celé kolo hrát čísla (včetně aktivního hráče)
       newPlayers.forEach((p: Player) => {
         p.status.numberLock = true;
       });
       newPlayers[currentPlayerIndex].status.notifications.push(` Zákaz čísel pro všechny na příští kolo!`);
       break;
 
-    case "EFF_024": // lim: Zrušení všech aktivních efektů u všech hráčů
+    case "EFF_020": // lim: Zrušení všech aktivních efektů u všech hráčů
       newPlayers.forEach((p: Player) => {
         p.status.frozen = false;
         p.status.operationLock = false;
@@ -351,7 +351,7 @@ export const applyEffectLogic = (
       });
       break;
 
-    case "EFF_025": // det: Změní pořadí tahů na opačné
+    case "EFF_028": // det: Změní pořadí tahů na opačné
       newPlayers.reverse();
       newPlayers.forEach(p => {
         if (p.id !== activePlayer.id) {
@@ -363,7 +363,7 @@ export const applyEffectLogic = (
         metadata: { turnOrderReversed: true }
       };
 
-    case "EFF_026": // ztráta karty pro všechny soupeře (goniometrické funkce)
+    case "EFF_021": // ztráta karty pro všechny soupeře (goniometrické funkce)
       newPlayers.forEach((p: Player) => {
         if (p.id !== activePlayer.id) {
           p.status.drawReduction = (p.status.drawReduction || 0) + 1;
@@ -372,12 +372,12 @@ export const applyEffectLogic = (
       });
       break;
 
-    case "EFF_027": // skalar: v příštím tahu může zahrát jakoukoliv kartu jako 0
+    case "EFF_022": // skalar: v příštím tahu může zahrát jakoukoliv kartu jako 0
       activePlayer.status.playAnyAsZeroNextTurn = true;
       activePlayer.status.notifications.push('🔵 V příštím tahu můžeš zahrát libovolnou kartu jako 0.');
       break;
 
-    case "EFF_028": // vektor: UI výběr 1 ze 3 řeší useGameEngine (minihra)
+    case "EFF_023": // vektor: UI výběr 1 ze 3 řeší useGameEngine (minihra)
       break;
 
     default:
