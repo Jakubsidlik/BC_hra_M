@@ -14,7 +14,7 @@ export function TutorialOverlay({
   onNext,
   gameMode = 'CLASSIC',
   sharedGoalTurnsRemaining,
-  sharedGoalTotalTurns = 30,
+  sharedGoalTotalTurns = 20,
 }: {
   active: boolean;
   step: number;
@@ -101,7 +101,7 @@ type VictoryReason =
   | { type: 'QED' }
   | { type: 'SHARED_GOAL_TIMEOUT'; target: string; bestDistance: number | null; isDraw: boolean };
 
-export function VictoryScreen({ winner, victoryReason, sharedGoalTotalTurns = 30, onReset, onShowDetails }: { winner: Player[] | null, victoryReason?: VictoryReason | null, sharedGoalTotalTurns?: number, onReset: () => void, onShowDetails: () => void }) {
+export function VictoryScreen({ winner, victoryReason, sharedGoalTotalTurns = 20, onReset, onShowDetails }: { winner: Player[] | null, victoryReason?: VictoryReason | null, sharedGoalTotalTurns?: number, onReset: () => void, onShowDetails: () => void }) {
   if (!winner || winner.length === 0) return null;
   const isDraw = winner.length > 1;
   const winnerNames = winner.map(player => player.name).join(', ');
@@ -460,7 +460,7 @@ export function EffectDialog({
                   }}
                 >
                   <span className="text-white font-bold text-base sm:text-lg" style={{ fontFamily: "'Merienda', cursive" }}>
-                    Položit na plochu L
+                    Vložit bez efektu
                   </span>
                 </button>
               </div>

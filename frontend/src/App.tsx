@@ -1,5 +1,5 @@
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { DndContext, useSensor, useSensors, MouseSensor, TouchSensor, pointerWithin, type DragStartEvent, type DragEndEvent } from '@dnd-kit/core';
 import { snapCenterToCursor } from '@dnd-kit/modifiers';
 import { Toaster } from "sonner";
@@ -8,10 +8,6 @@ import { Toaster } from "sonner";
 import { useGameEngine } from '@/hooks/useGameEngine';
 import { cardsDatabase } from '@/data/cardsDB';
 import { useDeviceType } from '@/hooks/useDeviceType';
-import { preloadCardImages } from '@/lib/preloadCardImages';
-
-// Preload all card SVG images immediately on app startup
-preloadCardImages();
 
 // Importy Komponent
 import { 
@@ -32,6 +28,7 @@ import { IntegralSetupDialog } from '@/components/game/IntegralSetupDialog';
 import { MobileGameLayout } from '@/components/game/MobileGameLayout';
 import { TabletGameLayout } from '@/components/game/TabletGameLayout';
 import { DesktopGameLayout } from '@/components/game/DesktopGameLayout';
+import { AppIcon } from '@/components/ui/AppIcon';
 
 export default function App() {
   // 1. NAČTENÍ LOGIKY Z CUSTOM HOOKU
@@ -43,7 +40,18 @@ export default function App() {
   const touchSensor = useSensor(TouchSensor, { activationConstraint: { delay: 120, tolerance: 8 } });
   const sensors = useSensors(mouseSensor, touchSensor);
   const [isMouseDrag, setIsMouseDrag] = useState(false);
+  const [tutorialOverlayHidden, setTutorialOverlayHidden] = useState(false);
   const activeModifiers = useMemo(() => (isMouseDrag ? [snapCenterToCursor] : []), [isMouseDrag]);
+
+  useEffect(() => {
+    if (!state.tutorialActive) {
+      setTutorialOverlayHidden(false);
+    }
+  }, [state.tutorialActive]);
+
+  const tutorialToggleLabel = deviceType === 'phone'
+    ? 'Instrukce'
+    : (tutorialOverlayHidden ? 'Zobrazit instrukce' : 'Skrýt instrukce');
 
   const handleDragStart = (event: DragStartEvent) => {
     const activator = event.activatorEvent;
@@ -150,8 +158,18 @@ export default function App() {
         stats={state.gameStats}
         onBack={actions.closeGameSummary}
       />
+      {state.tutorialActive && (
+        <button
+          type="button"
+          onClick={() => setTutorialOverlayHidden(prev => !prev)}
+          className="fixed left-1/2 top-4 z-130 -translate-x-1/2 inline-flex items-center gap-2 rounded-xl border border-white/20 bg-slate-950/85 px-3 py-2 text-[10px] sm:text-xs font-black uppercase tracking-[0.14em] text-slate-100 shadow-xl backdrop-blur-md transition-colors hover:bg-slate-900/90"
+        >
+          <AppIcon name="search" className="text-sm sm:text-base" />
+          <span>{tutorialToggleLabel}</span>
+        </button>
+      )}
       <TutorialOverlay
-        active={state.tutorialActive}
+        active={state.tutorialActive && !tutorialOverlayHidden}
         step={state.tutorialStep}
         onNext={() => actions.setTutorialStep(state.tutorialStep + 1)}
         gameMode={state.gameMode}

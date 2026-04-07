@@ -1,7 +1,8 @@
 /* eslint-disable react-refresh/only-export-components */
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { preloadCardImages } from '@/lib/preloadCardImages';
 
 // --- DEFINICE 8 BAREVNÝCH TÉMAT STOLU (Syté a jasné barvy) ---
 export const AVAILABLE_THEMES = [
@@ -22,10 +23,15 @@ interface SetupScreenProps {
 
 export function SetupScreen({ onStart, onBack }: SetupScreenProps) {
   const [playerCount, setPlayerCount] = useState(2);
+  const [isPreloadingCards, setIsPreloadingCards] = useState(false);
   const [setupPlayers, setSetupPlayers] = useState([
     { name: 'Matematik 1', theme: 'bg-violet-600/60' }, // Výchozí fialová
     { name: 'Matematik 2', theme: 'bg-emerald-600/60' }
   ]);
+
+  useEffect(() => {
+    void preloadCardImages();
+  }, []);
 
   const handleCountChange = (count: number) => {
     setPlayerCount(count);
@@ -48,11 +54,16 @@ export function SetupScreen({ onStart, onBack }: SetupScreenProps) {
     });
   };
 
-  const handleStart = () => {
+  const handleStart = async () => {
     if (setupPlayers.some(p => !p.name.trim())) {
       toast.error("Všichni hráči musí mít jméno!");
       return;
     }
+
+    setIsPreloadingCards(true);
+    await preloadCardImages();
+    setIsPreloadingCards(false);
+
     onStart(setupPlayers);
   };
 
@@ -98,21 +109,21 @@ export function SetupScreen({ onStart, onBack }: SetupScreenProps) {
               key={index} 
               className={`p-6 rounded-2rem border-2 transition-colors duration-500 flex flex-col gap-4 bg-black/40 border-white/10`}
             >
-              <div className="flex justify-between items-center">
+              <div className="flex items-center">
                 <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Žák č. {index + 1}</label>
-                <div className={`w-3 h-3 rounded-full animate-pulse ${player.theme.split('/')[0]}`} />
               </div>
 
               <input 
                 type="text" 
                 value={player.name}
                 onChange={(e) => handleUpdatePlayer(index, 'name', e.target.value)}
-                className="w-full bg-black/20 border-b-2 border-white/20 rounded-none px-0 py-2 text-white font-chalk text-2xl focus:outline-none focus:border-emerald-500 transition-colors placeholder:text-white/10"
+                className="w-full bg-black/20 border-b-2 border-white/20 rounded-none px-0 py-2 text-white text-2xl focus:outline-none focus:border-emerald-500 transition-colors placeholder:text-white/10"
+                style={{ fontFamily: 'Merienda, cursive' }}
                 placeholder="Zadejte jméno..."
               />
 
               <div className="mt-2">
-                <label className="block text-[10px] font-bold uppercase tracking-widest mb-3">Barva osobního prostoru L</label>
+                <label className="block text-[10px] font-bold uppercase tracking-widest mb-3">Barva tabule</label>
                 <div className="flex flex-wrap gap-3">
                   {AVAILABLE_THEMES.map(theme => {
                     const isSelected = player.theme === theme.id;
@@ -141,8 +152,9 @@ export function SetupScreen({ onStart, onBack }: SetupScreenProps) {
             size="lg" 
             className="bg-emerald-600 hover:bg-emerald-500 text-white font-black text-3xl px-16 py-10 rounded-2rem shadow-[0_0_40px_rgba(16,185,129,0.25)] transition-all hover:scale-105 active:scale-95 border-4 border-emerald-400/50" 
             onClick={handleStart}
+            disabled={isPreloadingCards}
           >
-            ZAČÍT
+            {isPreloadingCards ? 'NAČÍTÁM KARTY...' : 'ZAČÍT'}
           </Button>
           <Button
             variant="ghost"

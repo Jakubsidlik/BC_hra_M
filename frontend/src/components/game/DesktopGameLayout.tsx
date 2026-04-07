@@ -656,7 +656,7 @@ function TutorialReferenceRow({ cards, palette }: { cards: GameCard[]; palette: 
 }
 
 export function DesktopGameLayout({ currentPlayer, state, actions, tutorialReferenceBoard, showEffectDebug, debugEffectRows = [] }: DesktopGameLayoutProps) {
-  const { deck, discardPile, isDiscarding, hasModifiedBoardThisTurn, bracketMode, tutorialActive, gameMode, sharedGoalTurnsRemaining, sharedGoalTotalTurns } = state;
+  const { discardPile, isDiscarding, hasModifiedBoardThisTurn, bracketMode, tutorialActive, gameMode, sharedGoalTurnsRemaining, sharedGoalTotalTurns } = state;
   const palette = getDesktopPalette(currentPlayer.theme);
   const canVerify = true;
   const integralVar = findIntegralVariable(currentPlayer.board);
@@ -681,9 +681,26 @@ export function DesktopGameLayout({ currentPlayer, state, actions, tutorialRefer
 
   const handCards = currentPlayer.hand;
   const showSharedGoalTracker = gameMode === 'SHARED_GOAL' && sharedGoalTurnsRemaining !== null;
-  const totalSharedTurns = sharedGoalTotalTurns ?? 30;
+  const totalSharedTurns = sharedGoalTotalTurns ?? 20;
+  const sharedGoalTurnsLeft = showSharedGoalTracker ? Math.max(0, sharedGoalTurnsRemaining ?? 0) : 0;
+  const sharedGoalProgressBase = sharedGoalTurnsLeft === 0 ? 1 : sharedGoalTurnsLeft;
+  const sharedGoalBarColorClass = sharedGoalTurnsLeft <= 5
+    ? 'bg-red-500'
+    : sharedGoalTurnsLeft <= 10
+      ? 'bg-orange-500'
+      : sharedGoalTurnsLeft <= 15
+        ? 'bg-yellow-400'
+        : 'bg-emerald-500';
+  const sharedGoalMetaTextColorClass = sharedGoalTurnsLeft <= 5
+    ? 'text-red-200'
+    : sharedGoalTurnsLeft <= 10
+      ? 'text-orange-200'
+      : sharedGoalTurnsLeft <= 15
+        ? 'text-yellow-200'
+        : 'text-emerald-200';
+  const sharedGoalCounterText = sharedGoalTurnsLeft === 0 ? 'Poslední kolo' : `${sharedGoalTurnsLeft}/${totalSharedTurns}`;
   const sharedGoalProgress = showSharedGoalTracker
-    ? Math.max(0, Math.min(100, (sharedGoalTurnsRemaining! / totalSharedTurns) * 100))
+    ? Math.max(0, Math.min(100, (sharedGoalProgressBase / Math.max(totalSharedTurns, 1)) * 100))
     : 0;
   const sharedGoalBoardBottomInset = showSharedGoalTracker ? 40 : 0;
   const sharedGoalBelowBoardLift = showSharedGoalTracker ? 40 : 0;
@@ -779,13 +796,13 @@ export function DesktopGameLayout({ currentPlayer, state, actions, tutorialRefer
       <main className="flex-1 flex flex-col mx-auto w-full px-6 max-w-[90vw] pt-0 gap-4">
         {showSharedGoalTracker && (
           <section className="w-full rounded-xl border border-white/15 bg-black/25 px-4 py-3">
-            <div className="mb-2 flex items-center justify-between text-xs uppercase tracking-[0.2em] text-emerald-200">
-              <span>Společný cíl: tahy aktuálního hráče</span>
-              <span>Zbývá {sharedGoalTurnsRemaining} / {totalSharedTurns}</span>
+            <div className={`mb-2 flex items-center justify-between text-xs uppercase tracking-[0.2em] ${sharedGoalMetaTextColorClass}`}>
+              <span>Společný cíl: Počet kol</span>
+              <span>{sharedGoalCounterText}</span>
             </div>
             <div className="h-3 w-full overflow-hidden rounded-full bg-white/10">
               <div
-                className="h-full rounded-full bg-emerald-500 transition-all duration-500"
+                className={`h-full rounded-full transition-all duration-500 ${sharedGoalBarColorClass}`}
                 style={{ width: `${sharedGoalProgress}%` }}
               />
             </div>
@@ -813,11 +830,16 @@ export function DesktopGameLayout({ currentPlayer, state, actions, tutorialRefer
                 backgroundSize: '30px 30px',
               }}
             >
-            <div
-              className="absolute inset-0 opacity-20 pointer-events-none"
-              style={{ background: 'radial-gradient(circle at center, rgba(200,200,200,0.15) 0%, transparent 70%)' }}
-            />
-
+            {currentPlayer.board.length === 0 && (
+              <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none">
+                <span
+                  className="uppercase tracking-[0.25em] text-2xl pointer-events-none select-none italic"
+                  style={{ color: 'rgba(255,255,255,0.10)' }}
+                >
+                  Tabule
+                </span>
+              </div>
+            )}
             {/* Board cards */}
             <div className="z-10 flex flex-col items-center gap-3 w-full" style={{ minHeight: '6rem' }}>
               {tutorialReferenceBoard && tutorialReferenceBoard.length > 0 && (
@@ -826,14 +848,7 @@ export function DesktopGameLayout({ currentPlayer, state, actions, tutorialRefer
                 </div>
               )}
               <div className={`flex items-stretch gap-0 flex-wrap w-full ${(hasVsLockedCard || showDxDy) ? 'justify-start' : 'justify-center'}`}>
-                {currentPlayer.board.length === 0 ? (
-                  <span
-                    className="uppercase tracking-[0.25em] text-2xl pointer-events-none select-none italic self-center"
-                    style={{ color: 'rgba(255,255,255,0.10)' }}
-                  >
-                    Tabule
-                  </span>
-                ) : (
+                {currentPlayer.board.length > 0 ? (
                   <>
                     <div className="flex items-stretch gap-0 flex-wrap">
                       {hasVsLockedCard && (
@@ -911,7 +926,7 @@ export function DesktopGameLayout({ currentPlayer, state, actions, tutorialRefer
                       </div>
                     )}
                   </>
-                )}
+                ) : null}
               </div>
             </div>
 
@@ -1006,9 +1021,6 @@ export function DesktopGameLayout({ currentPlayer, state, actions, tutorialRefer
                   className="w-full h-full object-cover"
                   draggable={false}
                 />
-                <span className="absolute bottom-2 rounded-full border border-white/30 bg-slate-900/90 px-2 py-0.5 text-[11px] uppercase tracking-tighter text-white font-bold">
-                  Přidat ({deck.length})
-                </span>
               </div>
             </div>
           </div>

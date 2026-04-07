@@ -146,20 +146,20 @@ export function GameModeSelection({ onSelect, onBack }: { onSelect: (mode: 'CLAS
 
       <div className="relative z-10 flex flex-col items-center w-full max-w-4xl">
         <h2 className="text-5xl md:text-7xl font-black italic text-slate-100 mb-12 opacity-95 text-center">
-          Vyber herní režim...
+          Vyber herní režim
         </h2>
 
         <div className="flex flex-col items-center gap-6 w-full max-w-3xl mb-16 md:gap-8">
           <Button
             size="lg"
-            className="w-[55%] mx-auto bg-emerald-600/20 hover:bg-emerald-600/40 text-emerald-100 font-black text-2xl py-8 rounded-3xl border-4 border-emerald-400/50 hover:border-emerald-400 transition-all shadow-xl md:w-full md:text-4xl md:py-10"
+            className="w-[68%] mx-auto bg-emerald-600/20 hover:bg-emerald-600/40 text-emerald-100 font-black text-2xl py-9 rounded-3xl border-4 border-emerald-400/50 hover:border-emerald-400 transition-all shadow-xl md:w-full md:text-4xl md:py-10"
             onClick={() => onSelect('CLASSIC')}
           >
             KLASICKÝ
           </Button>
           <Button
             size="lg"
-            className="w-[55%] mx-auto bg-emerald-600/20 hover:bg-emerald-600/40 text-emerald-100 font-black text-2xl py-8 rounded-3xl border-4 border-emerald-400/50 hover:border-emerald-400 transition-all shadow-xl md:w-full md:text-4xl md:py-10"
+            className="w-[68%] mx-auto bg-emerald-600/20 hover:bg-emerald-600/40 text-emerald-100 font-black text-2xl py-9 rounded-3xl border-4 border-emerald-400/50 hover:border-emerald-400 transition-all shadow-xl md:w-full md:text-4xl md:py-10"
             onClick={() => onSelect('SHARED_GOAL')}
           >
             SPOLEČNÝ CÍL
@@ -189,7 +189,7 @@ export function DifficultySelection({ onSelect, onBack }: { onSelect: (mode: 'TU
 
       <div className="relative z-10 flex flex-col items-center w-full max-w-4xl">
         <h2 className="text-5xl md:text-7xl font-black italic text-slate-100 mb-12 opacity-95 text-center">
-          Vyber režim...
+          Vyber obtížnost
         </h2>
 
         <div className="flex flex-col items-center gap-6 w-full max-w-3xl mb-16 md:gap-8">
