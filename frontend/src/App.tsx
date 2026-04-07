@@ -7,7 +7,7 @@ import { Toaster } from "sonner";
 // Importy Hooku a dat
 import { useGameEngine } from '@/hooks/useGameEngine';
 import { cardsDatabase } from '@/data/cardsDB';
-import { isIOSDevice, useDeviceType } from '@/hooks/useDeviceType';
+import { useDeviceType } from '@/hooks/useDeviceType';
 
 // Importy Komponent
 import { 
@@ -34,13 +34,13 @@ export default function App() {
   // 1. NAČTENÍ LOGIKY Z CUSTOM HOOKU
   const { state, actions } = useGameEngine();
   const deviceType = useDeviceType();
-  const isIOS = isIOSDevice();
+  const isIOS = deviceType === 'phone';
 
   // 2. SENZORY PRO DOTYK A MYŠ (Optimalizace pro mobil i PC)
   const mouseSensor = useSensor(MouseSensor, { activationConstraint: { distance: 6 } });
   const touchSensor = useSensor(
     TouchSensor,
-    { activationConstraint: isIOS ? { delay: 0, tolerance: 2 } : { delay: 120, tolerance: 8 } },
+    { activationConstraint: { delay: 0, tolerance: 2 } },
   );
   const sensors = useSensors(mouseSensor, touchSensor);
   const [isMouseDrag, setIsMouseDrag] = useState(false);
