@@ -116,6 +116,10 @@ export function MainMenu({ onPlay, onRules }: { onPlay: () => void, onRules: () 
         </div>
       </div>
 
+      <div className="fixed bottom-6 left-6 z-20 text-slate-400 font-semibold text-sm leading-none">
+        VERZE: 4.9.0
+      </div>
+
       {/* Tlačítko Zástupce vpravo dole */}
       <div className="fixed bottom-6 right-6 z-20">
         <Button
