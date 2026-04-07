@@ -781,7 +781,7 @@ function TutorialReferenceRow({ cards, palette }: { cards: GameCard[]; palette: 
 }
 
 export function MobileGameLayout({ currentPlayer, state, actions, tutorialReferenceBoard, showEffectDebug, debugEffectRows = [] }: MobileGameLayoutProps) {
-  const { deck, discardPile, isDiscarding, hasModifiedBoardThisTurn, bracketMode, tutorialActive, gameMode, sharedGoalTurnsRemaining, sharedGoalTotalTurns } = state;
+  const { discardPile, isDiscarding, hasModifiedBoardThisTurn, bracketMode, tutorialActive, gameMode, sharedGoalTurnsRemaining, sharedGoalTotalTurns } = state;
   const palette = getPalette(currentPlayer.theme);
   const canVerify = true;
   const integralVar = findIntegralVariable(currentPlayer.board);
@@ -806,9 +806,26 @@ export function MobileGameLayout({ currentPlayer, state, actions, tutorialRefere
 
   const handCards = currentPlayer.hand;
   const showSharedGoalTracker = gameMode === 'SHARED_GOAL' && sharedGoalTurnsRemaining !== null;
-  const totalSharedTurns = sharedGoalTotalTurns ?? 30;
+  const totalSharedTurns = sharedGoalTotalTurns ?? 20;
+  const sharedGoalTurnsLeft = showSharedGoalTracker ? Math.max(0, sharedGoalTurnsRemaining ?? 0) : 0;
+  const sharedGoalProgressBase = sharedGoalTurnsLeft === 0 ? 1 : sharedGoalTurnsLeft;
+  const sharedGoalBarColorClass = sharedGoalTurnsLeft <= 5
+    ? 'bg-red-500'
+    : sharedGoalTurnsLeft <= 10
+      ? 'bg-orange-500'
+      : sharedGoalTurnsLeft <= 15
+        ? 'bg-yellow-400'
+        : 'bg-emerald-500';
+  const sharedGoalMetaTextColorClass = sharedGoalTurnsLeft <= 5
+    ? 'text-red-200'
+    : sharedGoalTurnsLeft <= 10
+      ? 'text-orange-200'
+      : sharedGoalTurnsLeft <= 15
+        ? 'text-yellow-200'
+        : 'text-emerald-200';
+  const sharedGoalCounterText = sharedGoalTurnsLeft === 0 ? 'Poslední kolo' : `${sharedGoalTurnsLeft}/${totalSharedTurns}`;
   const sharedGoalProgress = showSharedGoalTracker
-    ? Math.max(0, Math.min(100, (sharedGoalTurnsRemaining! / totalSharedTurns) * 100))
+    ? Math.max(0, Math.min(100, (sharedGoalProgressBase / Math.max(totalSharedTurns, 1)) * 100))
     : 0;
   const sharedGoalBoardBottomInset = showSharedGoalTracker ? 30 : 0;
   const sharedGoalBelowBoardLift = showSharedGoalTracker ? 20 : 0;
@@ -900,13 +917,13 @@ export function MobileGameLayout({ currentPlayer, state, actions, tutorialRefere
       <main className="flex-1 flex flex-col mx-auto w-full p-2 pb-16 max-w-4xl gap-2">
         {showSharedGoalTracker && (
           <section className="w-full rounded-xl border border-white/15 bg-black/25 px-3 py-2">
-            <div className="mb-2 flex items-center justify-between text-[10px] uppercase tracking-[0.15em] text-emerald-200">
-              <span>Společný cíl: tahy hráče</span>
-              <span>{sharedGoalTurnsRemaining} / {totalSharedTurns} tahů</span>
+            <div className={`mb-2 flex items-center justify-between text-[10px] uppercase tracking-[0.15em] ${sharedGoalMetaTextColorClass}`}>
+              <span>Společný cíl: Počet kol</span>
+              <span>{sharedGoalCounterText}</span>
             </div>
             <div className="h-2.5 w-full overflow-hidden rounded-full bg-white/10">
               <div
-                className="h-full rounded-full bg-emerald-500 transition-all duration-500"
+                className={`h-full rounded-full transition-all duration-500 ${sharedGoalBarColorClass}`}
                 style={{ width: `${sharedGoalProgress}%` }}
               />
             </div>
@@ -934,12 +951,16 @@ export function MobileGameLayout({ currentPlayer, state, actions, tutorialRefere
                 backgroundSize: '30px 30px',
               }}
             >
-            {/* Overlay */}
-            <div
-              className="absolute inset-0 opacity-20 pointer-events-none"
-              style={{ background: 'radial-gradient(circle at center, rgba(200,200,200,0.15) 0%, transparent 70%)' }}
-            />
-
+            {currentPlayer.board.length === 0 && (
+              <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none">
+                <span
+                  className="uppercase tracking-[0.2em] text-xl pointer-events-none select-none italic"
+                  style={{ color: 'rgba(255,255,255,0.12)' }}
+                >
+                  Tabule
+                </span>
+              </div>
+            )}
             {/* Board cards */}
             <div className="z-10 flex flex-col items-center gap-2 w-full" style={{ minHeight: '5rem', paddingBottom: '2.5rem' }}>
               {tutorialReferenceBoard && tutorialReferenceBoard.length > 0 && (
@@ -948,14 +969,7 @@ export function MobileGameLayout({ currentPlayer, state, actions, tutorialRefere
                 </div>
               )}
               <div className={`flex items-stretch gap-0 flex-wrap w-full ${(hasVsLockedCard || showDxDy) ? 'justify-start' : 'justify-center'}`}>
-                {currentPlayer.board.length === 0 ? (
-                  <span
-                    className="uppercase tracking-[0.2em] text-xl pointer-events-none select-none italic self-center"
-                    style={{ color: 'rgba(255,255,255,0.12)' }}
-                  >
-                    Tabule
-                  </span>
-                ) : (
+                {currentPlayer.board.length > 0 ? (
                   <>
                     <div className="flex items-stretch gap-0 flex-wrap">
                       {hasVsLockedCard && (
@@ -1035,7 +1049,7 @@ export function MobileGameLayout({ currentPlayer, state, actions, tutorialRefere
                       </div>
                     )}
                   </>
-                )}
+                ) : null}
               </div>
             </div>
 
@@ -1125,9 +1139,6 @@ export function MobileGameLayout({ currentPlayer, state, actions, tutorialRefere
                 className="w-full h-full object-cover"
                 draggable={false}
               />
-              <span className="absolute bottom-1.5 rounded-full border border-white/30 bg-slate-900/90 px-1.5 py-0.5 text-[10px] uppercase tracking-tighter text-white font-bold">
-                Přidat ({deck.length})
-              </span>
             </div>
           </div>
         </section>

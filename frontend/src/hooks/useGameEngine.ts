@@ -56,7 +56,7 @@ const ANTI_STREAK_THRESHOLD = 3;
 const ANTI_STREAK_BASE_BOOST = 0.08;
 const ANTI_STREAK_STEP_BOOST = 0.02;
 const ANTI_STREAK_MAX_BOOST = 0.15;
-const getSharedGoalTotalTurns = (difficulty: DifficultyMode): number => (difficulty === 'ZŠ' ? 20 : 30);
+const getSharedGoalTotalTurns = (): number => 20;
 
 const decrementSharedGoalTurn = (turnMap: Record<number, number>, playerId: number, totalTurns: number): Record<number, number> => {
   const currentRemaining = turnMap[playerId] ?? totalTurns;
@@ -182,7 +182,7 @@ export function useGameEngine() {
   const [gamePhase, setGamePhase] = useState<'MENU' | 'RULES' | 'PICK_MODE' | 'PICK_DIFFICULTY' | 'SETUP' | 'PLAYING'>('MENU');
   const [gameMode, setGameMode] = useState<GameMode>('CLASSIC');
   const [difficulty, setDifficulty] = useState<DifficultyMode>('ZŠ');
-  const sharedGoalTotalTurns = getSharedGoalTotalTurns(difficulty);
+  const sharedGoalTotalTurns = getSharedGoalTotalTurns();
   const [players, setPlayers] = useState<Player[]>([]);
   const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
   const [deck, setDeck] = useState<GameCard[]>([]);
@@ -1989,7 +1989,7 @@ export function useGameEngine() {
   const handleStartTutorial = () => {
     const tutorialGameMode: GameMode = gameMode === 'SHARED_GOAL' ? 'SHARED_GOAL' : 'CLASSIC';
     const tutorialTarget = 11;
-    const tutorialSharedTurns = getSharedGoalTotalTurns('ZŠ');
+    const tutorialSharedTurns = getSharedGoalTotalTurns();
 
     const makeCard = (symbol: string, prefix: string) => ({
       id: `${prefix}-${symbol}-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,

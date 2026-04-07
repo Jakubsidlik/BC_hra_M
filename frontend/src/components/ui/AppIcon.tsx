@@ -1,5 +1,5 @@
 import type { LucideProps } from 'lucide-react';
-import { BookOpen, Eraser, Hourglass, Menu, Play, SkipForward, Trash2, X } from 'lucide-react';
+import { BookOpen, Eraser, Hourglass, Menu, Play, Search, SkipForward, Trash2, X } from 'lucide-react';
 import type { ComponentType } from 'react';
 
 type AppIconName =
@@ -10,7 +10,8 @@ type AppIconName =
   | 'hourglass_empty'
   | 'play_arrow'
   | 'menu_book'
-  | 'close';
+  | 'close'
+  | 'search';
 
 const ICON_MAP: Record<AppIconName, ComponentType<LucideProps>> = {
   delete: Trash2,
@@ -21,6 +22,7 @@ const ICON_MAP: Record<AppIconName, ComponentType<LucideProps>> = {
   play_arrow: Play,
   menu_book: BookOpen,
   close: X,
+  search: Search,
 };
 
 interface AppIconProps {
