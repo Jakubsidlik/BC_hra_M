@@ -1,8 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { preloadCardImages } from '@/lib/preloadCardImages';
 
 // --- DEFINICE 8 BAREVNÝCH TÉMAT STOLU (Syté a jasné barvy) ---
 export const AVAILABLE_THEMES = [
@@ -23,15 +22,10 @@ interface SetupScreenProps {
 
 export function SetupScreen({ onStart, onBack }: SetupScreenProps) {
   const [playerCount, setPlayerCount] = useState(2);
-  const [isPreloadingCards, setIsPreloadingCards] = useState(false);
   const [setupPlayers, setSetupPlayers] = useState([
     { name: 'Matematik 1', theme: 'bg-violet-600/60' }, // Výchozí fialová
     { name: 'Matematik 2', theme: 'bg-emerald-600/60' }
   ]);
-
-  useEffect(() => {
-    void preloadCardImages();
-  }, []);
 
   const handleCountChange = (count: number) => {
     setPlayerCount(count);
@@ -54,15 +48,11 @@ export function SetupScreen({ onStart, onBack }: SetupScreenProps) {
     });
   };
 
-  const handleStart = async () => {
+  const handleStart = () => {
     if (setupPlayers.some(p => !p.name.trim())) {
       toast.error("Všichni hráči musí mít jméno!");
       return;
     }
-
-    setIsPreloadingCards(true);
-    await preloadCardImages();
-    setIsPreloadingCards(false);
 
     onStart(setupPlayers);
   };
@@ -152,9 +142,8 @@ export function SetupScreen({ onStart, onBack }: SetupScreenProps) {
             size="lg" 
             className="bg-emerald-600 hover:bg-emerald-500 text-white font-black text-3xl px-16 py-10 rounded-2rem shadow-[0_0_40px_rgba(16,185,129,0.25)] transition-all hover:scale-105 active:scale-95 border-4 border-emerald-400/50" 
             onClick={handleStart}
-            disabled={isPreloadingCards}
           >
-            {isPreloadingCards ? 'NAČÍTÁM KARTY...' : 'ZAČÍT'}
+            ZAČÍT
           </Button>
           <Button
             variant="ghost"
