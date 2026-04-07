@@ -117,7 +117,7 @@ export function MainMenu({ onPlay, onRules }: { onPlay: () => void, onRules: () 
       </div>
 
       <div className="fixed bottom-6 left-6 z-20 text-slate-400 font-semibold text-sm leading-none">
-        VERZE: 5.0.0
+        VERZE: 5.0.4
       </div>
 
       {/* Tlačítko Zástupce vpravo dole */}
@@ -227,7 +227,7 @@ export function DifficultySelection({ onSelect, onBack }: { onSelect: (mode: 'TU
           </Button>
           <Button
             size="lg"
-            className="w-[45%] mx-auto bg-emerald-600/20 hover:bg-emerald-600/40 text-emerald-100 font-black text-[2.15rem] py-14 rounded-3xl border-4 border-emerald-400/50 hover:border-emerald-400 transition-all shadow-xl md:hidden"
+            className="w-[45%] mx-auto bg-emerald-600/20 hover:bg-emerald-600/40 text-emerald-100 font-black text-2xl py-14 rounded-3xl border-4 border-emerald-400/50 hover:border-emerald-400 transition-all shadow-xl md:hidden"
             onClick={() => onSelect('CUSTOM')}
           >
             VLASTNÍ
