@@ -641,6 +641,7 @@ interface BracketCardProps {
 }
 
 function BracketCard({ syntax, bracketMode, palette, onCancel, isIOS = false }: BracketCardProps) {
+  const { setNodeRef: setBracketPoolRef, isOver: isOverBracketPool } = useDroppable({ id: 'drop-bracket-pool' });
   const openSymbols = ['(', '[', '{'];
   const closeSymbols = [')', ']', '}'];
   const firstOpen = syntax.find(c => openSymbols.includes(c.symbol));
@@ -658,7 +659,10 @@ function BracketCard({ syntax, bracketMode, palette, onCancel, isIOS = false }: 
   // V RIGHT fázi: zobraz uzavírací závorku jako draggable
   if (bracketMode) {
     return (
-      <div className="flex flex-col items-center gap-1">
+      <div
+        ref={setBracketPoolRef}
+        className={`flex flex-col items-center gap-1 rounded-lg p-1 transition-colors ${isOverBracketPool ? 'bg-emerald-500/15 ring-2 ring-emerald-300/60' : ''}`}
+      >
         <div
           ref={setNodeRef}
           {...listeners}
@@ -690,7 +694,7 @@ function BracketCard({ syntax, bracketMode, palette, onCancel, isIOS = false }: 
         </div>
         <button
           onClick={onCancel}
-          className="text-[9px] text-red-400/70 hover:text-red-400 uppercase tracking-tight transition-colors"
+          className="px-2 py-1 text-[11px] md:text-xs font-bold text-red-300 hover:text-red-200 uppercase tracking-[0.08em] rounded-md border border-red-400/40 bg-red-500/10 hover:bg-red-500/20 transition-colors"
         >
           Zrušit
         </button>
@@ -701,43 +705,48 @@ function BracketCard({ syntax, bracketMode, palette, onCancel, isIOS = false }: 
   // Normální fáze: zobraz první dostupný pár
   return (
     <div
-      ref={setNodeRef}
-      {...(exhausted ? {} : listeners)}
-      {...(exhausted ? {} : attributes)}
-      className={`relative overflow-hidden rounded-md border-2 shadow-sm flex items-center justify-center
-        ${isIOS ? (isDragging ? 'transition-none' : 'transition-[transform,box-shadow,border-color] duration-200') : 'transition-transform'}
-        ${exhausted ? 'opacity-40 cursor-not-allowed' : `cursor-grab active:cursor-grabbing ${isIOS ? '' : 'hover:scale-105'}`}
-      `}
-      style={{
-        width: FULL_CARD_W,
-        height: FULL_CARD_H,
-        backgroundColor: `${palette.bgDark}cc`,
-        borderColor: exhausted ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.6)',
-        boxShadow: exhausted ? 'none' : `0 0 10px ${palette.glow}`,
-        transform: transform ? (isIOS ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : CSS.Translate.toString(transform)) : undefined,
-        zIndex: isDragging ? 99999 : undefined,
-        ...(isIOS
-          ? {
-              touchAction: 'none' as const,
-              WebkitUserDrag: 'none' as const,
-              WebkitTouchCallout: 'none' as const,
-              backfaceVisibility: 'hidden' as const,
-              willChange: isDragging ? 'transform' : 'auto',
-            }
-          : {}),
-      } as DragStyle}
+      ref={setBracketPoolRef}
+      className={`rounded-lg p-1 transition-colors ${isOverBracketPool ? 'bg-emerald-500/15 ring-2 ring-emerald-300/60' : ''}`}
     >
-      {exhausted ? (
-        <span className="text-[9px] uppercase tracking-tight text-white/30 font-bold text-center px-1">Závorky vyčerpány</span>
-      ) : (
-        <>
-          {cardsDatabase[firstOpen!.symbol]?.image ? (
-            <img src={`${BASE}${cardsDatabase[firstOpen!.symbol].image.replace(/^\//, '')}`} alt={firstOpen!.symbol} draggable={false} className="w-full h-full object-cover select-none pointer-events-none" />
-          ) : (
-            <span className="text-2xl font-chalk text-white leading-none">{firstOpen!.symbol}</span>
-          )}
-        </>
-      )}
+      <div
+        ref={setNodeRef}
+        {...(exhausted ? {} : listeners)}
+        {...(exhausted ? {} : attributes)}
+        className={`relative overflow-hidden rounded-md border-2 shadow-sm flex items-center justify-center
+          ${isIOS ? (isDragging ? 'transition-none' : 'transition-[transform,box-shadow,border-color] duration-200') : 'transition-transform'}
+          ${exhausted ? 'opacity-40 cursor-not-allowed' : `cursor-grab active:cursor-grabbing ${isIOS ? '' : 'hover:scale-105'}`}
+        `}
+        style={{
+          width: FULL_CARD_W,
+          height: FULL_CARD_H,
+          backgroundColor: `${palette.bgDark}cc`,
+          borderColor: exhausted ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.6)',
+          boxShadow: exhausted ? 'none' : `0 0 10px ${palette.glow}`,
+          transform: transform ? (isIOS ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : CSS.Translate.toString(transform)) : undefined,
+          zIndex: isDragging ? 99999 : undefined,
+          ...(isIOS
+            ? {
+                touchAction: 'none' as const,
+                WebkitUserDrag: 'none' as const,
+                WebkitTouchCallout: 'none' as const,
+                backfaceVisibility: 'hidden' as const,
+                willChange: isDragging ? 'transform' : 'auto',
+              }
+            : {}),
+        } as DragStyle}
+      >
+        {exhausted ? (
+          <span className="text-[9px] uppercase tracking-tight text-white/30 font-bold text-center px-1">Závorky vyčerpány</span>
+        ) : (
+          <>
+            {cardsDatabase[firstOpen!.symbol]?.image ? (
+              <img src={`${BASE}${cardsDatabase[firstOpen!.symbol].image.replace(/^\//, '')}`} alt={firstOpen!.symbol} draggable={false} className="w-full h-full object-cover select-none pointer-events-none" />
+            ) : (
+              <span className="text-2xl font-chalk text-white leading-none">{firstOpen!.symbol}</span>
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 }

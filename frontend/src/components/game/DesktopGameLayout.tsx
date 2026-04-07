@@ -499,6 +499,7 @@ function BracketCard({ syntax, bracketMode, palette, onCancel }: {
   palette: ThemePalette;
   onCancel: () => void;
 }) {
+  const { setNodeRef: setBracketPoolRef, isOver: isOverBracketPool } = useDroppable({ id: 'drop-bracket-pool' });
   const openSymbols = ['(', '[', '{'];
   const closeSymbols = [')', ']', '}'];
   const firstOpen = syntax.find(c => openSymbols.includes(c.symbol));
@@ -515,7 +516,10 @@ function BracketCard({ syntax, bracketMode, palette, onCancel }: {
 
   if (bracketMode) {
     return (
-      <div className="flex flex-col items-center gap-1">
+      <div
+        ref={setBracketPoolRef}
+        className={`flex flex-col items-center gap-1 rounded-lg p-1 transition-colors ${isOverBracketPool ? 'bg-emerald-500/15 ring-2 ring-emerald-300/60' : ''}`}
+      >
         <div
           ref={setNodeRef} {...listeners} {...attributes}
           className="relative overflow-hidden rounded-md border-2 border-yellow-400/80 shadow-sm flex items-center justify-center cursor-grab active:cursor-grabbing"
@@ -533,7 +537,10 @@ function BracketCard({ syntax, bracketMode, palette, onCancel }: {
             <span className="text-3xl font-chalk text-yellow-300 leading-none">{closeSymbol}</span>
           )}
         </div>
-        <button onClick={onCancel} className="text-[9px] text-red-400/70 hover:text-red-400 uppercase tracking-tight">
+        <button
+          onClick={onCancel}
+          className="px-2 py-1 text-[11px] md:text-xs font-bold text-red-300 hover:text-red-200 uppercase tracking-[0.08em] rounded-md border border-red-400/40 bg-red-500/10 hover:bg-red-500/20 transition-colors"
+        >
           Zrušit
         </button>
       </div>
@@ -542,30 +549,35 @@ function BracketCard({ syntax, bracketMode, palette, onCancel }: {
 
   return (
     <div
-      ref={setNodeRef}
-      {...(exhausted ? {} : listeners)}
-      {...(exhausted ? {} : attributes)}
-      className={`relative overflow-hidden rounded-md border-2 shadow-sm flex items-center justify-center transition-transform
-        ${exhausted ? 'opacity-40 cursor-not-allowed' : 'cursor-grab active:cursor-grabbing hover:scale-105'}`}
-      style={{
-        width: CARD_W, height: CARD_H,
-        backgroundColor: `${palette.bgDark}cc`,
-        borderColor: exhausted ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.6)',
-        boxShadow: exhausted ? 'none' : `0 0 14px ${palette.glow}`,
-        transform: transform ? `translate(${transform.x}px,${transform.y}px)` : undefined,
-        zIndex: isDragging ? 99999 : undefined,
-      }}
+      ref={setBracketPoolRef}
+      className={`rounded-lg p-1 transition-colors ${isOverBracketPool ? 'bg-emerald-500/15 ring-2 ring-emerald-300/60' : ''}`}
     >
-      {exhausted
-        ? <span className="text-[9px] uppercase tracking-tight text-white/30 font-bold text-center px-1">Závorky vyčerpány</span>
-        : <>
-          {cardsDatabase[firstOpen!.symbol]?.image ? (
-            <img src={`${BASE}${cardsDatabase[firstOpen!.symbol].image.replace(/^\//, '')}`} alt={firstOpen!.symbol} className="w-full h-full object-cover" />
-          ) : (
-            <span className="text-lg font-chalk text-white leading-none">{firstOpen!.symbol}</span>
-          )}
-        </>
-      }
+      <div
+        ref={setNodeRef}
+        {...(exhausted ? {} : listeners)}
+        {...(exhausted ? {} : attributes)}
+        className={`relative overflow-hidden rounded-md border-2 shadow-sm flex items-center justify-center transition-transform
+          ${exhausted ? 'opacity-40 cursor-not-allowed' : 'cursor-grab active:cursor-grabbing hover:scale-105'}`}
+        style={{
+          width: CARD_W, height: CARD_H,
+          backgroundColor: `${palette.bgDark}cc`,
+          borderColor: exhausted ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.6)',
+          boxShadow: exhausted ? 'none' : `0 0 14px ${palette.glow}`,
+          transform: transform ? `translate(${transform.x}px,${transform.y}px)` : undefined,
+          zIndex: isDragging ? 99999 : undefined,
+        }}
+      >
+        {exhausted
+          ? <span className="text-[9px] uppercase tracking-tight text-white/30 font-bold text-center px-1">Závorky vyčerpány</span>
+          : <>
+            {cardsDatabase[firstOpen!.symbol]?.image ? (
+              <img src={`${BASE}${cardsDatabase[firstOpen!.symbol].image.replace(/^\//, '')}`} alt={firstOpen!.symbol} className="w-full h-full object-cover" />
+            ) : (
+              <span className="text-lg font-chalk text-white leading-none">{firstOpen!.symbol}</span>
+            )}
+          </>
+        }
+      </div>
     </div>
   );
 }

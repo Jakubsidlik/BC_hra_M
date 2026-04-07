@@ -69,6 +69,22 @@ const ANTI_STREAK_STEP_BOOST = 0.02;
 const ANTI_STREAK_MAX_BOOST = 0.15;
 const getSharedGoalTotalTurns = (): number => 20;
 const VS_SPECIAL_SYMBOLS = ['int', 'd/dx', '∑', '∏', 'lim'] as const;
+const BRACKET_COUNTERPARTS: Record<string, string> = {
+  '(': ')',
+  ')': '(',
+  '[': ']',
+  ']': '[',
+  '{': '}',
+  '}': '{',
+};
+const BRACKET_SORT_ORDER: Record<string, number> = {
+  '(': 0,
+  ')': 1,
+  '[': 2,
+  ']': 3,
+  '{': 4,
+  '}': 5,
+};
 const CUSTOMIZABLE_CARD_SYMBOLS = Object.entries(cardsDatabase)
   .filter(([, cardData]) => cardData.count > 0 && cardData.type !== 'syntax')
   .map(([symbol]) => symbol);
@@ -249,7 +265,7 @@ export function useGameEngine() {
   const [chosenEffectChoice, setChosenEffectChoice] = useState<'ACTIVATE' | null>(null);
   const [targetingMode, setTargetingMode] = useState<{ effectId: string, targetPlayerId?: number } | null>(null);
   const [minigameMode, setMinigameMode] = useState<{ effectId: string, cards: GameCard[], targetPlayerId?: number } | null>(null);
-  const [bracketMode, setBracketMode] = useState<{ leftInsertPosition: number; pairIndex: number } | null>(null);
+  const [bracketMode, setBracketMode] = useState<{ leftInsertPosition: number; pairIndex: number; leftBracketId?: string } | null>(null);
   const [integralSetup, setIntegralSetup] = useState<{ card: GameCard, targetId: string | null, insertPosition?: number } | null>(null);
   const [deckPreviewMode, setDeckPreviewMode] = useState<{ originalDeck: GameCard[], reorderedDeck?: GameCard[] } | null>(null);
   const [moduloMode, setModuloMode] = useState<{ activePlayerIndex: number, targetPlayerId?: number } | null>(null);
@@ -260,6 +276,7 @@ export function useGameEngine() {
   const [hasModifiedBoardThisTurn, setHasModifiedBoardThisTurn] = useState(false);
   const [playsThisTurn, setPlaysThisTurn] = useState(0);
   const [turnPlayCounts, setTurnPlayCounts] = useState<TurnPlayCounts>({ value: 0, operator: 0 });
+  const [bracketPairsPlacedThisTurn, setBracketPairsPlacedThisTurn] = useState(0);
 
   // ==========================================
   // 1. REKURZIVNÍ LOGIKA (Kaskády)
@@ -560,6 +577,79 @@ export function useGameEngine() {
     setPendingHandSwap(null);
   }, [pendingHandSwap]);
 
+  const restorePendingLeftBracket = useCallback(() => {
+    if (!bracketMode?.leftBracketId) return;
+    const leftBracketId = bracketMode.leftBracketId;
+
+    setPlayers(prev => {
+      const next = JSON.parse(JSON.stringify(prev));
+      const player = next[currentPlayerIndex];
+      if (!player) return prev;
+
+      const leftIndex = player.board.findIndex((card: GameCard) => card.id === leftBracketId);
+      if (leftIndex === -1) return prev;
+
+      const [leftBracket] = player.board.splice(leftIndex, 1);
+      if (leftBracket) {
+        player.syntax.push(leftBracket);
+      }
+      return next;
+    });
+  }, [bracketMode, currentPlayerIndex]);
+
+  const sortSyntaxCards = useCallback((cards: GameCard[]): GameCard[] => {
+    return [...cards].sort((a, b) => {
+      const aOrder = BRACKET_SORT_ORDER[a.symbol] ?? Number.MAX_SAFE_INTEGER;
+      const bOrder = BRACKET_SORT_ORDER[b.symbol] ?? Number.MAX_SAFE_INTEGER;
+      if (aOrder !== bOrder) return aOrder - bOrder;
+      return a.id.localeCompare(b.id);
+    });
+  }, []);
+
+  const returnBracketPairToSyntax = useCallback((draggedCardId: string): boolean => {
+    const player = players[currentPlayerIndex];
+    if (!player) return false;
+
+    const firstRemoval = removeCardRecursively(player.board, draggedCardId);
+    const draggedCard = firstRemoval.removed;
+    if (!draggedCard || !(draggedCard.symbol in BRACKET_COUNTERPARTS)) {
+      return false;
+    }
+
+    let boardAfter = firstRemoval.newCards;
+    const returnedCards: GameCard[] = [draggedCard];
+    const counterpartSymbol = BRACKET_COUNTERPARTS[draggedCard.symbol];
+    const counterpartCard = boardAfter
+      .flatMap((card: GameCard) => flattenCardTree(card))
+      .find((card: GameCard) => card.symbol === counterpartSymbol);
+
+    if (counterpartCard) {
+      const secondRemoval = removeCardRecursively(boardAfter, counterpartCard.id);
+      boardAfter = secondRemoval.newCards;
+      if (secondRemoval.removed) {
+        returnedCards.push(secondRemoval.removed);
+      }
+    }
+
+    const updatedSyntax = sortSyntaxCards([...player.syntax, ...returnedCards]);
+
+    setPlayers(prev => {
+      const next = JSON.parse(JSON.stringify(prev));
+      if (!next[currentPlayerIndex]) return prev;
+      next[currentPlayerIndex].board = boardAfter;
+      next[currentPlayerIndex].syntax = updatedSyntax;
+      return next;
+    });
+
+    if (bracketMode) {
+      setBracketMode(null);
+    }
+    setHasModifiedBoardThisTurn(true);
+    toast.info('Pár závorek byl vrácen do sady závorek.');
+
+    return true;
+  }, [bracketMode, currentPlayerIndex, flattenCardTree, players, removeCardRecursively, sortSyntaxCards]);
+
   const finalizeTurn = useCallback(() => {
     applyPendingHandSwap();
     setIsDiscarding(false);
@@ -599,6 +689,7 @@ export function useGameEngine() {
       setHasModifiedBoardThisTurn(false);
       setPlaysThisTurn(0);
       setTurnPlayCounts({ value: 0, operator: 0 });
+      setBracketPairsPlacedThisTurn(0);
       performDraw(1, currentPlayerIndex);
       return;
     }
@@ -631,11 +722,12 @@ export function useGameEngine() {
     });
 
     setHasModifiedBoardThisTurn(true);
-    toast.info("Celý výraz byl vyhozen do odhazovacího balíčku.");
+    toast.info("Celý výraz byl vyhozen do odhazovacího balíčku. Tah byl spotřebován.");
   };
 
   const handleEndTurn = () => {
     if (bracketMode) {
+      restorePendingLeftBracket();
       setBracketMode(null);
       toast.info("Nedokončená závorka byla vrácena do sady závorek.");
     }
@@ -692,6 +784,7 @@ export function useGameEngine() {
       setHasModifiedBoardThisTurn(false);
       setPlaysThisTurn(0);
       setTurnPlayCounts({ value: 0, operator: 0 });
+      setBracketPairsPlacedThisTurn(0);
       setTutorialStep(3);
       return;
     }
@@ -727,6 +820,7 @@ export function useGameEngine() {
       setHasModifiedBoardThisTurn(false);
       setPlaysThisTurn(0);
       setTurnPlayCounts({ value: 0, operator: 0 });
+      setBracketPairsPlacedThisTurn(0);
       setIsDiscarding(false);
 
       // Tutorial respects the same next-turn bonus for dual play (1 operator + 1 value).
@@ -891,6 +985,7 @@ export function useGameEngine() {
     setHasModifiedBoardThisTurn(false);
     setPlaysThisTurn(0);
     setTurnPlayCounts({ value: 0, operator: 0 });
+    setBracketPairsPlacedThisTurn(0);
     updatePlayerStats(nextIdx, stats => ({
       ...stats,
       currentTurnDraw: 0,
@@ -1267,8 +1362,19 @@ export function useGameEngine() {
       if (openSymbols.includes(syntaxCard.symbol) && insertPos !== undefined) {
         // Fáze LEFT: hráč umístil otevírací závorku
         if (bracketMode) return toast.error("Nejprve dokonči umístění závorky.");
+        if (bracketPairsPlacedThisTurn >= 1) return toast.error("V tomto tahu můžeš umístit maximálně jeden pár závorek.");
         const pairIndex = openSymbols.indexOf(syntaxCard.symbol);
-        setBracketMode({ leftInsertPosition: insertPos, pairIndex });
+        setPlayers(prev => {
+          const next = JSON.parse(JSON.stringify(prev));
+          const player = next[currentPlayerIndex];
+          const syntaxIndex = player.syntax.findIndex((c: GameCard) => c.id === syntaxCard.id);
+          if (syntaxIndex === -1) return prev;
+
+          const [leftBracket] = player.syntax.splice(syntaxIndex, 1);
+          player.board.splice(insertPos, 0, leftBracket);
+          return next;
+        });
+        setBracketMode({ leftInsertPosition: insertPos, pairIndex, leftBracketId: syntaxCard.id });
         toast.info("Nyní přetáhni pravou závorku na místo v tabuli.", { icon: ')' });
         return;
       }
@@ -1276,30 +1382,31 @@ export function useGameEngine() {
       if (closeSymbols.includes(syntaxCard.symbol) && insertPos !== undefined && bracketMode) {
         // Fáze RIGHT: hráč umístil uzavírací závorku
         const { leftInsertPosition, pairIndex } = bracketMode;
+        const expectedCloseSymbol = closeSymbols[pairIndex];
+        if (syntaxCard.symbol !== expectedCloseSymbol) {
+          return toast.error(`Nejdřív uzavři stejný typ závorky (${expectedCloseSymbol}).`);
+        }
         if (insertPos <= leftInsertPosition) {
           return toast.error("Pravá závorka musí být za levou!");
         }
         // Validace obsahu závorek
         const board = players[currentPlayerIndex].board;
-        const cardsInBrackets = board.slice(leftInsertPosition, insertPos);
+        const cardsInBrackets = board.slice(leftInsertPosition + 1, insertPos);
         const hasValidContent = cardsInBrackets.some(c => {
           const cd = cardsDatabase[c.symbol];
-          return cd?.type === 'number' || cd?.type === 'variable' || c.symbol === 'π';
+          return cd?.type === 'number' || cd?.type === 'operator' || cd?.type === 'variable';
         });
         if (!hasValidContent) {
-          return toast.error("V závorkách musí být alespoň jedno číslo nebo proměnná!");
+          return toast.error("V závorkách musí být alespoň jedno číslo nebo operace!");
         }
-        // Získej závorky ze syntax
-        const lB = players[currentPlayerIndex].syntax.find(c => c.symbol === openSymbols[pairIndex]);
-        const rB = players[currentPlayerIndex].syntax.find(c => c.symbol === closeSymbols[pairIndex]);
-        if (!lB || !rB) return;
-        // Vlož závorky do boardu
+        // Získej pravou závorku ze syntax a vlož ji na cílovou pozici
+        const rB = players[currentPlayerIndex].syntax.find(c => c.id === syntaxCard.id);
+        if (!rB) return;
         setPlayers(prev => {
           const next = JSON.parse(JSON.stringify(prev));
           const player = next[currentPlayerIndex];
-          player.syntax = player.syntax.filter((c: GameCard) => c.id !== lB.id && c.id !== rB.id);
-          player.board.splice(leftInsertPosition, 0, lB);
-          player.board.splice(insertPos + 1, 0, rB);
+          player.syntax = player.syntax.filter((c: GameCard) => c.id !== rB.id);
+          player.board.splice(insertPos, 0, rB);
           return next;
         });
         updatePlayerStats(currentPlayerIndex, stats => ({
@@ -1307,8 +1414,7 @@ export function useGameEngine() {
           bracketPairsUsed: stats.bracketPairsUsed + 1,
         }));
         setBracketMode(null);
-        setHasModifiedBoardThisTurn(true);
-        setPlaysThisTurn(prev => prev + 1);
+        setBracketPairsPlacedThisTurn(prev => prev + 1);
         toast.success("Závorky umístěny!", { icon: '✓' });
         if (tutorialActive && tutorialStep === 3 && !tutorialBracketInfoShown) {
           setTutorialBracketInfoShown(true);
@@ -1317,6 +1423,19 @@ export function useGameEngine() {
         return;
       }
       return; // Syntax karta bez validní drop zóny – ignoruj
+    }
+
+    const droppedOnBracketPool = over.id === 'drop-bracket-pool';
+    const droppedOnDiscard = over.id === 'drop-discard';
+    const boardCardCandidate = players[currentPlayerIndex].board
+      .flatMap((card: GameCard) => flattenCardTree(card))
+      .find((card: GameCard) => card.id === active.id);
+    const isBoardBracketCard = Boolean(boardCardCandidate && (boardCardCandidate.symbol in BRACKET_COUNTERPARTS));
+
+    if ((droppedOnBracketPool || droppedOnDiscard) && isBoardBracketCard) {
+      if (returnBracketPairToSyntax(String(active.id))) {
+        return;
+      }
     }
 
     if (over.id === 'drop-discard') {
@@ -1383,6 +1502,7 @@ export function useGameEngine() {
           }));
           if (!isLockedSpecialSlotDiscard) {
             setHasModifiedBoardThisTurn(true);
+            toast.info("Karta byla odhozena z tabule. Tah byl spotřebován.");
           } else {
             toast.info("Mez/slot byl odhozen. Můžeš ihned vložit náhradu.");
           }
@@ -1456,6 +1576,10 @@ export function useGameEngine() {
           setPendingEffect(null);
         }
         return;
+      }
+      const boardActionAlreadyConsumedTurn = hasModifiedBoardThisTurn && playsThisTurn === 0;
+      if (boardActionAlreadyConsumedTurn) {
+        return toast.error("Po odhozu/resetu z tabule už v tomto tahu nemůžeš vykládat z ruky.");
       }
       const totalTurnPlays = turnPlayCounts.value + turnPlayCounts.operator;
       if (totalTurnPlays >= 2) return toast.error("V tomto tahu už jsi vyložil maximum (1 hodnota/proměnná a 1 operace).");
@@ -1583,6 +1707,11 @@ export function useGameEngine() {
       : transformedCardToPlace;
 
     if (!isOnlyOnBoard && isFromHand) {
+      const boardActionAlreadyConsumedTurn = hasModifiedBoardThisTurn && playsThisTurn === 0;
+      if (boardActionAlreadyConsumedTurn) {
+        return toast.error("Po odhozu/resetu z tabule už v tomto tahu nemůžeš vykládat z ruky.");
+      }
+
       if (pStatus?.playLimit !== null && pStatus?.playLimit !== undefined && playsThisTurn >= pStatus.playLimit) {
         return toast.error("Tento tah už nesmíš vyložit další kartu!");
       }
@@ -1690,8 +1819,10 @@ export function useGameEngine() {
     difficulty,
     playsThisTurn,
     turnPlayCounts,
+    bracketPairsPlacedThisTurn,
     getTurnPlayBucket,
     removeCardRecursively,
+    returnBracketPairToSyntax,
     tutorialActive,
     tutorialStep,
     tutorialBracketInfoShown,
@@ -1959,6 +2090,7 @@ export function useGameEngine() {
   }, [moduloMode, gameMode, sharedGoalTarget]);
 
   const cancelBracketMode = () => {
+    restorePendingLeftBracket();
     setBracketMode(null);
     toast.info("Umístění závorky zrušeno.");
   };
@@ -2356,6 +2488,7 @@ export function useGameEngine() {
     setHasModifiedBoardThisTurn(false);
     setPlaysThisTurn(0);
     setTurnPlayCounts({ value: 0, operator: 0 });
+    setBracketPairsPlacedThisTurn(0);
     resetGameStats(newPlayers);
     setPendingHandSwap(null);
     setNonNumberDrawStreakByPlayer({});
@@ -2405,6 +2538,7 @@ export function useGameEngine() {
     setHasModifiedBoardThisTurn(false);
     setPlaysThisTurn(0);
     setTurnPlayCounts({ value: 0, operator: 0 });
+    setBracketPairsPlacedThisTurn(0);
     setGameStats(null);
     setGameSummaryOpen(false);
     setPendingHandSwap(null);
@@ -2436,6 +2570,7 @@ export function useGameEngine() {
     setHasModifiedBoardThisTurn(false);
     setPlaysThisTurn(0);
     setTurnPlayCounts({ value: 0, operator: 0 });
+    setBracketPairsPlacedThisTurn(0);
     setGameStats(null);
     setGameSummaryOpen(false);
     setPendingHandSwap(null);

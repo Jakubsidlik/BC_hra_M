@@ -626,11 +626,34 @@ export function RulesScreen({ onBack }: { onBack: () => void }) {
                   <p className="text-xs md:text-sm text-slate-300">Odebrat kartu do odhozu (spolu se všemi vnořenými dětmi a okénky) nebo změnit pořadí na tabuli.</p>
                 </div>
               </div>
-              <div className="mt-6 space-y-3 text-sm md:text-base bg-black/30 p-4 border border-slate-700/50 rounded-xl">
-                <p>Pokud hráč v jednom kole vyloží obě povolené kategorie (hodnota + operace), v příštím tahu dobírá o 1 kartu navíc (tedy standardně 2).</p>
-                <p>Po stisku tlačítka Ukončit tah se vždy aktivuje režim odhazování/předání tahu.</p>
-                <p>Předání tahu je možné až ve chvíli, kdy má hráč v ruce maximálně 5 karet.</p>
-                <p>Karty s efektem nabídnou volbu: aktivovat destruktivní/výhodný efekt (a odhodit), nebo kartu pasivně zadrátovat na tabuli.</p>
+              <div className="mt-6 space-y-3 text-sm md:text-base text-slate-200 bg-black/30 p-4 border border-slate-700/50 rounded-xl">
+                <p><strong>Co je počítáno jako tah:</strong></p>
+                <ul className="list-disc list-inside space-y-1">
+                  <li>Vyložení karty z ruky do tabule (max 1 hodnota/proměnná + 1 operace za tah).</li>
+                  <li>Vložení karty z ruky do slotu/okénka (počítá se stejně jako vyložení do tabule).</li>
+                  <li>Odhoz jedné karty z tabule do odhozu (včetně vnořených karet).</li>
+                  <li>Reset tabule: vyhození celého výrazu do odhozu (max 1 odhoz/reset akce z tabule za tah).</li>
+                </ul>
+                <p className="pt-1"><strong>Co není počítáno jako tah:</strong></p>
+                <ul className="list-disc list-inside space-y-1">
+                  <li>Položení páru závorek se nepočítá do limitu 1 hodnota + 1 operace (stále platí max 1 pár závorek za tah).</li>
+                  <li>Přeskládání už vyložených karet uvnitř vlastní tabule.</li>
+                  <li>Odhazování z ruky po stisku Ukončit tah pro splnění limitu max 5 karet.</li>
+                </ul>
+                <div className="space-y-2 pt-1">
+                  <div className="rounded-lg border border-slate-600/60 bg-slate-900/40 px-3 py-2">
+                    <p><strong>Pořadí akcí:</strong> pokud nejdřív vyložíš kartu z ruky, už v tom tahu nemůžeš provést odhoz/reset z tabule. Pokud nejdřív provedeš odhoz/reset z tabule, už v tom tahu nemůžeš vykládat z ruky.</p>
+                  </div>
+                  <div className="rounded-lg border border-slate-600/60 bg-slate-900/40 px-3 py-2">
+                    <p><strong>Speciální chování závorek:</strong> přetažení jedné závorky z aktivního páru do odhozu nebo zpět do prostoru závorek vrátí celý pár do sady závorek v pořadí ()[].</p>
+                  </div>
+                  <div className="rounded-lg border border-slate-600/60 bg-slate-900/40 px-3 py-2">
+                    <p><strong>Konec tahu:</strong> po stisku tlačítka Ukončit tah se aktivuje režim odhazování z ruky; předat tah lze až s maximálně 5 kartami v ruce.</p>
+                  </div>
+                  <div className="rounded-lg border border-slate-600/60 bg-slate-900/40 px-3 py-2">
+                    <p><strong>Efektové karty:</strong> nabídnou volbu aktivovat efekt (a kartu odhodit), nebo kartu pasivně položit na tabuli.</p>
+                  </div>
+                </div>
               </div>
               </section>
 
@@ -638,6 +661,7 @@ export function RulesScreen({ onBack }: { onBack: () => void }) {
               <h3 className="text-3xl font-bold text-emerald-400 border-b border-emerald-400/30 pb-2 mb-4 italic">6. Závorky a Implicitní Násobení</h3>
               <div className="space-y-3 text-sm md:text-base border-l-4 border-slate-500 pl-4">
                 <p><strong>Závorky:</strong> Umísťují se ve 2 krocích: nejdřív levá, potom pravá.</p>
+                <p><strong>Limit závorek:</strong> V jednom tahu lze uzavřít maximálně 1 pár závorek.</p>
                 <p><strong>Implicitní násobení:</strong> Pokud položíte číslo a proměnnou (2 a x) beze znaménka, tabule automaticky znásobkuje `2*x`.</p>
               </div>
               </section>
