@@ -474,8 +474,8 @@ export function useGameEngine() {
 
   const resolveSharedGoalTimeout = useCallback(() => {
     if (sharedGoalTarget === null) return;
-    const numericSharedGoalTarget = Number(sharedGoalTarget);
-    const canCompareDistance = Number.isFinite(numericSharedGoalTarget);
+    const numericSharedGoalTarget = evaluateExpressionValue(sharedGoalTarget);
+    const canCompareDistance = numericSharedGoalTarget !== null && Number.isFinite(numericSharedGoalTarget);
 
     const evaluatedPlayers = players.map(player => {
       if (!player.board || player.board.length === 0) {
@@ -484,7 +484,7 @@ export function useGameEngine() {
 
       const expression = parseBoardToMathString(player.board);
       const value = evaluateExpressionValue(expression, player.status?.mathModifiers || []);
-      const distance = !canCompareDistance || value === null
+      const distance = !canCompareDistance || value === null || numericSharedGoalTarget === null
         ? Number.POSITIVE_INFINITY
         : Math.abs(value - numericSharedGoalTarget);
       return { player, value, distance };
@@ -592,7 +592,7 @@ export function useGameEngine() {
         };
       });
     }
-  }, [deck, discardPile, nonNumberDrawStreakByPlayer, players, updatePlayerStats]);
+  }, [deck, discardPile, difficulty, nonNumberDrawStreakByPlayer, players, updatePlayerStats]);
 
   const applyPendingHandSwap = useCallback(() => {
     if (!pendingHandSwap) return;
@@ -1210,7 +1210,7 @@ export function useGameEngine() {
       registerTurnPlay(cardWithSlots.symbol);
     }
     setPendingEffect(null);
-  }, [currentPlayerIndex, registerTurnPlay, updatePlayerStats]);
+  }, [currentPlayerIndex, players, registerTurnPlay, updatePlayerStats]);
 
   const addCardToSlotFromHand = useCallback((
     card: GameCard,
@@ -2256,12 +2256,12 @@ export function useGameEngine() {
     };
 
     const generateSharedSsLikeTarget = (): string => {
-      const plainNumber = Math.floor(Math.random() * 1099) - 99;
+      const plainNumber = Math.floor(Math.random() * 199) - 99;
       if (Math.random() < 0.5) return `${plainNumber}`;
 
       let coefficient = 0;
       while (coefficient === 0) {
-        coefficient = Math.floor(Math.random() * 109) - 9;
+        coefficient = Math.floor(Math.random() * 199) - 99;
       }
       const symbol = ['x', 'y', 'e', 'π'][Math.floor(Math.random() * 4)];
       return `${coefficient}${symbol}`;
@@ -2306,7 +2306,7 @@ export function useGameEngine() {
       }
 
       if (difficulty === 'SŠ') {
-        return generateSharedSsLikeTarget();
+        return generatePersonalTargetR('SŠ');
       }
 
       if (difficulty === 'VŠ') {

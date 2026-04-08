@@ -34,13 +34,13 @@ V módu **Společný cíl** mají všichni hráči stejnou cílovou hodnotu **R*
 ### Klasický režim
 - **Tutoriál:** řízená ukázková hra s pevným cílem `R = 11`.
 - **ZŠ:** R je číslo z intervalu `-99..99`, nebo člen `-9x..9x` / `-9y..9y` (bez `0x` a `0y`).
-- **SŠ:** R je z množiny `-99..999`, `-99x..99x`, `-99y..99y`, `-99e..99e`, `-99π..99π`.
+- **SŠ:** R je z množiny `-99..99`, `-99x..99x`, `-99y..99y`, `-99e..99e`, `-99π..99π`; navíc může být `sqrt(2)`, `2*sqrt(2)`, `sqrt(2)/3`, `sqrt(2)/4` a obecný zlomek `a/b` v základním tvaru (`a = 1..9`, `b = 2..9`).
 - **VŠ:** stejné jako SŠ. Pokud je zamčená VŠ karta `∏`, cílové R se losuje jako složené číslo podle pravidel sekvenčního produktu.
 - **Vlastní:** před volbou hráčů se otevře konfigurace balíčku. Hráč zvolí, které karty budou ve hře a kolik kopií každé karty bude v dobíracím balíčku. Bez výběru alespoň jedné karty nelze pokračovat.
 
 ### Režim Společný cíl
 - **ZŠ:** společné R je `-99..99`, `-9x..9x`, `-9y..9y` (bez `0x` a `0y`).
-- **SŠ:** společné R je z množiny `-99..99`, `-99x..99x`, `-99y..99y`, `-99e..99e`, `-99π..99π`.
+- **SŠ:** společné R je z množiny `-99..99`, `-99x..99x`, `-99y..99y`, `-99e..99e`, `-99π..99π`; navíc může být `sqrt(2)`, `2*sqrt(2)`, `sqrt(2)/3`, `sqrt(2)/4` a obecný zlomek `a/b` v základním tvaru (`a = 1..9`, `b = 2..9`).
 - **VŠ:** stejné jako SŠ. Pokud je společná VŠ karta `∏`, společné R je složené číslo. Všichni hráči sdílí stejnou zamčenou VŠ kartu.
 - **Vlastní:** společný cíl i zamčené VŠ karty vycházejí z vlastní konfigurace. Lze zapnout vlastní počet tahů na hráče; při této volbě zůstává odpočtová lišta kol po celou hru zelená.
 
