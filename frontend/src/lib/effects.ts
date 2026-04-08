@@ -1,5 +1,6 @@
 import { cardsDatabase } from '../data/cardsDB';
 import { generatePersonalTargetR, type DifficultyMode } from './gameHelpers';
+import { formatTargetForDisplay } from './mathDisplay';
 
 // --- TYPY PRO CELOU HRU ---
 
@@ -25,6 +26,7 @@ export interface PlayerStatus {
   extraTurn?: boolean;
   extraDraw?: number;
   drawReduction?: number;
+  factorialDrawPenalty?: number;
   noDrawNextTurn?: boolean;
   frozen?: boolean;
   immune?: boolean;
@@ -57,6 +59,7 @@ const ensureStatus = (player: Player) => {
     player.status = {
       extraDraw: 0,
       drawReduction: 0,
+      factorialDrawPenalty: 0,
       immune: false,
       frozen: false,
       operationLock: false,
@@ -75,6 +78,9 @@ const ensureStatus = (player: Player) => {
     };
   } else if (!player.status.notifications) {
     player.status.notifications = []; // Pojistka pro starší stavy
+  }
+  if (player.status.factorialDrawPenalty === undefined) {
+    player.status.factorialDrawPenalty = 0;
   }
 };
 
@@ -97,8 +103,11 @@ export const applyEffectLogic = (
   selectedTargetId?: number,
   targetCardId?: string,
   playedCard?: GameCard,
-  currentDifficulty: DifficultyMode = 'ZŠ' // PŘIDÁNO: Potřebujeme vědět obtížnost pro efekty měnící R
+  currentDifficulty: DifficultyMode = 'ZŠ', // PŘIDÁNO: Potřebujeme vědět obtížnost pro efekty měnící R
+  sourceCardId?: string
 ): EffectResult | Player[] => {
+
+  void playedCard;
 
   // Hluboká kopie stavu
   const newPlayers: Player[] = JSON.parse(JSON.stringify(currentState));
@@ -129,28 +138,60 @@ export const applyEffectLogic = (
       activePlayer.status.extraDraw = (activePlayer.status.extraDraw || 0) + 1;
       break;
 
-    case "EFF_002": // π: Výměna 1 karty z vlastního L za kartu z L oponenta
-      if (targetPlayer && targetCardId && playedCard) {
-        let swappedCard: GameCard | null = null;
+    case "EFF_002": // π: Prohození vybrané karty z vlastního L s vybranou kartou z L oponenta
+      if (targetPlayer && targetCardId && sourceCardId) {
+        const cloneCard = (card: GameCard): GameCard => JSON.parse(JSON.stringify(card));
 
-        const findAndSwap = (cards: GameCard[]): GameCard[] => {
-          return cards.map(c => {
-            if (c.id === targetCardId) {
-              swappedCard = { ...c };
-              return { ...playedCard, exponent: c.exponent };
+        const findCardById = (cards: GameCard[], cardId: string): GameCard | null => {
+          for (const card of cards) {
+            if (card.id === cardId) return cloneCard(card);
+            if (card.exponent) {
+              const inExponent = findCardById([card.exponent], cardId);
+              if (inExponent) return inExponent;
             }
-            if (c.exponent) {
-              const result = findAndSwap([c.exponent]);
-              c.exponent = result.length > 0 ? result[0] : null;
+            if (card.slotCards) {
+              for (const nested of Object.values(card.slotCards)) {
+                if (!nested) continue;
+                const inSlot = findCardById([nested], cardId);
+                if (inSlot) return inSlot;
+              }
             }
-            return c;
+          }
+          return null;
+        };
+
+        const replaceCardById = (cards: GameCard[], cardId: string, replacement: GameCard): GameCard[] => {
+          return cards.map(card => {
+            if (card.id === cardId) return cloneCard(replacement);
+
+            const nextCard: GameCard = { ...card };
+            if (nextCard.exponent) {
+              const replacedExponent = replaceCardById([nextCard.exponent], cardId, replacement);
+              nextCard.exponent = replacedExponent.length > 0 ? replacedExponent[0] : null;
+            }
+            if (nextCard.slotCards) {
+              const nextSlots: Record<string, GameCard | null> = {};
+              Object.entries(nextCard.slotCards).forEach(([slotKey, slotCard]) => {
+                if (!slotCard) {
+                  nextSlots[slotKey] = null;
+                  return;
+                }
+                const replacedSlot = replaceCardById([slotCard], cardId, replacement);
+                nextSlots[slotKey] = replacedSlot.length > 0 ? replacedSlot[0] : null;
+              });
+              nextCard.slotCards = nextSlots;
+            }
+            return nextCard;
           });
         };
 
-        targetPlayer.board = findAndSwap(targetPlayer.board);
-        if (swappedCard) {
-          activePlayer.hand.push(swappedCard);
-          targetPlayer.status.notifications.push(`🔄 Hráč ${activePlayer.name} si vyměnil kartu z tvé plochy!`);
+        const ownCard = findCardById(activePlayer.board, sourceCardId);
+        const opponentCard = findCardById(targetPlayer.board, targetCardId);
+
+        if (ownCard && opponentCard) {
+          activePlayer.board = replaceCardById(activePlayer.board, sourceCardId, opponentCard);
+          targetPlayer.board = replaceCardById(targetPlayer.board, targetCardId, ownCard);
+          targetPlayer.status.notifications.push(`🔄 Hráč ${activePlayer.name} s tebou prohodil kartu na ploše.`);
         }
       }
       break;
@@ -158,11 +199,11 @@ export const applyEffectLogic = (
     case "EFF_003": // e: Okamžité nahrazení cíle R libovolného hráče novým losem
       if (targetPlayer) {
         targetPlayer.targetR = generatePersonalTargetR(currentDifficulty);
-        targetPlayer.status.notifications.push(`⚡ Hráč ${activePlayer.name} ti změnil cíl R na: ${targetPlayer.targetR}`);
+        targetPlayer.status.notifications.push(`⚡ Hráč ${activePlayer.name} ti změnil cíl R na: ${formatTargetForDisplay(targetPlayer.targetR)}`);
       }
       break;
 
-    case "EFF_004": // y: Následující hráč musí odhodit všechny číslice
+    case "EFF_004": // x: Následující hráč musí odhodit všechny číslice
       if (targetPlayer) {
         const originalLength = targetPlayer.hand.length;
         targetPlayer.hand = targetPlayer.hand.filter((c: GameCard) => {
@@ -175,7 +216,7 @@ export const applyEffectLogic = (
       }
       break;
 
-    case "EFF_005": // x: Následující hráč musí odhodit všechny operace
+    case "EFF_005": // y: Následující hráč musí odhodit všechny operace
       if (targetPlayer) {
         const originalLength = targetPlayer.hand.length;
         targetPlayer.hand = targetPlayer.hand.filter((c: GameCard) => {
@@ -237,10 +278,10 @@ export const applyEffectLogic = (
         metadata: { moduloOperationTriggered: true }
       };
 
-    case "EFF_013": // n!: Následující hráč nesmí vyložit více než 1 kartu v příštím tahu
+    case "EFF_013": // n!: Vybranému soupeři se každé další kolo snižuje dober o 1 až do nuly
       if (targetPlayer) {
-        targetPlayer.status.playLimit = 1;
-        targetPlayer.status.notifications.push(`🚫 Hráč ${activePlayer.name} ti omezil hraní na 1 kartu!`);
+        targetPlayer.status.factorialDrawPenalty = 1;
+        targetPlayer.status.notifications.push(`🧮 Hráč ${activePlayer.name} na tebe seslal faktoriál: každé další kolo dobereš o 1 kartu méně, až do nuly.`);
       }
       break;
 
@@ -273,7 +314,7 @@ export const applyEffectLogic = (
     case "EFF_025": // int: Okamžité nahrazení cíle R libovolného hráče novým losem
       if (targetPlayer) {
         targetPlayer.targetR = generatePersonalTargetR(currentDifficulty);
-        targetPlayer.status.notifications.push(`⚠️ Hráč ${activePlayer.name} ti kompletně změnil cíl R na: ${targetPlayer.targetR}`);
+        targetPlayer.status.notifications.push(`⚠️ Hráč ${activePlayer.name} ti kompletně změnil cíl R na: ${formatTargetForDisplay(targetPlayer.targetR)}`);
       }
       break;
 

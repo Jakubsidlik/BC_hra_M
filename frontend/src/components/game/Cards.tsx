@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import React from 'react';
 import { cardsDatabase } from '@/data/cardsDB';
 import { getBorderColor, getSpecialSlots } from '@/lib/gameHelpers';
+import { formatTargetForDisplay } from '@/lib/mathDisplay';
 import type { GameCard } from '@/lib/effects';
 
 const BASE = import.meta.env.BASE_URL;
@@ -651,7 +652,7 @@ export function BoardArea({ id, cards, targetR, playerTheme, isTargeting, onCard
         )}
         <div className="flex flex-col items-center justify-center bg-black/50 backdrop-blur-xl p-6 md:p-8 lg:p-12 rounded-3xl lg:rounded-[3rem] border-2 border-white/10 min-w-32 md:min-w-40 lg:min-w-56 shadow-xl transition-transform hover:scale-105">
           <div className="text-5xl md:text-7xl lg:text-9xl font-chalk text-white drop-shadow-[0_0_25px_rgba(255,255,255,0.7)] text-center">
-            {targetR}
+            {targetR !== undefined ? formatTargetForDisplay(targetR) : ''}
           </div>
           <div className="text-[8px] md:text-[10px] lg:text-xs font-mono text-white/40 uppercase tracking-[0.4em] mt-3 md:mt-4 lg:mt-6 font-black text-center">
             Výsledek

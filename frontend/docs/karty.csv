@@ -11,8 +11,8 @@ symbol;name;type;count;hasEffect;effect_id;effect;effect_target_self;effect_targ
 9;Devítka;number;10;1;EFF_001;Dobrání 1 karty navíc na začátku každého kola.;1;0;0;0
 pi;Ludolfovo číslo;number;5;1;EFF_002; Možnost výměny 1 karty z vlastního řetězce L za kartu z L oponenta.;1;0;0;0
 e;Eulerovo číslo;number;5;1;EFF_003;Imunita proti efektům karet Integrál a Derivace.;1;0;0;0
-y;Proměnná Y;variable;10;1;EFF_004;Následující hráč musí z ruky odhodit všechny číslice;0;1;0;0
-x;Proměnná X;variable;10;1;EFF_005;Následující hráč musí z ruky odhodit všechny operace;0;1;0;0
+y;Proměnná Y;variable;10;1;EFF_005;Následující hráč musí z ruky odhodit všechny operace;0;1;0;0
+x;Proměnná X;variable;10;1;EFF_004;Následující hráč musí z ruky odhodit všechny číslice;0;1;0;0
 +;Součet;operator;15;1;EFF_006; Následující hráč musí v příštím tahu použít libovolnou operaci.;0;1;0;0
 -;Rozdíl;operator;15;1;EFF_007;Odstranění 1 libovolné karty z ruky zvoleného oponenta.;0;0;0;0
 *;Součin;operator;15;1;EFF_008;Zdvojnásobení počtu dobíraných karet v příštím tahu.;1;0;0;0

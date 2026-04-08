@@ -31,18 +31,18 @@
 
 ---
 
-### ✅ EFF_004 - Zničení čísel (y)
+### ✅ EFF_004 - Zničení čísel (x)
 - **Typ:** OPPONENT
 - **Akce:** Odstranění všech čísel z ruky oponenta
-- **Stav:** ✅ Implementováno v effects.ts:145-156
+- **Stav:** ✅ Implementováno v effects.ts:165-176
 - **Poznámka:** Filtruje typ `number` z hand
 
 ---
 
-### ✅ EFF_005 - Zničení operací (x)
+### ✅ EFF_005 - Zničení operací (y)
 - **Typ:** OPPONENT
 - **Akce:** Odstranění všech operací z ruky oponenta
-- **Stav:** ✅ Implementováno v effects.ts:159-170
+- **Stav:** ✅ Implementováno v effects.ts:178-189
 - **Poznámka:** Filtruje typ `operator` z hand
 
 ---

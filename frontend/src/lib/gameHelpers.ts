@@ -90,20 +90,22 @@ export function generatePersonalTargetR(difficulty: DifficultyMode): string {
 
     const category = pick(['number', 'x', 'y', 'e', 'π', 'sqrt-special', 'fraction']);
     if (category === 'sqrt-special') {
-      return pick(['sqrt(2)', '2*sqrt(2)', 'sqrt(2)/3', 'sqrt(2)/4']);
+      return pick(['sqrt(2)', `${randInt(2, 9)}*sqrt(2)`, 'sqrt(2)/3', 'sqrt(2)/4']);
     }
 
     if (category === 'fraction') {
-      return pick(reducedFractions);
+      const fraction = pick(reducedFractions);
+      return Math.random() < 0.5 ? fraction : `${fraction}π`;
     }
 
     if (category === 'number') {
       return `${randInt(-99, 99)}`;
     }
 
+    const maxCoefficient = category === 'e' || category === 'π' ? 9 : 99;
     let coefficient = 0;
     while (coefficient === 0) {
-      coefficient = randInt(-99, 99);
+      coefficient = randInt(-maxCoefficient, maxCoefficient);
     }
     return formatTerm(coefficient, category);
   }

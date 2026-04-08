@@ -3,6 +3,7 @@ import { useDraggable, useDroppable, useDndMonitor } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 import { cardsDatabase } from '@/data/cardsDB';
 import { getBorderColor, getSpecialSlots } from '@/lib/gameHelpers';
+import { formatTargetForDisplay } from '@/lib/mathDisplay';
 import { BoardDropZone, type SlotDropData } from '@/components/game/Cards';
 import { AppIcon } from '@/components/ui/AppIcon';
 import type { GameCard, Player } from '@/lib/effects';
@@ -1129,7 +1130,7 @@ export function MobileGameLayout({ currentPlayer, state, actions, tutorialRefere
                 style={{ background: 'rgba(0,0,0,0.30)' }}
               >
                 <span className="text-xl font-bold text-white">=</span>
-                <span className="text-3xl font-black text-white px-1">{currentPlayer.targetR}</span>
+                <span className="text-3xl font-black text-white px-1">{formatTargetForDisplay(currentPlayer.targetR)}</span>
               </div>
             </div>
           </div>

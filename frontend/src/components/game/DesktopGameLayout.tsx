@@ -3,6 +3,7 @@ import { useDraggable, useDroppable, useDndMonitor } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 import { cardsDatabase } from '@/data/cardsDB';
 import { getBorderColor, getSpecialSlots } from '@/lib/gameHelpers';
+import { formatTargetForDisplay } from '@/lib/mathDisplay';
 import { BoardDropZone, type SlotDropData } from '@/components/game/Cards';
 import { AppIcon } from '@/components/ui/AppIcon';
 import type { GameCard, Player } from '@/lib/effects';
@@ -968,7 +969,7 @@ export function DesktopGameLayout({ currentPlayer, state, actions, tutorialRefer
                 }}
               >
                 <span className="text-2xl font-bold text-white">=</span>
-                <span className="text-4xl font-black text-white px-2">{currentPlayer.targetR}</span>
+                <span className="text-4xl font-black text-white px-2">{formatTargetForDisplay(currentPlayer.targetR)}</span>
               </div>
             </div>
           </div>
