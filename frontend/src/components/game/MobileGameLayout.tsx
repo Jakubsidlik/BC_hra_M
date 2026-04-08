@@ -181,6 +181,7 @@ interface MiniHandCardProps {
 
 function MiniHandCard({ card, index, total, isDiscarding, onDiscard, onSelect, isSelected = false, palette, isIOS = false }: MiniHandCardProps) {
   const cardData = cardsDatabase[card.symbol];
+
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: card.id,
     data: card,
@@ -193,7 +194,7 @@ function MiniHandCard({ card, index, total, isDiscarding, onDiscard, onSelect, i
   const fanTranslateY = isDragging ? 0 : Math.abs(distanceFromCenter) * 6;
   const translateX = isDragging ? 0 : distanceFromCenter * 28;
 
-  // When selected: straighten, lift up, scale to 2.75x so card is fully visible
+  // When selected: straighten and enlarge card as in previous mobile preview behavior
   const selectedTransform = `rotate(0deg) translateY(-6rem) translateX(${translateX}px) scale(2.25)`;
   const normalTransform = `rotate(${rotation}deg) translateY(${fanTranslateY}px) translateX(${translateX}px)`;
 
@@ -239,7 +240,7 @@ function MiniHandCard({ card, index, total, isDiscarding, onDiscard, onSelect, i
       }}
       style={style}
       className={`rounded-xl border-2 shadow-xl select-none overflow-hidden origin-bottom
-        ${isIOS ? (isDragging ? 'transition-none' : 'transition-[transform,box-shadow,border-color] duration-200') : 'transition-all duration-300'}
+        ${isIOS ? (isDragging ? 'transition-none' : 'transition-all duration-300') : 'transition-all duration-300'}
         ${isDragging ? (isIOS ? 'scale-[1.02] ring-0' : 'scale-110 ring-2 ring-white/30') : ''}
         ${isDiscarding
           ? 'cursor-pointer border-red-500! animate-pulse'
@@ -293,11 +294,6 @@ function MobileDiscardSlot({ discardCount, isDiscarding, palette }: MobileDiscar
       <span className="text-[10px] uppercase tracking-tighter text-white/50 font-bold mt-1 relative z-10">
         {discardCount > 0 ? `Odhoz (${discardCount})` : 'Odhoz'}
       </span>
-      {isDiscarding && (
-        <div className="absolute -top-3 right-0 bg-red-600 text-white text-[9px] px-2 py-1 rounded-full animate-bounce shadow-md pointer-events-none">
-          SEM
-        </div>
-      )}
     </div>
   );
 }

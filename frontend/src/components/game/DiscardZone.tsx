@@ -26,11 +26,6 @@ export function DiscardZone({ discardCount, deckCount, isDiscarding }: DiscardZo
           {discardCount}
         </span>
       </div>
-      {isDiscarding && (
-        <div className="absolute -top-3 right-0 bg-red-600 text-[9px] px-2 py-1 rounded-full animate-bounce shadow-md pointer-events-none">
-          SEM
-        </div>
-      )}
     </div>
   );
 }

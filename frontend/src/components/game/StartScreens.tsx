@@ -117,7 +117,7 @@ export function MainMenu({ onPlay, onRules }: { onPlay: () => void, onRules: () 
       </div>
 
       <div className="fixed bottom-6 left-6 z-20 text-slate-400 font-semibold text-sm leading-none">
-        VERZE: 5.6.0
+        VERZE: 5.7.0
       </div>
 
       {/* Tlačítko Zástupce vpravo dole */}

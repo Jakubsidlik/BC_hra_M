@@ -30,6 +30,51 @@ import { TabletGameLayout } from '@/components/game/TabletGameLayout';
 import { DesktopGameLayout } from '@/components/game/DesktopGameLayout';
 import { AppIcon } from '@/components/ui/AppIcon';
 
+const restrictToGameBoundary = ({
+  transform,
+  activeNodeRect,
+}: {
+  transform: { x: number; y: number; scaleX: number; scaleY: number };
+  activeNodeRect: { left: number; right: number; top: number; bottom: number } | null;
+}) => {
+  if (!activeNodeRect || typeof document === 'undefined') {
+    return transform;
+  }
+
+  const boundary = document.querySelector('[data-game-boundary="true"]') as HTMLElement | null;
+  if (!boundary) {
+    return transform;
+  }
+
+  const boundaryRect = boundary.getBoundingClientRect();
+  const nextLeft = activeNodeRect.left + transform.x;
+  const nextRight = activeNodeRect.right + transform.x;
+  const nextTop = activeNodeRect.top + transform.y;
+  const nextBottom = activeNodeRect.bottom + transform.y;
+
+  let x = transform.x;
+  let y = transform.y;
+
+  if (nextLeft < boundaryRect.left) {
+    x += boundaryRect.left - nextLeft;
+  }
+  if (nextRight > boundaryRect.right) {
+    x -= nextRight - boundaryRect.right;
+  }
+  if (nextTop < boundaryRect.top) {
+    y += boundaryRect.top - nextTop;
+  }
+  if (nextBottom > boundaryRect.bottom) {
+    y -= nextBottom - boundaryRect.bottom;
+  }
+
+  return {
+    ...transform,
+    x,
+    y,
+  };
+};
+
 export default function App() {
   // 1. NAČTENÍ LOGIKY Z CUSTOM HOOKU
   const { state, actions } = useGameEngine();
@@ -45,7 +90,10 @@ export default function App() {
   const sensors = useSensors(mouseSensor, touchSensor);
   const [isMouseDrag, setIsMouseDrag] = useState(false);
   const [tutorialOverlayHidden, setTutorialOverlayHidden] = useState(false);
-  const activeModifiers = useMemo(() => (isMouseDrag ? [snapCenterToCursor] : []), [isMouseDrag]);
+  const activeModifiers = useMemo(
+    () => (isMouseDrag ? [snapCenterToCursor, restrictToGameBoundary] : [restrictToGameBoundary]),
+    [isMouseDrag]
+  );
 
   const tutorialOverlayVisible = state.tutorialActive && !tutorialOverlayHidden;
 
@@ -259,74 +307,76 @@ export default function App() {
 />
 
       {/* --- HLAVNÍ UI HRY --- */}
-      {deviceType === 'phone' ? (
-        <MobileGameLayout
-          currentPlayer={currentPlayer}
-          state={state}
-          showEffectDebug={showEffectDebug}
-          debugEffectRows={effectDebugRows}
-          isIOS={isIOS}
-          actions={{
-            checkMathEngine: actions.checkMathEngine,
-            handleDiscardExpression: actions.handleDiscardExpression,
-            handleEndTurn: actions.handleEndTurn,
-            handleDiscard: actions.handleDiscard,
-            cancelBracketMode: actions.cancelBracketMode,
-            resetTutorial: actions.resetTutorial,
-            skipTutorial: actions.skipTutorial,
-            openLeaveGameConfirm: actions.openLeaveGameConfirm,
-            setIntegralVariable: actions.setIntegralVariable,
-            setDerivativeVariable: actions.setDerivativeVariable,
-            setSeriesVariable: actions.setSeriesVariable,
-            setLimitVariable: actions.setLimitVariable,
-          }}
-          tutorialReferenceBoard={state.tutorialReferenceBoard}
-        />
-      ) : deviceType === 'tablet' ? (
-        <TabletGameLayout
-          currentPlayer={currentPlayer}
-          state={state}
-          showEffectDebug={showEffectDebug}
-          debugEffectRows={effectDebugRows}
-          actions={{
-            checkMathEngine: actions.checkMathEngine,
-            handleDiscardExpression: actions.handleDiscardExpression,
-            handleEndTurn: actions.handleEndTurn,
-            handleDiscard: actions.handleDiscard,
-            cancelBracketMode: actions.cancelBracketMode,
-            resetTutorial: actions.resetTutorial,
-            skipTutorial: actions.skipTutorial,
-            openLeaveGameConfirm: actions.openLeaveGameConfirm,
-            setIntegralVariable: actions.setIntegralVariable,
-            setDerivativeVariable: actions.setDerivativeVariable,
-            setSeriesVariable: actions.setSeriesVariable,
-            setLimitVariable: actions.setLimitVariable,
-          }}
-          tutorialReferenceBoard={state.tutorialReferenceBoard}
-        />
-      ) : (
-        <DesktopGameLayout
-          currentPlayer={currentPlayer}
-          state={state}
-          showEffectDebug={showEffectDebug}
-          debugEffectRows={effectDebugRows}
-          actions={{
-            checkMathEngine: actions.checkMathEngine,
-            handleDiscardExpression: actions.handleDiscardExpression,
-            handleEndTurn: actions.handleEndTurn,
-            handleDiscard: actions.handleDiscard,
-            cancelBracketMode: actions.cancelBracketMode,
-            resetTutorial: actions.resetTutorial,
-            skipTutorial: actions.skipTutorial,
-            openLeaveGameConfirm: actions.openLeaveGameConfirm,
-            setIntegralVariable: actions.setIntegralVariable,
-            setDerivativeVariable: actions.setDerivativeVariable,
-            setSeriesVariable: actions.setSeriesVariable,
-            setLimitVariable: actions.setLimitVariable,
-          }}
-          tutorialReferenceBoard={state.tutorialReferenceBoard}
-        />
-      )}
+      <div data-game-boundary="true" className="relative">
+        {deviceType === 'phone' ? (
+          <MobileGameLayout
+            currentPlayer={currentPlayer}
+            state={state}
+            showEffectDebug={showEffectDebug}
+            debugEffectRows={effectDebugRows}
+            isIOS={isIOS}
+            actions={{
+              checkMathEngine: actions.checkMathEngine,
+              handleDiscardExpression: actions.handleDiscardExpression,
+              handleEndTurn: actions.handleEndTurn,
+              handleDiscard: actions.handleDiscard,
+              cancelBracketMode: actions.cancelBracketMode,
+              resetTutorial: actions.resetTutorial,
+              skipTutorial: actions.skipTutorial,
+              openLeaveGameConfirm: actions.openLeaveGameConfirm,
+              setIntegralVariable: actions.setIntegralVariable,
+              setDerivativeVariable: actions.setDerivativeVariable,
+              setSeriesVariable: actions.setSeriesVariable,
+              setLimitVariable: actions.setLimitVariable,
+            }}
+            tutorialReferenceBoard={state.tutorialReferenceBoard}
+          />
+        ) : deviceType === 'tablet' ? (
+          <TabletGameLayout
+            currentPlayer={currentPlayer}
+            state={state}
+            showEffectDebug={showEffectDebug}
+            debugEffectRows={effectDebugRows}
+            actions={{
+              checkMathEngine: actions.checkMathEngine,
+              handleDiscardExpression: actions.handleDiscardExpression,
+              handleEndTurn: actions.handleEndTurn,
+              handleDiscard: actions.handleDiscard,
+              cancelBracketMode: actions.cancelBracketMode,
+              resetTutorial: actions.resetTutorial,
+              skipTutorial: actions.skipTutorial,
+              openLeaveGameConfirm: actions.openLeaveGameConfirm,
+              setIntegralVariable: actions.setIntegralVariable,
+              setDerivativeVariable: actions.setDerivativeVariable,
+              setSeriesVariable: actions.setSeriesVariable,
+              setLimitVariable: actions.setLimitVariable,
+            }}
+            tutorialReferenceBoard={state.tutorialReferenceBoard}
+          />
+        ) : (
+          <DesktopGameLayout
+            currentPlayer={currentPlayer}
+            state={state}
+            showEffectDebug={showEffectDebug}
+            debugEffectRows={effectDebugRows}
+            actions={{
+              checkMathEngine: actions.checkMathEngine,
+              handleDiscardExpression: actions.handleDiscardExpression,
+              handleEndTurn: actions.handleEndTurn,
+              handleDiscard: actions.handleDiscard,
+              cancelBracketMode: actions.cancelBracketMode,
+              resetTutorial: actions.resetTutorial,
+              skipTutorial: actions.skipTutorial,
+              openLeaveGameConfirm: actions.openLeaveGameConfirm,
+              setIntegralVariable: actions.setIntegralVariable,
+              setDerivativeVariable: actions.setDerivativeVariable,
+              setSeriesVariable: actions.setSeriesVariable,
+              setLimitVariable: actions.setLimitVariable,
+            }}
+            tutorialReferenceBoard={state.tutorialReferenceBoard}
+          />
+        )}
+      </div>
 
       {/* DIALOG PRO VÝBĚR EFEKTU */}
       <EffectDialog 
