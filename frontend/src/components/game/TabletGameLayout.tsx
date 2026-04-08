@@ -168,11 +168,6 @@ function TabletDiscardSlot({ discardCount, isDiscarding, palette }: { discardCou
       <span className="text-[10px] uppercase tracking-tighter text-white/50 font-bold mt-1 relative z-10">
         {discardCount > 0 ? `Odhoz (${discardCount})` : 'Odhoz'}
       </span>
-      {isDiscarding && (
-        <div className="absolute -top-3 right-0 bg-red-600 text-white text-[9px] px-2 py-1 rounded-full animate-bounce shadow-md pointer-events-none">
-          SEM
-        </div>
-      )}
     </div>
   );
 }

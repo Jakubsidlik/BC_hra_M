@@ -65,6 +65,7 @@ type CustomDifficultyConfig = {
 const MAX_SLOT_DIGITS = 5;
 const NUMBER_DRAW_BOOST = 0.15;
 const SS_MINUS_DRAW_WEIGHT = 2;
+const E_PI_DRAW_WEIGHT = 2;
 const ANTI_STREAK_THRESHOLD = 3;
 const ANTI_STREAK_BASE_BOOST = 0.08;
 const ANTI_STREAK_STEP_BOOST = 0.02;
@@ -124,11 +125,28 @@ const getAntiStreakNumberBoost = (nonNumberStreak: number): number => {
   return Math.min(ANTI_STREAK_MAX_BOOST, ANTI_STREAK_BASE_BOOST + extraSteps * ANTI_STREAK_STEP_BOOST);
 };
 
-const getDrawSymbolWeightsForTarget = (difficulty: DifficultyMode, targetR: string): Record<string, number> => {
+const getDrawSymbolWeightsForTarget = (
+  difficulty: DifficultyMode,
+  targetR: string,
+  isCustomDifficulty: boolean = false
+): Record<string, number> => {
+  const weights: Record<string, number> = {};
+
   if ((difficulty === 'SŠ' || difficulty === 'VŠ') && targetR.includes('-')) {
-    return { '-': SS_MINUS_DRAW_WEIGHT };
+    weights['-'] = SS_MINUS_DRAW_WEIGHT;
   }
-  return {};
+
+  if (!isCustomDifficulty) {
+    const normalizedTarget = targetR.toLowerCase();
+    if (normalizedTarget.includes('e')) {
+      weights.e = E_PI_DRAW_WEIGHT;
+    }
+    if (targetR.includes('π') || normalizedTarget.includes('pi')) {
+      weights['π'] = E_PI_DRAW_WEIGHT;
+    }
+  }
+
+  return weights;
 };
 
 const pickWeightedDeckIndex = (
@@ -569,7 +587,7 @@ export function useGameEngine() {
           currentDiscard = [];
         }
         const antiStreakBoost = getAntiStreakNumberBoost(updatedNonNumberStreak);
-        const symbolWeights = getDrawSymbolWeightsForTarget(difficulty, String(p.targetR ?? ''));
+        const symbolWeights = getDrawSymbolWeightsForTarget(difficulty, String(p.targetR ?? ''), isCustomDifficulty);
         const drawn = drawCardWithNumberBias(currentDeck, NUMBER_DRAW_BOOST + antiStreakBoost, symbolWeights);
         if (drawn) {
           p.hand.push({ ...drawn, id: `h-${drawn.symbol}-${Date.now()}-${Math.random().toString(36).substring(2, 5)}` });
@@ -603,7 +621,7 @@ export function useGameEngine() {
         };
       });
     }
-  }, [deck, discardPile, difficulty, nonNumberDrawStreakByPlayer, players, updatePlayerStats]);
+  }, [deck, discardPile, difficulty, isCustomDifficulty, nonNumberDrawStreakByPlayer, players, updatePlayerStats]);
 
   const applyPendingHandSwap = useCallback(() => {
     if (!pendingHandSwap) return;
@@ -641,7 +659,7 @@ export function useGameEngine() {
 
       const [leftBracket] = player.board.splice(leftIndex, 1);
       if (leftBracket) {
-        player.syntax.push(leftBracket);
+        player.syntax = [leftBracket, ...player.syntax.filter((card: GameCard) => card.id !== leftBracket.id)];
       }
       return next;
     });
@@ -1498,7 +1516,6 @@ export function useGameEngine() {
     if (over.id === 'drop-discard') {
       const cardInHand = players[currentPlayerIndex].hand.find(c => c.id === active.id);
       if (cardInHand) {
-        if (!isDiscarding) return toast.error("Odhazovat lze jen na konci tahu.");
         handleDiscard(active.id as string);
       } else {
         if (hasModifiedBoardThisTurn) return toast.error("Již jsi provedl akci.");
@@ -1937,7 +1954,7 @@ export function useGameEngine() {
               currentDiscard = [];
             }
             const targetR = players[currentPlayerIndex]?.targetR ?? '';
-            const symbolWeights = getDrawSymbolWeightsForTarget(difficulty, String(targetR));
+            const symbolWeights = getDrawSymbolWeightsForTarget(difficulty, String(targetR), isCustomDifficulty);
             const drawn = drawCardWithNumberBias(currentDeck, NUMBER_DRAW_BOOST, symbolWeights);
             if (drawn) {
               drawnCards.push({
@@ -2427,7 +2444,7 @@ export function useGameEngine() {
 
     newPlayers.forEach(player => {
       let nonNumberStreak = 0;
-      const symbolWeights = getDrawSymbolWeightsForTarget(difficulty, String(player.targetR ?? ''));
+      const symbolWeights = getDrawSymbolWeightsForTarget(difficulty, String(player.targetR ?? ''), isCustomDifficulty);
       for (let i = 0; i < 5; i++) {
         const antiStreakBoost = getAntiStreakNumberBoost(nonNumberStreak);
         const drawn = drawCardWithNumberBias(deckCopy, NUMBER_DRAW_BOOST + antiStreakBoost, symbolWeights);
@@ -2446,7 +2463,7 @@ export function useGameEngine() {
     // Starting player draws 6th card
     const startPlayer = newPlayers[0];
     const startPlayerStreak = openingNonNumberStreakByPlayerId[startPlayer.id] ?? 0;
-    const startPlayerWeights = getDrawSymbolWeightsForTarget(difficulty, String(startPlayer.targetR ?? ''));
+    const startPlayerWeights = getDrawSymbolWeightsForTarget(difficulty, String(startPlayer.targetR ?? ''), isCustomDifficulty);
     const drawn = drawCardWithNumberBias(deckCopy, NUMBER_DRAW_BOOST + getAntiStreakNumberBoost(startPlayerStreak), startPlayerWeights);
     if (drawn) {
       newPlayers[0].hand.push({ ...drawn, id: `h-${drawn.symbol}-${Date.now()}-${Math.random().toString(36).substring(2, 5)}` });
