@@ -63,6 +63,7 @@ type CustomDifficultyConfig = {
 
 const MAX_SLOT_DIGITS = 5;
 const NUMBER_DRAW_BOOST = 0.15;
+const SS_MINUS_DRAW_WEIGHT = 2;
 const ANTI_STREAK_THRESHOLD = 3;
 const ANTI_STREAK_BASE_BOOST = 0.08;
 const ANTI_STREAK_STEP_BOOST = 0.02;
@@ -121,7 +122,43 @@ const getAntiStreakNumberBoost = (nonNumberStreak: number): number => {
   return Math.min(ANTI_STREAK_MAX_BOOST, ANTI_STREAK_BASE_BOOST + extraSteps * ANTI_STREAK_STEP_BOOST);
 };
 
-const drawCardWithNumberBias = (sourceDeck: GameCard[], numberBoost: number = NUMBER_DRAW_BOOST): GameCard | undefined => {
+const getDrawSymbolWeightsForTarget = (difficulty: DifficultyMode, targetR: string): Record<string, number> => {
+  if ((difficulty === 'SŠ' || difficulty === 'VŠ') && targetR.includes('-')) {
+    return { '-': SS_MINUS_DRAW_WEIGHT };
+  }
+  return {};
+};
+
+const pickWeightedDeckIndex = (
+  sourceDeck: GameCard[],
+  indexes: number[],
+  symbolWeights: Record<string, number>
+): number => {
+  if (indexes.length === 1) return indexes[0];
+
+  const weighted = indexes.map(index => {
+    const symbol = sourceDeck[index]?.symbol;
+    const configuredWeight = symbol ? symbolWeights[symbol] : undefined;
+    return Number.isFinite(configuredWeight) && (configuredWeight ?? 0) > 0 ? (configuredWeight as number) : 1;
+  });
+
+  const totalWeight = weighted.reduce((sum, value) => sum + value, 0);
+  if (totalWeight <= 0) return indexes[Math.floor(Math.random() * indexes.length)];
+
+  let roll = Math.random() * totalWeight;
+  for (let i = 0; i < indexes.length; i++) {
+    roll -= weighted[i];
+    if (roll <= 0) return indexes[i];
+  }
+
+  return indexes[indexes.length - 1];
+};
+
+const drawCardWithNumberBias = (
+  sourceDeck: GameCard[],
+  numberBoost: number = NUMBER_DRAW_BOOST,
+  symbolWeights: Record<string, number> = {}
+): GameCard | undefined => {
   if (sourceDeck.length === 0) return undefined;
 
   const numberIndexes: number[] = [];
@@ -137,8 +174,9 @@ const drawCardWithNumberBias = (sourceDeck: GameCard[], numberBoost: number = NU
   });
 
   if (numberIndexes.length === 0) {
-    const randomIndex = Math.floor(Math.random() * sourceDeck.length);
-    return sourceDeck.splice(randomIndex, 1)[0];
+    const allIndexes = sourceDeck.map((_, index) => index);
+    const selectedIndex = pickWeightedDeckIndex(sourceDeck, allIndexes, symbolWeights);
+    return sourceDeck.splice(selectedIndex, 1)[0];
   }
 
   const baseNumberChance = numberIndexes.length / sourceDeck.length;
@@ -150,7 +188,7 @@ const drawCardWithNumberBias = (sourceDeck: GameCard[], numberBoost: number = NU
     pool = shouldDrawNumber ? nonNumberIndexes : numberIndexes;
   }
 
-  const selectedIndex = pool[Math.floor(Math.random() * pool.length)];
+  const selectedIndex = pickWeightedDeckIndex(sourceDeck, pool, symbolWeights);
   return sourceDeck.splice(selectedIndex, 1)[0];
 };
 
@@ -520,7 +558,8 @@ export function useGameEngine() {
           currentDiscard = [];
         }
         const antiStreakBoost = getAntiStreakNumberBoost(updatedNonNumberStreak);
-        const drawn = drawCardWithNumberBias(currentDeck, NUMBER_DRAW_BOOST + antiStreakBoost);
+        const symbolWeights = getDrawSymbolWeightsForTarget(difficulty, String(p.targetR ?? ''));
+        const drawn = drawCardWithNumberBias(currentDeck, NUMBER_DRAW_BOOST + antiStreakBoost, symbolWeights);
         if (drawn) {
           p.hand.push({ ...drawn, id: `h-${drawn.symbol}-${Date.now()}-${Math.random().toString(36).substring(2, 5)}` });
           drawnCount += 1;
@@ -543,8 +582,8 @@ export function useGameEngine() {
       }));
     }
 
-    if (drawnCount > 0) {
-      updatePlayerStats(playerIndex, stats => {
+    if (drawnCount > 0 && activePlayerId !== undefined) {
+      updatePlayerStats(activePlayerId, stats => {
         const currentTurnDraw = stats.currentTurnDraw + drawnCount;
         return {
           ...stats,
@@ -682,10 +721,12 @@ export function useGameEngine() {
         next[currentPlayerIndex].status.extraTurn = false;
         return next;
       });
-      updatePlayerStats(currentPlayerIndex, stats => ({
-        ...stats,
-        currentTurnDraw: 0,
-      }));
+      if (p) {
+        updatePlayerStats(p.id, stats => ({
+          ...stats,
+          currentTurnDraw: 0,
+        }));
+      }
       setHasModifiedBoardThisTurn(false);
       setPlaysThisTurn(0);
       setTurnPlayCounts({ value: 0, operator: 0 });
@@ -703,8 +744,8 @@ export function useGameEngine() {
     const current = players[currentPlayerIndex];
     const removableCards = current?.board.filter((card: GameCard) => !card.locked) || [];
     const allCards = removableCards.flatMap((card: GameCard) => flattenCardTree(card));
-    if (allCards.length > 0) {
-      updatePlayerStats(currentPlayerIndex, stats => ({
+    if (allCards.length > 0 && current) {
+      updatePlayerStats(current.id, stats => ({
         ...stats,
         cardsFromBoardToDiscard: stats.cardsFromBoardToDiscard + allCards.length,
       }));
@@ -986,10 +1027,13 @@ export function useGameEngine() {
     setPlaysThisTurn(0);
     setTurnPlayCounts({ value: 0, operator: 0 });
     setBracketPairsPlacedThisTurn(0);
-    updatePlayerStats(nextIdx, stats => ({
-      ...stats,
-      currentTurnDraw: 0,
-    }));
+    const nextPlayerId = players[nextIdx]?.id;
+    if (typeof nextPlayerId === 'number') {
+      updatePlayerStats(nextPlayerId, stats => ({
+        ...stats,
+        currentTurnDraw: 0,
+      }));
+    }
 
     const p = players[nextIdx];
     const totalToDraw = Math.max(0, 1 + (p.status?.extraDraw || 0) - (p.status?.drawReduction || 0));
@@ -1049,7 +1093,7 @@ export function useGameEngine() {
       toast.error("Dvě operace × nebo ÷ nesmí být vedle sebe!");
       const boardCount = curr.board.flatMap((card: GameCard) => flattenCardTree(card)).length;
       if (boardCount > 0) {
-        updatePlayerStats(currentPlayerIndex, stats => ({
+        updatePlayerStats(curr.id, stats => ({
           ...stats,
           cardsFromBoardToDiscard: stats.cardsFromBoardToDiscard + boardCount,
         }));
@@ -1085,7 +1129,7 @@ export function useGameEngine() {
       } else {
         toast.error("Chyba v důkazu!", { id: toastId });
         const boardCount = curr.board.flatMap((card: GameCard) => flattenCardTree(card)).length;
-        updatePlayerStats(currentPlayerIndex, stats => ({
+        updatePlayerStats(curr.id, stats => ({
           ...stats,
           wrongQEDAttempts: stats.wrongQEDAttempts + 1,
           cardsFromBoardToDiscard: stats.cardsFromBoardToDiscard + boardCount,
@@ -1154,10 +1198,13 @@ export function useGameEngine() {
       return next;
     });
 
-    updatePlayerStats(currentPlayerIndex, stats => ({
-      ...stats,
-      cardsToBoard: stats.cardsToBoard + 1,
-    }));
+    const currentPlayerId = players[currentPlayerIndex]?.id;
+    if (typeof currentPlayerId === 'number') {
+      updatePlayerStats(currentPlayerId, stats => ({
+        ...stats,
+        cardsToBoard: stats.cardsToBoard + 1,
+      }));
+    }
 
     if (countAsAction) {
       registerTurnPlay(cardWithSlots.symbol);
@@ -1228,10 +1275,13 @@ export function useGameEngine() {
       return next;
     });
 
-    updatePlayerStats(currentPlayerIndex, stats => ({
-      ...stats,
-      cardsToBoard: stats.cardsToBoard + 1,
-    }));
+    const currentPlayerId = players[currentPlayerIndex]?.id;
+    if (typeof currentPlayerId === 'number') {
+      updatePlayerStats(currentPlayerId, stats => ({
+        ...stats,
+        cardsToBoard: stats.cardsToBoard + 1,
+      }));
+    }
 
     if (countAsAction) {
       registerTurnPlay(card.symbol);
@@ -1409,10 +1459,13 @@ export function useGameEngine() {
           player.board.splice(insertPos, 0, rB);
           return next;
         });
-        updatePlayerStats(currentPlayerIndex, stats => ({
-          ...stats,
-          bracketPairsUsed: stats.bracketPairsUsed + 1,
-        }));
+        const currentPlayerId = players[currentPlayerIndex]?.id;
+        if (typeof currentPlayerId === 'number') {
+          updatePlayerStats(currentPlayerId, stats => ({
+            ...stats,
+            bracketPairsUsed: stats.bracketPairsUsed + 1,
+          }));
+        }
         setBracketMode(null);
         setBracketPairsPlacedThisTurn(prev => prev + 1);
         toast.success("Závorky umístěny!", { icon: '✓' });
@@ -1496,10 +1549,13 @@ export function useGameEngine() {
           });
           const removedCards = flattenCardTree(removed);
           setDiscardPile(old => [...old, ...removedCards]);
-          updatePlayerStats(currentPlayerIndex, stats => ({
-            ...stats,
-            cardsFromBoardToDiscard: stats.cardsFromBoardToDiscard + removedCards.length,
-          }));
+          const currentPlayerId = players[currentPlayerIndex]?.id;
+          if (typeof currentPlayerId === 'number') {
+            updatePlayerStats(currentPlayerId, stats => ({
+              ...stats,
+              cardsFromBoardToDiscard: stats.cardsFromBoardToDiscard + removedCards.length,
+            }));
+          }
           if (!isLockedSpecialSlotDiscard) {
             setHasModifiedBoardThisTurn(true);
             toast.info("Karta byla odhozena z tabule. Tah byl spotřebován.");
@@ -1866,7 +1922,9 @@ export function useGameEngine() {
               currentDeck = [...currentDiscard].sort(() => Math.random() - 0.5);
               currentDiscard = [];
             }
-            const drawn = drawCardWithNumberBias(currentDeck);
+            const targetR = players[currentPlayerIndex]?.targetR ?? '';
+            const symbolWeights = getDrawSymbolWeightsForTarget(difficulty, String(targetR));
+            const drawn = drawCardWithNumberBias(currentDeck, NUMBER_DRAW_BOOST, symbolWeights);
             if (drawn) {
               drawnCards.push({
                 ...drawn,
@@ -2198,12 +2256,12 @@ export function useGameEngine() {
     };
 
     const generateSharedSsLikeTarget = (): string => {
-      const plainNumber = Math.floor(Math.random() * 199) - 99;
+      const plainNumber = Math.floor(Math.random() * 1099) - 99;
       if (Math.random() < 0.5) return `${plainNumber}`;
 
       let coefficient = 0;
       while (coefficient === 0) {
-        coefficient = Math.floor(Math.random() * 199) - 99;
+        coefficient = Math.floor(Math.random() * 109) - 9;
       }
       const symbol = ['x', 'y', 'e', 'π'][Math.floor(Math.random() * 4)];
       return `${coefficient}${symbol}`;
@@ -2343,9 +2401,10 @@ export function useGameEngine() {
 
     newPlayers.forEach(player => {
       let nonNumberStreak = 0;
+      const symbolWeights = getDrawSymbolWeightsForTarget(difficulty, String(player.targetR ?? ''));
       for (let i = 0; i < 5; i++) {
         const antiStreakBoost = getAntiStreakNumberBoost(nonNumberStreak);
-        const drawn = drawCardWithNumberBias(deckCopy, NUMBER_DRAW_BOOST + antiStreakBoost);
+        const drawn = drawCardWithNumberBias(deckCopy, NUMBER_DRAW_BOOST + antiStreakBoost, symbolWeights);
         if (drawn) {
           player.hand.push({ ...drawn, id: `h-${drawn.symbol}-${Date.now()}-${Math.random().toString(36).substring(2, 5)}` });
           if (cardsDatabase[drawn.symbol]?.type === 'number') {
@@ -2361,7 +2420,8 @@ export function useGameEngine() {
     // Starting player draws 6th card
     const startPlayer = newPlayers[0];
     const startPlayerStreak = openingNonNumberStreakByPlayerId[startPlayer.id] ?? 0;
-    const drawn = drawCardWithNumberBias(deckCopy, NUMBER_DRAW_BOOST + getAntiStreakNumberBoost(startPlayerStreak));
+    const startPlayerWeights = getDrawSymbolWeightsForTarget(difficulty, String(startPlayer.targetR ?? ''));
+    const drawn = drawCardWithNumberBias(deckCopy, NUMBER_DRAW_BOOST + getAntiStreakNumberBoost(startPlayerStreak), startPlayerWeights);
     if (drawn) {
       newPlayers[0].hand.push({ ...drawn, id: `h-${drawn.symbol}-${Date.now()}-${Math.random().toString(36).substring(2, 5)}` });
       openingNonNumberStreakByPlayerId[startPlayer.id] = cardsDatabase[drawn.symbol]?.type === 'number' ? 0 : startPlayerStreak + 1;

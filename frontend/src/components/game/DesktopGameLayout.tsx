@@ -1049,10 +1049,10 @@ export function DesktopGameLayout({ currentPlayer, state, actions, tutorialRefer
         className="mt-auto pb-20 pt-2 px-4 transition-colors duration-700"
         style={{ background: `linear-gradient(to top, ${palette.footerBg} 0%, transparent 100%)`, position: 'relative', zIndex: 100, transform: `translateY(-${sharedGoalBelowBoardLift}px)` }}
       >
-        {/* translateY(-200px) to lift the whole fan up as in the mockup */}
+        {/* translateY(-210px) to lift the whole fan up as in the mockup */}
         <div
           className="relative max-w-lg mx-auto flex justify-center items-end h-48 select-none"
-          style={{ transform: 'translateY(-200px)' }}
+          style={{ transform: 'translateY(-250px)' }}
         >
           {handCards.map((card, index) => (
             <DesktopHandCard

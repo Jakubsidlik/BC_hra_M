@@ -117,7 +117,7 @@ export function MainMenu({ onPlay, onRules }: { onPlay: () => void, onRules: () 
       </div>
 
       <div className="fixed bottom-6 left-6 z-20 text-slate-400 font-semibold text-sm leading-none">
-        VERZE: 5.0.4
+        VERZE: 5.4.0
       </div>
 
       {/* Tlačítko Zástupce vpravo dole */}
@@ -287,7 +287,7 @@ export function CustomDifficultySetupScreen({
 }) {
   const naturalNumberSymbols = new Set(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']);
   const zsOperatorSymbols = new Set(['+', '-', '*', '/', 'a^b', 'sqrt']);
-  const ssOperatorSymbols = new Set(['mod', 'n!', 'log', 'ln', 'log10', 'nCk', 'det', 'skalar', 'vektor']);
+  const ssOperatorSymbols = new Set(['mod', 'n!', 'log2', 'log3', 'log', 'nCk', 'det', 'skalar', 'vektor']);
   const vsOperatorSymbols = new Set(['d/dx', 'int', '∑', '∏', 'lim']);
   const isGoniometrySymbol = (symbol: string) => /^(sin|cos|tg|cotg)\(/.test(symbol);
 
@@ -712,7 +712,7 @@ export function RulesScreen({ onBack }: { onBack: () => void }) {
                     <ul className="space-y-2 text-slate-200">
                       <li><strong>Tutoriál:</strong> krátká ukázková hra s pevně daným cílem R = 11 a řízenými kroky.</li>
                       <li><strong>ZŠ:</strong> výsledek je číslo z intervalu -99..99, nebo člen -9x..9x / -9y..9y (bez 0x a 0y).</li>
-                      <li><strong>SŠ, VŠ:</strong> výsledek je z množiny -99..999, -99x..99x, -99y..99y, -99e..99e, -99π..99π.</li>
+                      <li><strong>SŠ, VŠ:</strong> výsledek je z množiny -99..999, -9x..99x, -9y..99y, -9e..99e, -9π..99π.</li>
                       <li><strong>Vlastní:</strong> výsledky i karty se řídí tím, co si hráč navolí v konfiguraci. Pokud je vybraná jedna VŠ zamčená karta (int, d/dx, ∑, ∏, lim), dostanou ji všichni; pokud je jich vybraných více, každý hráč dostane náhodně jednu z nich.</li>
                     </ul>
                   </div>
@@ -720,7 +720,7 @@ export function RulesScreen({ onBack }: { onBack: () => void }) {
                     <p className="font-bold text-yellow-300 mb-2">Režim Společný cíl</p>
                     <ul className="space-y-2 text-slate-200">
                       <li><strong>ZŠ:</strong> společný výsledek je -99..99, -9x..9x, -9y..9y (bez 0x a 0y).</li>
-                      <li><strong>SŠ, VŠ:</strong> společný výsledek je -99..99, -99x..99x, -99y..99y, -99e..99e, -99π..99π.</li>
+                      <li><strong>SŠ, VŠ:</strong> společný výsledek je -99..999, -9x..99x, -9y..99y, -9e..99e, -9π..99π.</li>
                       <li><strong>Vlastní:</strong> společný cíl i zamčené VŠ karty se řídí vlastní konfigurací. Lze nastavit vlastní počet tahů na hráče; při této volbě zůstává odpočtová lišta kol po celou hru zelená.</li>
                     </ul>
                   </div>

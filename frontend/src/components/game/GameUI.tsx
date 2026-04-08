@@ -209,8 +209,6 @@ export function GameSummaryDialog({
   const maxDraw = Math.max(0, ...rows.map(r => r.maxDrawInTurn));
   const maxToBoard = Math.max(0, ...rows.map(r => r.cardsToBoard));
   const maxFromBoard = Math.max(0, ...rows.map(r => r.cardsFromBoardToDiscard));
-  const hardest = rows.reduce((a, b) => (a.targetScore >= b.targetScore ? a : b), rows[0]);
-  const easiest = rows.reduce((a, b) => (a.targetScore <= b.targetScore ? a : b), rows[0]);
   const firstWrongPlayerId = stats.firstWrongQED?.playerId;
   const firstWrong = typeof firstWrongPlayerId === 'number' ? rows.find(r => r.id === firstWrongPlayerId) : null;
 
@@ -255,9 +253,6 @@ export function GameSummaryDialog({
         <div className="mt-4 text-xs text-slate-300 space-y-1">
           {firstWrong && (
             <div>První špatný Q.E.D.: <span className="text-white font-bold">{firstWrong.name}</span></div>
-          )}
-          {hardest && easiest && (
-            <div>Nejtěžší R: <span className="text-white font-bold">{hardest.name}</span> ({hardest.targetR}) • Nejlehčí R: <span className="text-white font-bold">{easiest.name}</span> ({easiest.targetR})</div>
           )}
         </div>
 

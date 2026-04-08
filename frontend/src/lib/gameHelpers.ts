@@ -67,7 +67,7 @@ export function generatePersonalTargetR(difficulty: DifficultyMode): string {
   }
 
   if (difficulty === 'SŠ' || difficulty === 'VŠ') {
-    // SŠ/VŠ: -99..999, -99x..99x, -99y..99y, -99e..99e, -99π..99π
+    // SŠ/VŠ: -99..999, -9x..99x, -9y..99y, -9e..99e, -9π..99π
     const category = pick(['number', 'x', 'y', 'e', 'π']);
     if (category === 'number') {
       return `${randInt(-99, 999)}`;
@@ -75,7 +75,7 @@ export function generatePersonalTargetR(difficulty: DifficultyMode): string {
 
     let coefficient = 0;
     while (coefficient === 0) {
-      coefficient = randInt(-99, 99);
+      coefficient = randInt(-9, 99);
     }
     return formatTerm(coefficient, category);
   }
@@ -93,9 +93,9 @@ export function parseBoardToMathString(board: GameCard[]): string {
     'e': 'E',
     'tg': 'tan',
     'cotg': '1/tan',
-    'ln': 'log3',
-    'log': 'log2',
-    'log10': 'log10',
+    'log3': 'log3',
+    'log2': 'log2',
+    'log': 'log10',
     '√': 'sqrt',
     'mod': '%'
   };
@@ -157,7 +157,7 @@ export function parseBoardToMathString(board: GameCard[]): string {
       const currIsDigitOrVar = card.symbol.match(/^[0-9]$/) || ['x', 'y', 'π', 'e'].includes(card.symbol);
       const prevIsCloseBracket = [')', ']', '}'].includes(prevCard.symbol);
       const currIsOpenBracket = ['(', '[', '{'].includes(card.symbol);
-      const functionPrefixes = ['sin', 'cos', 'tg', 'cotg', 'log', 'log10', 'ln', 'sqrt', 'int', '∑', '∏', 'lim', 'd/dx'];
+      const functionPrefixes = ['sin', 'cos', 'tg', 'cotg', 'log', 'log2', 'log3', 'sqrt', 'int', '∑', '∏', 'lim', 'd/dx'];
       const trigPrefixes = ['sin', 'cos', 'tg', 'cotg'];
       const currIsFunction = functionPrefixes.some(pf => card.symbol === pf || card.symbol.startsWith(pf + '('));
       const prevIsTrigFunction = trigPrefixes.some(pf => prevCard.symbol === pf || prevCard.symbol.startsWith(pf + '('));
@@ -316,7 +316,7 @@ export function hasOperation(board: GameCard[]): boolean {
   // Goniometrické funkce jako sin, cos, tg, cotg už se sem neřadí, pohlíží se na ně jako na entity vyhodnotitelné samostatně/čísla.
   const operations = [
     '+', '-', '*', '/', 'a^b', 'sqrt', 'abs', 'skalar', 'mod', 'n!', 'd/dx', 'int',
-    '∑', 'log', 'log10', 'ln', 'nCk', '∏', 'lim', 'det',
+    '∑', 'log', 'log2', 'log3', 'nCk', '∏', 'lim', 'det',
     '∫', // alternativní symbol pro integrál
   ];
   const hasExplicitOp = board.some(card => operations.includes(card.symbol) || card.exponent);
@@ -331,7 +331,7 @@ export function hasOperation(board: GameCard[]): boolean {
     const currIsDigitOrVar = card.symbol.match(/^[0-9]$/) || ['x', 'y', 'vektor', 'π', 'e'].includes(card.symbol);
     const prevIsCloseBracket = [')', ']', '}'].includes(prevCard.symbol);
     const currIsOpenBracket = ['(', '[', '{'].includes(card.symbol);
-    const functionPrefixes = ['sin', 'cos', 'tg', 'cotg', 'log', 'log10', 'ln', 'sqrt', 'abs', 'int', '∑', '∏', 'lim', 'd/dx'];
+    const functionPrefixes = ['sin', 'cos', 'tg', 'cotg', 'log', 'log2', 'log3', 'sqrt', 'abs', 'int', '∑', '∏', 'lim', 'd/dx'];
     const currIsFunction = functionPrefixes.some(pf => card.symbol === pf || card.symbol.startsWith(pf + '('));
 
     if (
@@ -372,7 +372,7 @@ export function getBorderColor(symbol: string): string {
   // Operace: oranžové
   const operators = [
     '+', '-', '*', '/', 'a^b', 'sqrt', 'abs', 'skalar', 'mod', 'n!', 
-    'd/dx', 'int', '∑', 'log', 'log10', 'ln', 
+    'd/dx', 'int', '∑', 'log', 'log2', 'log3', 
     'nCk', '∏', 'lim', 'det'
   ];
   if (symbol === '|') return 'border-orange-500';
@@ -395,7 +395,7 @@ export function generateFilteredDeck(difficulty: DifficultyMode): GameCard[] {
     // ZŠ vyloučí: vysokoškolský obsah + pokročilé SŠ operace
     'ZŠ': [
       'π', 'e', 'mod', 'n!', 
-      'd/dx', 'int', '∑', 'log', 'log10', 'ln', 'sin', 'cos', 'tg', 'cotg', 
+        'd/dx', 'int', '∑', 'log2', 'log', 'log3', 'sin', 'cos', 'tg', 'cotg', 
       'nCk', '∏', 'lim', 'det', 'skalar', 'vektor', 'abs'
     ],
     // SŠ vyloučí: vysokoškolský obsah + modulo

@@ -284,7 +284,7 @@ export const applyEffectLogic = (
       newPlayers[currentPlayerIndex].status.notifications.push(`🔐 Zákaz operací pro všechny na příští kolo!`);
       break;
 
-    case "EFF_014": // log: Můžeš hrát libovolný počet karet
+    case "EFF_014": // log2: Můžeš hrát libovolný počet karet
       activePlayer.status.infinitePlays = true;
       break;
 
