@@ -303,8 +303,8 @@ int:
   slots:
     - upper
     - lower
-log:
-  symbol: log
+log2:
+  symbol: log2
   type: operator
   count: 6
   image: /svg/log.svg
@@ -672,15 +672,15 @@ vektor:
       name: Velikost vektoru
       description: Ihned dobereš 3 karty, 1 si necháš a 2 zahodíš.
       target: SELF
-ln:
-  symbol: ln
+log3:
+  symbol: log3
   type: operator
   count: 6
-  image: /svg/ln.svg
+  image: /svg/log3.svg
   slots:
     - single
-log10:
-  symbol: log10
+log:
+  symbol: log
   type: operator
   count: 6
   image: /svg/log10.svg

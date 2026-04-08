@@ -28,9 +28,6 @@ function translateToNerdamer(expr: string): string {
     result = result.replace(/\*\*/g, '^');
 
     // 2. SymPy formáty funkcí (vygenerovaných z parseBoardToMathString)
-    // ln(x) -> log(x, 3)
-    result = result.replace(/ln\(([^()]+)\)/g, 'log($1,3)');
-
     // log2(x) -> log(x, 2)
     result = result.replace(/log2\(([^()]+)\)/g, 'log($1,2)');
 
