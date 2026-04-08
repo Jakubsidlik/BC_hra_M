@@ -8,6 +8,7 @@
     "start": "vite",
     "build": "tsc -b && vite build",
     "test:regression": "tsx scripts/mathEngine.regression.ts",
+    "test:fractions": "tsx scripts/mathEngine.fractions.regression.ts",
     "lint": "eslint .",
     "preview": "vite preview"
   },

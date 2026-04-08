@@ -47,6 +47,16 @@ export type DifficultyMode = 'ZŠ' | 'SŠ' | 'VŠ';
 export function generatePersonalTargetR(difficulty: DifficultyMode): string {
   const randInt = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min;
   const pick = (arr: string[]) => arr[Math.floor(Math.random() * arr.length)];
+  const gcd = (a: number, b: number): number => {
+    let x = Math.abs(a);
+    let y = Math.abs(b);
+    while (y !== 0) {
+      const temp = y;
+      y = x % y;
+      x = temp;
+    }
+    return x;
+  };
   const formatTerm = (coefficient: number, symbol: string): string => {
     if (coefficient === 1) return symbol;
     if (coefficient === -1) return `-${symbol}`;
@@ -66,16 +76,48 @@ export function generatePersonalTargetR(difficulty: DifficultyMode): string {
     return formatTerm(coefficient, symbol);
   }
 
-  if (difficulty === 'SŠ' || difficulty === 'VŠ') {
-    // SŠ/VŠ: -99..999, -9x..99x, -9y..99y, -9e..99e, -9π..99π
-    const category = pick(['number', 'x', 'y', 'e', 'π']);
+  if (difficulty === 'SŠ') {
+    // SŠ: -99..99, -99x..99x, -99y..99y, -99e..99e, -99π..99π,
+    // plus speciální cíle se sqrt(2) a zlomky v základním tvaru.
+    const reducedFractions: string[] = [];
+    for (let numerator = 1; numerator <= 9; numerator += 1) {
+      for (let denominator = 2; denominator <= 9; denominator += 1) {
+        if (gcd(numerator, denominator) === 1) {
+          reducedFractions.push(`${numerator}/${denominator}`);
+        }
+      }
+    }
+
+    const category = pick(['number', 'x', 'y', 'e', 'π', 'sqrt-special', 'fraction']);
+    if (category === 'sqrt-special') {
+      return pick(['sqrt(2)', '2*sqrt(2)', 'sqrt(2)/3', 'sqrt(2)/4']);
+    }
+
+    if (category === 'fraction') {
+      return pick(reducedFractions);
+    }
+
     if (category === 'number') {
-      return `${randInt(-99, 999)}`;
+      return `${randInt(-99, 99)}`;
     }
 
     let coefficient = 0;
     while (coefficient === 0) {
-      coefficient = randInt(-9, 99);
+      coefficient = randInt(-99, 99);
+    }
+    return formatTerm(coefficient, category);
+  }
+
+  if (difficulty === 'VŠ') {
+    // VŠ: -99..99, -99x..99x, -99y..99y, -99e..99e, -99π..99π
+    const category = pick(['number', 'x', 'y', 'e', 'π']);
+    if (category === 'number') {
+      return `${randInt(-99, 99)}`;
+    }
+
+    let coefficient = 0;
+    while (coefficient === 0) {
+      coefficient = randInt(-99, 99);
     }
     return formatTerm(coefficient, category);
   }
