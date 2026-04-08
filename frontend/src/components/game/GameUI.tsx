@@ -5,7 +5,10 @@ import { Badge } from "@/components/ui/badge";
 import { AppIcon } from '@/components/ui/AppIcon';
 import { cardsDatabase } from '@/data/cardsDB';
 import type { GameCard, Player } from '@/lib/effects';
+import { formatTargetForDisplay } from '@/lib/mathDisplay';
 import { BoardArea } from './Cards';
+
+const BASE = import.meta.env.BASE_URL;
 
 // --- TUTORIÁL OVERLAY ---
 export function TutorialOverlay({
@@ -172,6 +175,7 @@ type GameSummaryStats = {
 type TargetingModeState = {
   effectId: string;
   targetPlayerId?: number;
+  sourceCardId?: string;
 };
 
 type PendingEffectState = {
@@ -216,7 +220,7 @@ export function GameSummaryDialog({
     const header = ['Hráč', 'R', 'Karty do L', 'Odhozeno z L', 'Závorky', 'Max dober v tahu', 'Špatné Q.E.D.'].join('\t');
     const lines = rows.map(r => [
       r.name,
-      r.targetR,
+      formatTargetForDisplay(r.targetR),
       r.cardsToBoard,
       r.cardsFromBoardToDiscard,
       r.bracketPairsUsed,
@@ -274,7 +278,7 @@ export function GameSummaryDialog({
                 {rows.map(r => (
                   <tr key={r.id} className="border-t border-white/5">
                     <td className="px-3 py-2 font-semibold text-white">{r.name}</td>
-                    <td className="px-3 py-2">{r.targetR}</td>
+                    <td className="px-3 py-2">{formatTargetForDisplay(r.targetR)}</td>
                     <td className={`px-3 py-2 text-right ${r.cardsToBoard === maxToBoard ? 'text-emerald-300 font-bold' : ''}`}>{r.cardsToBoard}</td>
                     <td className={`px-3 py-2 text-right ${r.cardsFromBoardToDiscard === maxFromBoard ? 'text-emerald-300 font-bold' : ''}`}>{r.cardsFromBoardToDiscard}</td>
                     <td className={`px-3 py-2 text-right ${r.bracketPairsUsed === maxBrackets ? 'text-emerald-300 font-bold' : ''}`}>{r.bracketPairsUsed}</td>
@@ -290,7 +294,7 @@ export function GameSummaryDialog({
             {rows.map(r => (
               <div key={r.id} className="rounded-xl border border-white/10 bg-black/20 p-4">
                 <div className="text-lg font-bold text-white">{r.name}</div>
-                <div className="text-sm text-slate-300">R: {r.targetR}</div>
+                <div className="text-sm text-slate-300">R: {formatTargetForDisplay(r.targetR)}</div>
                 <div className="mt-2 text-sm">Karty do L: <span className="text-white font-semibold">{r.cardsToBoard}</span></div>
                 <div className="text-sm">Odhozeno z L: <span className="text-white font-semibold">{r.cardsFromBoardToDiscard}</span></div>
                 <div className="text-sm">Závorky: <span className="text-white font-semibold">{r.bracketPairsUsed}</span></div>
@@ -342,12 +346,14 @@ export function HandoffScreen({ isHandoff, players, nextIndex, onReveal }: { isH
 export function TargetingOverlay({
   targetingMode,
   pendingEffect,
+  currentPlayerId,
   players,
   handleBoardCardClick,
   onCancel,
 }: {
   targetingMode: TargetingModeState | null;
   pendingEffect: PendingEffectState | null;
+  currentPlayerId: number;
   players: Player[];
   handleBoardCardClick: (id: string) => void;
   onCancel: () => void;
@@ -355,14 +361,25 @@ export function TargetingOverlay({
   if (!targetingMode || !pendingEffect) return null;
 
   const targetPlayer = players.find((p: Player) => p.id === targetingMode.targetPlayerId);
+  const currentPlayer = players.find((p: Player) => p.id === currentPlayerId);
+  const isPiSwap = targetingMode.effectId === 'EFF_002';
+  const selectingOwnCard = isPiSwap && !targetingMode.sourceCardId;
+  const boardOwner = selectingOwnCard ? currentPlayer : targetPlayer;
+  const overlayTitle = isPiSwap ? 'Výměna karet' : 'Zaměřování';
+  const overlayDescriptionPrefix = selectingOwnCard
+    ? 'Nejprve vyber kartu ze své plochy'
+    : 'Vyber kartu na ploše matematika';
+  const overlayDescriptionName = selectingOwnCard
+    ? (currentPlayer?.name ?? 'Hráč')
+    : (targetPlayer?.name ?? 'Soupeř');
 
   return (
     <div className="fixed inset-0 bg-slate-950/95 z-200 flex flex-col items-center justify-center p-8 backdrop-blur-md animate-in fade-in duration-300">
       <div className="text-center mb-12">
         <Badge variant="outline" className="mb-4 border-red-500 text-red-500 px-4 py-1 animate-pulse">TARGET ACQUIRED</Badge>
-        <h2 className="text-6xl text-white font-black mb-4 tracking-tighter uppercase font-chalk">Zaměřování</h2>
+        <h2 className="text-6xl text-white font-black mb-4 tracking-tighter uppercase" style={{ fontFamily: "'Merienda', cursive" }}>{overlayTitle}</h2>
         <p className="text-2xl text-slate-400 font-mono italic">
-          Zvol prvek na ploše matematika: <span className="text-red-500 font-bold">{targetPlayer?.name}</span>
+          {overlayDescriptionPrefix}: <span className="text-red-500 font-bold">{overlayDescriptionName}</span>
         </p>
       </div>
 
@@ -370,7 +387,7 @@ export function TargetingOverlay({
         <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-red-600 px-6 py-1 rounded-full text-xs font-bold tracking-widest text-white uppercase">Cílová oblast</div>
         <BoardArea
           id="target-board"
-          cards={targetPlayer?.board || []}
+          cards={boardOwner?.board || []}
           isTargeting={true}
           onCardClick={handleBoardCardClick}
         />
@@ -391,21 +408,17 @@ export function EffectDialog({
   if (!pendingEffect) return null;
   const cardData = cardsDatabase[pendingEffect.card.symbol];
   const effect = cardData?.effects?.optionA;
+  const isMinusEffect = effect?.id === 'EFF_007';
+  const hideTargetMetaLabel = effect?.id === 'EFF_007';
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) onClose(); }}>
-      <DialogContent className="w-[92vw] max-w-112.5 p-0 border-0 shadow-2xl rounded-xl overflow-hidden"
+      <DialogContent className="w-[92vw] max-w-112.5 p-0 border-0 shadow-2xl rounded-xl overflow-hidden *:data-[slot=dialog-close]:left-4 *:data-[slot=dialog-close]:right-auto"
         style={{ background: 'rgb(30,41,59)', border: '4px solid rgba(255,255,255,0.08)' }}>
 
         {/* Header */}
         <div className="flex items-center justify-between p-2"
           style={{ background: 'rgba(15,23,42,0.6)' }}>
-          <button
-            onClick={onClose}
-            className="text-slate-400 hover:text-white transition-colors p-1"
-          >
-            <AppIcon name="close" className="text-xl" />
-          </button>
           <DialogTitle className="sr-only">
             {effectStep === 'CHOOSE_EFFECT' ? 'Využití karty' : 'Cíl útoku'}
           </DialogTitle>
@@ -482,7 +495,9 @@ export function EffectDialog({
               <h3 className="text-red-400 text-2xl sm:text-3xl font-bold text-center" style={{ fontFamily: "'Merienda', cursive" }}>
                 Cíl útoku
               </h3>
-              <p className="text-slate-400 text-sm text-center font-mono italic">Na koho dopadne váha vaší inteligence?</p>
+              {!isMinusEffect && (
+                <p className="text-slate-400 text-sm text-center font-mono italic">Na koho dopadne váha vaší inteligence?</p>
+              )}
 
               <div className="w-full flex flex-col gap-3">
                 {players.filter((p: Player) => p.id !== currentPlayerId).map((opponent: Player) => (
@@ -497,7 +512,9 @@ export function EffectDialog({
                     }}
                   >
                     <div className="flex flex-col items-start overflow-hidden">
-                      <span className="font-mono text-[10px] text-slate-500 uppercase tracking-wider">Oponent</span>
+                      {!hideTargetMetaLabel && (
+                        <span className="font-mono text-[10px] text-slate-500 uppercase tracking-wider">Oponent</span>
+                      )}
                       <span className="text-white text-xl font-bold truncate" style={{ fontFamily: "'Merienda', cursive" }}>
                         {opponent.name}
                       </span>
@@ -541,7 +558,12 @@ export function MinigameDialog({ minigameMode, onPick }: { minigameMode: Minigam
     <Dialog open={!!minigameMode} onOpenChange={() => { }}>
       <DialogContent className="sm:max-w-2xl bg-slate-900 text-white border-slate-700 rounded-[2.5rem]">
         <DialogHeader>
-          <DialogTitle className={`text-4xl font-chalk text-center ${current.color} drop-shadow-lg`}>{current.title}</DialogTitle>
+          <DialogTitle
+            className={`text-4xl text-center ${current.color} drop-shadow-lg`}
+            style={{ fontFamily: "'Merienda', cursive" }}
+          >
+            {current.title}
+          </DialogTitle>
           <DialogDescription className="text-center text-slate-400 text-lg mt-2 font-mono italic">
             {current.desc}
           </DialogDescription>
@@ -552,15 +574,29 @@ export function MinigameDialog({ minigameMode, onPick }: { minigameMode: Minigam
           {minigameMode.cards.length === 0 ? (
             <div className="text-slate-600 italic flex items-center font-mono">Prázdnota...</div>
           ) : (
-            minigameMode.cards.map((card: GameCard) => (
-              <div
-                key={card.id}
-                onClick={() => onPick(card.id)}
-                className="w-28 h-40 bg-white border-2 border-slate-300 rounded-xl flex items-center justify-center shadow-2xl cursor-pointer hover:scale-110 hover:border-emerald-500 hover:rotate-2 transition-all group"
-              >
-                <span className="text-5xl font-black text-slate-800 font-chalk group-hover:scale-110 transition-transform">{card.symbol}</span>
-              </div>
-            ))
+            minigameMode.cards.map((card: GameCard) => {
+              const imagePath = cardsDatabase[card.symbol]?.image;
+              const imageSrc = imagePath ? `${BASE}${imagePath.replace(/^\/+/, '')}` : null;
+
+              return (
+                <div
+                  key={card.id}
+                  onClick={() => onPick(card.id)}
+                  className="w-28 h-40 bg-white border-2 border-slate-300 rounded-xl overflow-hidden flex items-center justify-center shadow-2xl cursor-pointer hover:scale-110 hover:border-emerald-500 hover:rotate-2 transition-all group"
+                >
+                  {imageSrc ? (
+                    <img
+                      src={imageSrc}
+                      alt={`Karta ${card.symbol}`}
+                      className="w-[95%] h-[95%] object-cover"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <span className="text-5xl font-black text-slate-800 group-hover:scale-110 transition-transform" style={{ fontFamily: "'Merienda', cursive" }}>{card.symbol}</span>
+                  )}
+                </div>
+              );
+            })
           )}
         </div>
 

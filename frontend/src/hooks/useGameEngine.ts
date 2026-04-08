@@ -13,6 +13,7 @@ import {
   createSlotCards,
   type DifficultyMode
 } from '@/lib/gameHelpers';
+import { resolveTurnStartDraw } from '@/lib/turnStartDraw';
 import { evaluateExpression, evaluateExpressionValue } from '@/lib/mathEngine';
 import type { GameCard, Player } from '@/lib/effects';
 import type { DropData, SlotDropData } from '@/components/game/Cards';
@@ -69,6 +70,7 @@ const ANTI_STREAK_BASE_BOOST = 0.08;
 const ANTI_STREAK_STEP_BOOST = 0.02;
 const ANTI_STREAK_MAX_BOOST = 0.15;
 const getSharedGoalTotalTurns = (): number => 20;
+const UNLIMITED_TURN_PLAY_SYMBOLS = new Set(['log', 'log2', 'log3']);
 const VS_SPECIAL_SYMBOLS = ['int', 'd/dx', '∑', '∏', 'lim'] as const;
 const BRACKET_COUNTERPARTS: Record<string, string> = {
   '(': ')',
@@ -301,7 +303,7 @@ export function useGameEngine() {
   const [pendingEffect, setPendingEffect] = useState<PendingEffectState | null>(null);
   const [effectStep, setEffectStep] = useState<'CHOOSE_EFFECT' | 'CHOOSE_TARGET'>('CHOOSE_EFFECT');
   const [chosenEffectChoice, setChosenEffectChoice] = useState<'ACTIVATE' | null>(null);
-  const [targetingMode, setTargetingMode] = useState<{ effectId: string, targetPlayerId?: number } | null>(null);
+  const [targetingMode, setTargetingMode] = useState<{ effectId: string, targetPlayerId?: number, sourceCardId?: string } | null>(null);
   const [minigameMode, setMinigameMode] = useState<{ effectId: string, cards: GameCard[], targetPlayerId?: number } | null>(null);
   const [bracketMode, setBracketMode] = useState<{ leftInsertPosition: number; pairIndex: number; leftBracketId?: string } | null>(null);
   const [integralSetup, setIntegralSetup] = useState<{ card: GameCard, targetId: string | null, insertPosition?: number } | null>(null);
@@ -470,7 +472,16 @@ export function useGameEngine() {
       ...prev,
       [bucket]: prev[bucket] + 1,
     }));
-  }, [getTurnPlayBucket]);
+    if (UNLIMITED_TURN_PLAY_SYMBOLS.has(symbol)) {
+      setPlayers(prev => {
+        const next = JSON.parse(JSON.stringify(prev));
+        if (next[currentPlayerIndex]?.status) {
+          next[currentPlayerIndex].status.infinitePlays = true;
+        }
+        return next;
+      });
+    }
+  }, [currentPlayerIndex, getTurnPlayBucket]);
 
   const resolveSharedGoalTimeout = useCallback(() => {
     if (sharedGoalTarget === null) return;
@@ -1036,7 +1047,8 @@ export function useGameEngine() {
     }
 
     const p = players[nextIdx];
-    const totalToDraw = Math.max(0, 1 + (p.status?.extraDraw || 0) - (p.status?.drawReduction || 0));
+    const drawOutcome = resolveTurnStartDraw(p.status);
+    const totalToDraw = drawOutcome.totalToDraw;
 
     // Zobrazit počet dobratých karet (kromě prvního kola)
     if (currentPlayerIndex !== 0 && totalToDraw > 0) {
@@ -1049,18 +1061,10 @@ export function useGameEngine() {
     setPlayers(prev => {
       const next = JSON.parse(JSON.stringify(prev));
       if (next[nextIdx].status) {
-        if (next[nextIdx].status.playAnyAsZeroNextTurn) {
-          next[nextIdx].status.playAnyAsZeroReady = true;
-          next[nextIdx].status.playAnyAsZeroNextTurn = false;
-        }
-        next[nextIdx].status.extraDraw = 0;
-        next[nextIdx].status.drawReduction = 0;
-        next[nextIdx].status.notifications = [];
-        // Jednokolová omezení — resetovat na začátku nového tahu hráče
-        next[nextIdx].status.operationLock = false;
-        next[nextIdx].status.numberLock = false;
-        next[nextIdx].status.playLimit = null;
-        next[nextIdx].status.infinitePlays = false;
+        next[nextIdx].status = {
+          ...next[nextIdx].status,
+          ...drawOutcome.nextStatus,
+        };
       }
       return next;
     });
@@ -1638,11 +1642,14 @@ export function useGameEngine() {
         return toast.error("Po odhozu/resetu z tabule už v tomto tahu nemůžeš vykládat z ruky.");
       }
       const totalTurnPlays = turnPlayCounts.value + turnPlayCounts.operator;
-      if (totalTurnPlays >= 2) return toast.error("V tomto tahu už jsi vyložil maximum (1 hodnota/proměnná a 1 operace).");
-      if (turnPlayCounts.value >= 1) return toast.error("V tomto tahu už jsi zahrál kartu čísla/proměnné/hodnoty.");
       const currentStatus = players[currentPlayerIndex].status;
-      if (currentStatus?.playLimit !== null && currentStatus?.playLimit !== undefined && playsThisTurn >= currentStatus.playLimit) {
-        return toast.error("Tento tah už nesmíš vyložit další kartu!");
+      const hasUnlimitedTurnPlays = !!currentStatus?.infinitePlays;
+      if (!hasUnlimitedTurnPlays) {
+        if (totalTurnPlays >= 2) return toast.error("V tomto tahu už jsi vyložil maximum (1 hodnota/proměnná a 1 operace).");
+        if (turnPlayCounts.value >= 1) return toast.error("V tomto tahu už jsi zahrál kartu čísla/proměnné/hodnoty.");
+        if (currentStatus?.playLimit !== null && currentStatus?.playLimit !== undefined && playsThisTurn >= currentStatus.playLimit) {
+          return toast.error("Tento tah už nesmíš vyložit další kartu!");
+        }
       }
 
       const slotCardData = cardsDatabase[slotCard.symbol];
@@ -1768,21 +1775,24 @@ export function useGameEngine() {
         return toast.error("Po odhozu/resetu z tabule už v tomto tahu nemůžeš vykládat z ruky.");
       }
 
-      if (pStatus?.playLimit !== null && pStatus?.playLimit !== undefined && playsThisTurn >= pStatus.playLimit) {
-        return toast.error("Tento tah už nesmíš vyložit další kartu!");
-      }
-
-      const totalTurnPlays = turnPlayCounts.value + turnPlayCounts.operator;
-      if (totalTurnPlays >= 2) {
-        return toast.error("V tomto tahu už jsi vyložil maximum (1 hodnota/proměnná a 1 operace).");
-      }
-
-      const bucket = getTurnPlayBucket(cardToPlaceWithDxDy.symbol);
-      if (turnPlayCounts[bucket] >= 1) {
-        if (bucket === 'operator') {
-          return toast.error("V tomto tahu už jsi zahrál kartu operace.");
+      const hasUnlimitedTurnPlays = !!pStatus?.infinitePlays;
+      if (!hasUnlimitedTurnPlays) {
+        if (pStatus?.playLimit !== null && pStatus?.playLimit !== undefined && playsThisTurn >= pStatus.playLimit) {
+          return toast.error("Tento tah už nesmíš vyložit další kartu!");
         }
-        return toast.error("V tomto tahu už jsi zahrál kartu čísla/proměnné/hodnoty.");
+
+        const totalTurnPlays = turnPlayCounts.value + turnPlayCounts.operator;
+        if (totalTurnPlays >= 2) {
+          return toast.error("V tomto tahu už jsi vyložil maximum (1 hodnota/proměnná a 1 operace).");
+        }
+
+        const bucket = getTurnPlayBucket(cardToPlaceWithDxDy.symbol);
+        if (turnPlayCounts[bucket] >= 1) {
+          if (bucket === 'operator') {
+            return toast.error("V tomto tahu už jsi zahrál kartu operace.");
+          }
+          return toast.error("V tomto tahu už jsi zahrál kartu čísla/proměnné/hodnoty.");
+        }
       }
     }
 
@@ -1814,9 +1824,7 @@ export function useGameEngine() {
         return toast.error("Tento tah nesmíš hrát číslo! (Zákaz čísel ∏)");
       }
       // EFF_006: mustPlayOperation — already checked above before hasModifiedBoardThisTurn
-      // EFF_013: playLimit — smí hrát jen N karet za tah (sledujeme kolik již zahrál)
-      // (playLimit resets each turn via nextTurn clearing; we track via hasModifiedBoardThisTurn for limit=1)
-      // The basic limit=1 case: hasModifiedBoardThisTurn already catches it (same error path above)
+      // EFF_013 (n!): řeší se při dobírání na začátku tahu přes factorialDrawPenalty.
 
       // Speciální funkce pro pouhý přesun na tabuli
       if (isOnlyOnBoard) {
@@ -1903,9 +1911,15 @@ export function useGameEngine() {
         // Pokud efekt vyžaduje kartu soupeře a ID karty ještě nemáme, zapneme TargetingMode
         const cardTargetingEffects = ['EFF_002'];
         if (cardTargetingEffects.includes(activeId) && !targetCardId) {
-          setTargetingMode({ effectId: activeId, targetPlayerId });
+          setTargetingMode({ effectId: activeId, targetPlayerId, sourceCardId: undefined });
           setEffectStep('CHOOSE_EFFECT');
           return; // Zastavíme funkci, dokud hráč neklikne na kartu na stole soupeře
+        }
+
+        const sourceCardId = activeId === 'EFF_002' ? targetingMode?.sourceCardId : undefined;
+        if (activeId === 'EFF_002' && targetCardId && !sourceCardId) {
+          toast.error('Nejprve vyber kartu ze své tabule pro výměnu.');
+          return;
         }
 
         // --- 2. OKAMŽITÉ AKCE ---
@@ -1950,13 +1964,25 @@ export function useGameEngine() {
           return;
         }
 
+        // Okamžité dobrání: dober 3 karty
+        if (activeId === 'EFF_029') {
+          performDraw(3, currentPlayerIndex);
+          placePendingEffectCard(pendingEffect);
+          setPendingEffect(null);
+          setTargetingMode(null);
+          setEffectStep('CHOOSE_EFFECT');
+          setChosenEffectChoice(null);
+          toast.success('Efekt okamžitého dobrání: dobíráš 3 karty.');
+          return;
+        }
+
         // --- 3. APLIKACE LOGIKY EFEKTU ---
         const playersForEffect = players.map((p, idx) => {
           if (idx !== currentPlayerIndex) return p;
           return { ...p, hand: p.hand.filter((c: GameCard) => c.id !== pendingEffect.card.id) };
         });
         const effectResult = applyEffectLogic(
-          activeId, playersForEffect, currentPlayerIndex, targetPlayerId, targetCardId, pendingEffect.card, difficulty
+          activeId, playersForEffect, currentPlayerIndex, targetPlayerId, targetCardId, pendingEffect.card, difficulty, sourceCardId
         );
 
         // Zpracování EffectResult s metadaty
@@ -2259,11 +2285,11 @@ export function useGameEngine() {
       const plainNumber = Math.floor(Math.random() * 199) - 99;
       if (Math.random() < 0.5) return `${plainNumber}`;
 
+      const symbol = ['x', 'y', 'e', 'π'][Math.floor(Math.random() * 4)];
       let coefficient = 0;
       while (coefficient === 0) {
         coefficient = Math.floor(Math.random() * 199) - 99;
       }
-      const symbol = ['x', 'y', 'e', 'π'][Math.floor(Math.random() * 4)];
       return `${coefficient}${symbol}`;
     };
 

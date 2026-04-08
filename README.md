@@ -6,11 +6,11 @@ Matematická karetní hra pro 2–8 hráčů. Hráči skládají levou stranu ro
 
 ## Aktuální stav hry
 
-- **Režimy:** `TUTORIÁL`, `ZŠ`, `SŠ`, `VŠ`
+- **Režimy:** `TUTORIÁL`, `ZŠ`, `SŠ`, `VŠ`, `VLASTNÍ` + herní módy `KLASICKÝ` a `SPOLEČNÝ CÍL`
 - **Počet hráčů:** 2 až 8
 - **Herní flow:** hlavní menu, pravidla, výběr režimu, setup hráčů, handoff mezi tahy, výherní obrazovka a detail statistik po hře
 - **Mechaniky:** drag&drop skládání výrazu, závorky `() [] {}`, exponenty, speciální sloty (integrál, suma, limit, determinant, vektor/skalár), limity tahu a odhazování
-- **Efekty karet:** implementované a zapojené efekty `EFF_001` až `EFF_028` (včetně cílení, miniher a speciálních dialogů)
+- **Efekty karet:** implementované a zapojené efekty `EFF_001` až `EFF_029` (včetně cílení, miniher a speciálních dialogů)
 - **Ověřování rovnice:** aktuálně probíhá **lokálně ve frontendu** (Nerdamer + Math.js), backend už není nutný pro běžné hraní
 
 ## Technologie

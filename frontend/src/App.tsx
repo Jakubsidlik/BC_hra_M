@@ -241,11 +241,16 @@ export default function App() {
       <TargetingOverlay 
   targetingMode={state.targetingMode} 
   pendingEffect={state.pendingEffect} 
+  currentPlayerId={currentPlayer.id}
   players={state.players} 
-  handleBoardCardClick={(id: string) => { // 'id' už nebude svítit, protože ho použijeme níže
+  handleBoardCardClick={(id: string) => {
     if (!state.targetingMode || !state.pendingEffect) return;
 
-    // PŘIDÁNO 'id' JAKO TŘETÍ PARAMETR
+    if (state.targetingMode.effectId === 'EFF_002' && !state.targetingMode.sourceCardId) {
+      actions.setTargetingMode({ ...state.targetingMode, sourceCardId: id });
+      return;
+    }
+
     actions.handleEffectChoice('ACTIVATE', state.targetingMode.targetPlayerId, id);
     
     actions.setTargetingMode(null);
@@ -333,7 +338,7 @@ export default function App() {
         handleEffectClick={() => {
           if (!state.pendingEffect) return;
           const effect = cardsDatabase[state.pendingEffect.card.symbol]?.effects?.optionA;
-          const autoTargetEffects = ['EFF_004', 'EFF_005', 'EFF_006', 'EFF_010', 'EFF_011', 'EFF_013'];
+          const autoTargetEffects = ['EFF_004', 'EFF_005', 'EFF_006', 'EFF_010', 'EFF_011'];
 
           if ((effect?.target === 'OPPONENT' || effect?.target === 'ANY') && !autoTargetEffects.includes(effect?.id || '')) { 
             actions.setChosenEffectChoice('ACTIVATE'); 

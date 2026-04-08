@@ -117,7 +117,7 @@ export function MainMenu({ onPlay, onRules }: { onPlay: () => void, onRules: () 
       </div>
 
       <div className="fixed bottom-6 left-6 z-20 text-slate-400 font-semibold text-sm leading-none">
-        VERZE: 5.5.0
+        VERZE: 5.6.0
       </div>
 
       {/* Tlačítko Zástupce vpravo dole */}
@@ -583,7 +583,7 @@ export function RulesScreen({ onBack }: { onBack: () => void }) {
                 
                 <div className="bg-emerald-900/10 p-4 rounded-lg border border-emerald-500/20">
                   <p className="text-emerald-400 font-bold mb-2 uppercase text-xs">ZŠ balíček</p>
-                  <p className="text-slate-300">Základní operace (+, -, *, :, a^b, √), čísla 0-9 a proměnné x/y. Konstanty π a e se v ZŠ nevyskytují.</p>
+                  <p className="text-slate-300">Základní operace (+, -, *, /, a^b, √), čísla 0-9 a proměnné x/y. Konstanty π a e se v ZŠ nevyskytují.</p>
                 </div>
 
                 <div className="bg-blue-900/10 p-4 rounded-lg border border-blue-500/20">
@@ -612,6 +612,7 @@ export function RulesScreen({ onBack }: { onBack: () => void }) {
               <section>
               <h3 className="text-3xl font-bold text-emerald-400 border-b border-emerald-400/30 pb-2 mb-4 italic">5. Průběh tahu a Akce</h3>
               <p className="text-sm italic mb-4">Matematik může v jednom kole z ruky vyložit maximálně 2 karty: 1 kartu čísla/proměnné/hodnoty a 1 kartu operace.</p>
+              <p className="text-xs md:text-sm text-emerald-200/90 mb-4">Výjimka: po aktivaci efektu <strong>Neomezené hraní</strong> (karty log, log2, log3) může hráč v daném tahu vyložit z ruky libovolný počet karet.</p>
               <div className="space-y-4 text-sm md:text-base">
                 <div className="border-l-4 border-emerald-500 pl-4 bg-emerald-500/10 py-2">
                   <p className="font-bold text-emerald-200">Přidání výpočtu</p>
@@ -712,7 +713,7 @@ export function RulesScreen({ onBack }: { onBack: () => void }) {
                     <ul className="space-y-2 text-slate-200">
                       <li><strong>Tutoriál:</strong> krátká ukázková hra s pevně daným cílem R = 11 a řízenými kroky.</li>
                       <li><strong>ZŠ:</strong> výsledek je číslo z intervalu -99..99, nebo člen -9x..9x / -9y..9y (bez 0x a 0y).</li>
-                      <li><strong>SŠ:</strong> výsledek je z množiny -99..99, -99x..99x, -99y..99y, -99e..99e, -99π..99π; navíc může být sqrt(2), 2*sqrt(2), sqrt(2)/3, sqrt(2)/4 a obecný zlomek a/b v základním tvaru (a = 1..9, b = 2..9).</li>
+                      <li><strong>SŠ:</strong> výsledek je z množiny -99..99, -99x..99x, -99y..99y, -9e..9e, -9π..9π; navíc může být √2, 2√2 až 9√2, √2/3, √2/4 a obecný zlomek a/b v základním tvaru (a = 1..9, b = 2..9), případně (a/b)π.</li>
                       <li><strong>VŠ:</strong> výsledek je z množiny -99..99, -99x..99x, -99y..99y, -99e..99e, -99π..99π.</li>
                       <li><strong>Vlastní:</strong> výsledky i karty se řídí tím, co si hráč navolí v konfiguraci. Pokud je vybraná jedna VŠ zamčená karta (int, d/dx, ∑, ∏, lim), dostanou ji všichni; pokud je jich vybraných více, každý hráč dostane náhodně jednu z nich.</li>
                     </ul>
@@ -721,8 +722,8 @@ export function RulesScreen({ onBack }: { onBack: () => void }) {
                     <p className="font-bold text-yellow-300 mb-2">Režim Společný cíl</p>
                     <ul className="space-y-2 text-slate-200">
                       <li><strong>ZŠ:</strong> společný výsledek je -99..99, -9x..9x, -9y..9y (bez 0x a 0y).</li>
-                      <li><strong>SŠ:</strong> společný výsledek je -99..99, -99x..99x, -99y..99y, -99e..99e, -99π..99π; navíc může být sqrt(2), 2*sqrt(2), sqrt(2)/3, sqrt(2)/4 a obecný zlomek a/b v základním tvaru (a = 1..9, b = 2..9).</li>
-                      <li><strong>VŠ:</strong> společný výsledek je -99..99, -99x..99x, -99y..99y, -99e..99e, -99π..99π.</li>
+                      <li><strong>SŠ:</strong> společný výsledek je -99..99, -99x..99x, -99y..99y, -9e..9e, -9π..9π; navíc může být √2, 2√2 až 9√2, √2/3, √2/4 a obecný zlomek a/b v základním tvaru (a = 1..9, b = 2..9), případně (a/b)π.</li>
+                      <li><strong>VŠ:</strong> společný výsledek je z množiny -99..99, -99x..99x, -99y..99y, -99e..99e, -99π..99π.</li>
                       <li><strong>Vlastní:</strong> společný cíl i zamčené VŠ karty se řídí vlastní konfigurací. Lze nastavit vlastní počet tahů na hráče; při této volbě zůstává odpočtová lišta kol po celou hru zelená.</li>
                     </ul>
                   </div>
@@ -742,7 +743,7 @@ export function RulesScreen({ onBack }: { onBack: () => void }) {
                       <div key={effect.id} className="rounded-lg border border-slate-600/40 bg-slate-800/40 p-3">
                         <div className="flex flex-wrap items-center gap-2 justify-between mb-1">
                           <p className="font-bold text-cyan-200">
-                            {effect.id} • {effect.name}
+                            {effect.name}
                           </p>
                           <span className="rounded-full border border-emerald-400/40 bg-emerald-500/15 px-2 py-0.5 text-xs font-bold text-emerald-200">
                             {effect.count}x ve hře

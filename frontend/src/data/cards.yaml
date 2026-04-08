@@ -163,9 +163,9 @@ e:
   hasEffect: true
   effects:
     optionA:
-      id: EFF_004
-      name: Zničení čísel
-      description: Následující hráč musí z ruky odhodit všechny číslice.
+      id: EFF_005
+      name: Zničení operací
+      description: Následující hráč musí z ruky odhodit všechny operace.
       target: OPPONENT
 x:
   symbol: x
@@ -176,9 +176,9 @@ x:
   hasEffect: true
   effects:
     optionA:
-      id: EFF_005
-      name: Zničení operací
-      description: Následující hráč musí z ruky odhodit všechny operace.
+      id: EFF_004
+      name: Zničení čísel
+      description: Následující hráč musí z ruky odhodit všechny číslice.
       target: OPPONENT
 +:
   symbol: +
@@ -280,7 +280,7 @@ n!:
     optionA:
       id: EFF_013
       name: Omezení hraní
-      description: Následující hráč nesmí v příštím tahu vyložit více než 1 kartu.
+      description: Vybranému soupeři se při každém dalším tahu dobírá o 1 kartu méně, dokud nedobere 0; pak efekt skončí.
       target: OPPONENT
 d/dx:
   symbol: d/dx
@@ -505,10 +505,10 @@ tg(π/4):
   hasEffect: true
   effects:
     optionA:
-      id: EFF_017
-      name: Předání po (tg)
-      description: Všichni hráči si předají karty v ruce po směru.
-      target: ALL
+      id: EFF_029
+      name: Okamžité dobrání
+      description: Ihned dobereš 3 karty z balíčku.
+      target: SELF
 tg(π/3):
   symbol: tg(π/3)
   type: number
@@ -529,10 +529,10 @@ tg(π):
   hasEffect: true
   effects:
     optionA:
-      id: EFF_017
-      name: Předání po (tg)
-      description: Všichni hráči si předají karty v ruce po směru.
-      target: ALL
+      id: EFF_029
+      name: Okamžité dobrání
+      description: Ihned dobereš 3 karty z balíčku.
+      target: SELF
 cotg(π/6):
   symbol: cotg(π/6)
   type: number
@@ -553,10 +553,10 @@ cotg(π/4):
   hasEffect: true
   effects:
     optionA:
-      id: EFF_018
-      name: Předání proti (cotg)
-      description: Všichni hráči si předají karty v ruce proti směru.
-      target: ALL
+      id: EFF_029
+      name: Okamžité dobrání
+      description: Ihned dobereš 3 karty z balíčku.
+      target: SELF
 cotg(π/3):
   symbol: cotg(π/3)
   type: number
@@ -577,10 +577,10 @@ cotg(π/2):
   hasEffect: true
   effects:
     optionA:
-      id: EFF_018
-      name: Předání proti (cotg)
-      description: Všichni hráči si předají karty v ruce proti směru.
-      target: ALL
+      id: EFF_029
+      name: Okamžité dobrání
+      description: Ihned dobereš 3 karty z balíčku.
+      target: SELF
 nCk:
   symbol: nCk
   type: operator
