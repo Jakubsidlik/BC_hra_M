@@ -6,6 +6,7 @@ import { AppIcon } from '@/components/ui/AppIcon';
 import { cardsDatabase } from '@/data/cardsDB';
 import type { GameCard, Player } from '@/lib/effects';
 import { formatTargetForDisplay } from '@/lib/mathDisplay';
+import { mergeDeckAfterPreview, splitDeckForPreview } from '@/lib/deckPreview';
 import { BoardArea } from './Cards';
 
 const BASE = import.meta.env.BASE_URL;
@@ -667,8 +668,13 @@ export function DeckPreviewDialog({
   onConfirm: (reorderedDeck: GameCard[]) => void;
   onCancel: () => void;
 }) {
-  const [reordered, setReordered] = React.useState<GameCard[]>([...deck.slice(0, 3)]);
-  const rest = [...deck.slice(3)];
+  const [reordered, setReordered] = React.useState<GameCard[]>(() => splitDeckForPreview(deck).top);
+  const rest = React.useMemo(() => splitDeckForPreview(deck).rest, [deck]);
+
+  React.useEffect(() => {
+    if (!open) return;
+    setReordered(splitDeckForPreview(deck).top);
+  }, [deck, open]);
 
   const moveCard = (index: number, direction: 'up' | 'down') => {
     const newOrder = [...reordered];
@@ -681,7 +687,7 @@ export function DeckPreviewDialog({
   };
 
   const handleConfirm = () => {
-    onConfirm([...reordered, ...rest]);
+    onConfirm(mergeDeckAfterPreview(reordered, rest));
   };
 
   return (

@@ -77,7 +77,7 @@ export function generatePersonalTargetR(difficulty: DifficultyMode): string {
   }
 
   if (difficulty === 'SŠ') {
-    // SŠ: -99..99, -99x..99x, -99y..99y, -99e..99e, -99π..99π,
+    // SŠ: -99..999, -99x..99x, -99y..99y, -99e..99e, -99π..99π,
     // plus speciální cíle se sqrt(2) a zlomky v základním tvaru.
     const reducedFractions: string[] = [];
     for (let numerator = 1; numerator <= 9; numerator += 1) {
@@ -99,7 +99,7 @@ export function generatePersonalTargetR(difficulty: DifficultyMode): string {
     }
 
     if (category === 'number') {
-      return `${randInt(-99, 99)}`;
+      return `${randInt(-99, 999)}`;
     }
 
     const maxCoefficient = category === 'e' || category === 'π' ? 9 : 99;

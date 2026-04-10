@@ -8,6 +8,7 @@ import { Toaster } from "sonner";
 import { useGameEngine } from '@/hooks/useGameEngine';
 import { cardsDatabase } from '@/data/cardsDB';
 import { useDeviceType } from '@/hooks/useDeviceType';
+import { getTouchActivationConstraint } from '@/lib/dragActivation';
 
 // Importy Komponent
 import { 
@@ -80,12 +81,14 @@ export default function App() {
   const { state, actions } = useGameEngine();
   const deviceType = useDeviceType();
   const isIOS = deviceType === 'phone';
+  const mouseDragActivationDistance = 6;
+  const touchActivationConstraint = getTouchActivationConstraint(deviceType);
 
   // 2. SENZORY PRO DOTYK A MYŠ (Optimalizace pro mobil i PC)
-  const mouseSensor = useSensor(MouseSensor, { activationConstraint: { distance: 6 } });
+  const mouseSensor = useSensor(MouseSensor, { activationConstraint: { distance: mouseDragActivationDistance } });
   const touchSensor = useSensor(
     TouchSensor,
-    { activationConstraint: { delay: 0, tolerance: 2 } },
+    { activationConstraint: touchActivationConstraint },
   );
   const sensors = useSensors(mouseSensor, touchSensor);
   const [isMouseDrag, setIsMouseDrag] = useState(false);
