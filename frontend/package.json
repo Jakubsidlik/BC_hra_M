@@ -11,6 +11,9 @@
     "test:fractions": "tsx scripts/mathEngine.fractions.regression.ts",
     "test:trig-effects": "npx --yes vite-node scripts/trigEffects.regression.ts",
     "test:turn-start-draw": "npx --yes vite-node scripts/turnStartDraw.regression.ts",
+    "test:deck-preview": "npx --yes vite-node scripts/deckPreview.regression.ts",
+    "test:mobile-drag-activation": "npx --yes vite-node scripts/mobileDragActivation.regression.ts",
+    "test:effects-full": "npx --yes vite-node scripts/effects.full.regression.ts",
     "lint": "eslint .",
     "preview": "vite preview"
   },

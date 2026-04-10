@@ -978,6 +978,11 @@ export function useGameEngine() {
   };
 
   const handleDiscard = useCallback((cardId: string) => {
+    if (!isDiscarding) {
+      toast.error("Kartu z ruky lze odhodit jen v režimu odhazování po kliknutí na Konec tahu.");
+      return;
+    }
+
     if (tutorialActive && tutorialStep !== 2 && tutorialStep !== 3) {
       toast.error("V tutoriálu teď není dovoleno odhazovat.");
       return;
@@ -2137,10 +2142,7 @@ export function useGameEngine() {
   // ==========================================
 
   const handleDeckPreviewConfirm = useCallback((reorderedCards: GameCard[]) => {
-    // Aktualizuj deck s přeřazenými kartami
     setDeck(reorderedCards);
-
-    // Úklid UI stavů
     setDeckPreviewMode(null);
     setPendingEffect(null);
     setTargetingMode(null);

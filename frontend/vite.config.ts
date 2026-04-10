@@ -28,7 +28,43 @@ export default defineConfig({
       registerType: 'autoUpdate',
       // Aktivovat PWA i v dev módu (jinak prohlížeč nevidí manifest → zobrazuje Vite ikonu)
       devOptions: { enabled: true },
-      includeAssets: ['tabule.svg', 'fonts/Chalkduster.ttf'],
+      includeAssets: [
+        'fonts/Chalkduster.ttf',
+        'icons/*.png',
+      ],
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,woff2,ttf,json,webmanifest}'],
+        runtimeCaching: [
+          {
+            urlPattern: /\/svg\/.*\.svg$/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'card-svg-cache-v1',
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+              expiration: {
+                maxEntries: 256,
+                maxAgeSeconds: 60 * 60 * 24 * 365,
+              },
+            },
+          },
+          {
+            urlPattern: /\/(?:tabule\.svg|sumace_kridou\.png)$/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'board-visuals-cache-v1',
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+              expiration: {
+                maxEntries: 16,
+                maxAgeSeconds: 60 * 60 * 24 * 365,
+              },
+            },
+          },
+        ],
+      },
       manifest: {
         name: 'Math4fun',
         short_name: 'Math4fun',
