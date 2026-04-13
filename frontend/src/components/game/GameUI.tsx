@@ -39,7 +39,8 @@ export function TutorialOverlay({
     },
     {
       title: 'Efekty karet',
-      text: 'Některé karty mají efekt. Při položení se nabízí volba: aktivovat efekt, nebo kartu jen přidat do výrazu L.'
+      // text: 'Některé karty mají efekt. Při položení se nabízí volba: aktivovat efekt, nebo kartu jen přidat do výrazu L.'
+      text: 'Některé karty mají efekt. Při položení můžeš jejich efekt aktivovat.'
     },
     {
       title: 'Konec tahu a odhazování',
@@ -464,7 +465,8 @@ export function EffectDialog({
                 </div>
               )}
 
-              {/* Volba 2: Symbol */}
+              {/* Volba 2: Symbol (dočasně skryto v UI, logika zůstává v handleEffectChoice('NONE')) */}
+              {/*
               <div className="w-full">
                 <button
                   onClick={() => handleEffectChoice('NONE')}
@@ -480,6 +482,7 @@ export function EffectDialog({
                   </span>
                 </button>
               </div>
+              */}
 
               {/* Zrušit */}
               <button

@@ -49,7 +49,8 @@ Matematik může v jednom kole z ruky vyložit maximálně 2 karty: 1 kartu čí
 - Pokud nejdřív provedeš odhoz/reset z tabule, už v tom tahu nemůžeš vykládat z ruky.
 - Přetažení jedné závorky z aktivního páru do odhozu nebo zpět do prostoru závorek vrátí celý pár do sady závorek v pořadí ()[].
 - Po stisku tlačítka Ukončit tah se aktivuje režim odhazování z ruky; předat tah lze až s maximálně 5 kartami v ruce.
-- Efektové karty nabídnou volbu aktivovat efekt (a kartu odhodit), nebo kartu pasivně položit na tabuli.
+<!-- - Efektové karty nabídnou volbu aktivovat efekt (a kartu odhodit), nebo kartu pasivně položit na tabuli. -->
+- Efektové karty při vyložení umožní aktivovat efekt (karta se odhodí).
 
 ## 6. Závorky a implicitní násobení
 - **Závorky:** umísťují se ve 2 krocích: nejdřív levá, potom pravá.
