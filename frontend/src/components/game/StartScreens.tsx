@@ -117,7 +117,7 @@ export function MainMenu({ onPlay, onRules }: { onPlay: () => void, onRules: () 
       </div>
 
       <div className="fixed bottom-6 left-6 z-20 text-slate-400 font-semibold text-sm leading-none">
-        VERZE: 5.8.0
+        VERZE: 5.9.0
       </div>
 
       {/* Tlačítko Zástupce vpravo dole */}
@@ -652,7 +652,8 @@ export function RulesScreen({ onBack }: { onBack: () => void }) {
                     <p><strong>Konec tahu:</strong> po stisku tlačítka Ukončit tah se aktivuje režim odhazování z ruky; předat tah lze až s maximálně 5 kartami v ruce.</p>
                   </div>
                   <div className="rounded-lg border border-slate-600/60 bg-slate-900/40 px-3 py-2">
-                    <p><strong>Efektové karty:</strong> nabídnou volbu aktivovat efekt (a kartu odhodit), nebo kartu pasivně položit na tabuli.</p>
+                    {/* <p><strong>Efektové karty:</strong> nabídnou volbu aktivovat efekt (a kartu odhodit), nebo kartu pasivně položit na tabuli.</p> */}
+                    <p><strong>Efektové karty:</strong> při vyložení můžeš aktivovat jejich efekt.</p>
                   </div>
                 </div>
               </div>
