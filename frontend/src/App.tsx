@@ -91,11 +91,11 @@ export default function App() {
     { activationConstraint: touchActivationConstraint },
   );
   const sensors = useSensors(mouseSensor, touchSensor);
-  const [isMouseDrag, setIsMouseDrag] = useState(false);
+  const [dragInputType, setDragInputType] = useState<'mouse' | 'touch' | 'other' | null>(null);
   const [tutorialOverlayHidden, setTutorialOverlayHidden] = useState(false);
   const activeModifiers = useMemo(
-    () => (isMouseDrag ? [snapCenterToCursor, restrictToGameBoundary] : [restrictToGameBoundary]),
-    [isMouseDrag]
+    () => (dragInputType === 'mouse' || dragInputType === 'touch' ? [snapCenterToCursor, restrictToGameBoundary] : [restrictToGameBoundary]),
+    [dragInputType]
   );
 
   const tutorialOverlayVisible = state.tutorialActive && !tutorialOverlayHidden;
@@ -108,16 +108,18 @@ export default function App() {
     const activator = event.activatorEvent;
     const pointerType = 'pointerType' in activator ? activator.pointerType : undefined;
     const mouseDriven = pointerType === 'mouse' || activator instanceof MouseEvent;
-    setIsMouseDrag(mouseDriven);
+    const touchDriven = pointerType === 'touch' || pointerType === 'pen' || (typeof TouchEvent !== 'undefined' && activator instanceof TouchEvent);
+    const touchDeviceFallback = (deviceType === 'phone' || deviceType === 'tablet') && !mouseDriven;
+    setDragInputType(mouseDriven ? 'mouse' : (touchDriven || touchDeviceFallback) ? 'touch' : 'other');
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
-    setIsMouseDrag(false);
+    setDragInputType(null);
     actions.handleDragEnd(event);
   };
 
   const handleDragCancel = () => {
-    setIsMouseDrag(false);
+    setDragInputType(null);
   };
 
   // 3. VYKRESLOVÁNÍ OBRAZOVEK PODLE FÁZE HRY
