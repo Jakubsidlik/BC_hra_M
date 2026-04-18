@@ -275,11 +275,6 @@ const createGameStats = (playerList: Player[]): GameStats => {
   return { players, firstWrongQED: null };
 };
 
-const createTutorialStepCard = (symbol: string, prefix: string): GameCard => ({
-  id: `${prefix}-${symbol}-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-  symbol
-});
-
 export function useGameEngine() {
   // --- STAVY JÁDRA ---
   const [gamePhase, setGamePhase] = useState<'MENU' | 'RULES' | 'PICK_MODE' | 'PICK_DIFFICULTY' | 'CUSTOM_DIFFICULTY' | 'SETUP' | 'PLAYING'>('MENU');
@@ -313,7 +308,7 @@ export function useGameEngine() {
   const [tutorialAllowedDiscardIds, setTutorialAllowedDiscardIds] = useState<string[]>([]);
   const [tutorialReferenceBoard, setTutorialReferenceBoard] = useState<GameCard[]>([]);
   const [tutorialBracketInfoShown, setTutorialBracketInfoShown] = useState(false);
-  const [tutorialTwosAdded, setTutorialTwosAdded] = useState(false);
+  const [, setTutorialTwosAdded] = useState(false);
   const [tutorialCardQueue, setTutorialCardQueue] = useState<GameCard[]>([]);
   const [leaveGameConfirmOpen, setLeaveGameConfirmOpen] = useState(false);
 
@@ -807,55 +802,7 @@ export function useGameEngine() {
     }
 
     if (tutorialActive && tutorialStep === 2) {
-      const p = players[currentPlayerIndex];
-      const handLimit = 5;
-
-      if (!isDiscarding) {
-        setIsDiscarding(true);
-        if (p.hand.length > handLimit) {
-          toast.warning(`Limit ruky překročen! Musíš zahodit ${p.hand.length - handLimit} karet.`);
-        }
-        return;
-      }
-
-      if (p.hand.length > handLimit) {
-        setIsDiscarding(true);
-        toast.warning(`Limit ruky překročen! Musíš zahodit ${p.hand.length - handLimit} karet.`);
-        return;
-      }
-
-      if (!tutorialTwosAdded) {
-        setPlayers(prev => {
-          const next = JSON.parse(JSON.stringify(prev));
-          const firstPlayer = next[0];
-          if (!firstPlayer) return prev;
-
-          const firstPlayerHand = firstPlayer.hand;
-          const hasPowerCard = firstPlayerHand.some((card: GameCard) => card.symbol === 'a^b');
-          const twoCount = firstPlayerHand.filter((card: GameCard) => card.symbol === '2').length;
-
-          // Build queue of cards to deal one-by-one in following tutorial turns.
-          const queueCards: GameCard[] = [];
-          if (!hasPowerCard) queueCards.push(createTutorialStepCard('a^b', 't1-step3'));
-          if (twoCount < 2) queueCards.push(createTutorialStepCard('2', 't1-step3'));
-
-          // Deal first card immediately, queue the rest.
-          if (queueCards.length > 0) {
-            firstPlayerHand.push(queueCards[0]);
-            setTutorialCardQueue(queueCards.slice(1));
-          }
-
-          return next;
-        });
-        setTutorialTwosAdded(true);
-      }
-
-      setIsDiscarding(false);
-      setHasModifiedBoardThisTurn(false);
-      setPlaysThisTurn(0);
-      setTurnPlayCounts({ value: 0, operator: 0 });
-      setBracketPairsPlacedThisTurn(0);
-      setTutorialStep(3);
+      toast.error("V tutoriálu teď nejdřív dokonči stavbu výrazu na tabuli.");
       return;
     }
 
@@ -944,6 +891,7 @@ export function useGameEngine() {
         const randomText = describeCardCount(completedDualPlay ? 2 : 1, 'náhodná', 'náhodné', 'náhodných');
         toast.info(`Kolo ukončeno. Dobrání: ${randomText}.`);
       }
+      setTutorialStep(4);
       return;
     }
 
@@ -983,15 +931,11 @@ export function useGameEngine() {
       return;
     }
 
-    if (tutorialActive && tutorialStep !== 2 && tutorialStep !== 3) {
+    if (tutorialActive && tutorialStep !== 3) {
       toast.error("V tutoriálu teď není dovoleno odhazovat.");
       return;
     }
-    if (tutorialActive && tutorialStep === 3 && !isDiscarding) {
-      toast.error("V tutoriálu teď neodhazuj karty.");
-      return;
-    }
-    if (tutorialActive && tutorialStep === 2 && tutorialAllowedDiscardIds.length > 0 && !tutorialAllowedDiscardIds.includes(cardId)) {
+    if (tutorialActive && tutorialAllowedDiscardIds.length > 0 && !tutorialAllowedDiscardIds.includes(cardId)) {
       toast.error("V tutoriálu teď odhazuj jen přebytečné karty.");
       return;
     }
@@ -1392,20 +1336,20 @@ export function useGameEngine() {
     const activeHandCard = players[currentPlayerIndex].hand.find(c => c.id === active.id);
 
     if (tutorialActive) {
-      if (tutorialStep === 2) {
+      if (tutorialStep === 3) {
         if (String(over.id) !== 'drop-discard') {
           toast.error("V tutoriálu teď odhazuj karty.");
           return;
         }
-      } else if (tutorialStep !== 3) {
+      } else if (tutorialStep !== 2) {
         toast.error("V tutoriálu teď nemůžeš s kartami hýbat.");
         return;
-      } else if (tutorialStep === 3 && String(over.id) === 'drop-discard' && !isDiscarding) {
+      } else if (String(over.id) === 'drop-discard' && !isDiscarding) {
         toast.error("V tutoriálu teď neodhazuj karty.");
         return;
       }
 
-      if (tutorialStep === 3 && activeHandCard && String(over.id) !== 'drop-discard') {
+      if (tutorialStep === 2 && activeHandCard && String(over.id) !== 'drop-discard') {
         const allowedSymbols = new Set(['2', '+', '3', 'a^b']);
         if (!allowedSymbols.has(activeHandCard.symbol)) {
           toast.error("V tutoriálu teď používej jen karty 2, +, 3 a a^b.");
@@ -1496,7 +1440,7 @@ export function useGameEngine() {
         setBracketMode(null);
         setBracketPairsPlacedThisTurn(prev => prev + 1);
         toast.success("Závorky umístěny!", { icon: '✓' });
-        if (tutorialActive && tutorialStep === 3 && !tutorialBracketInfoShown) {
+        if (tutorialActive && tutorialStep === 2 && !tutorialBracketInfoShown) {
           setTutorialBracketInfoShown(true);
           toast.info("Ve hře máš 3 páry závorek: (), [], {}. Můžeš použít libovolný typ.");
         }
@@ -2513,11 +2457,11 @@ export function useGameEngine() {
       symbol
     });
 
-    const requiredSymbolsBeforeStep3 = ['2', '+', '3'];
+    const requiredSymbolsForBoardStep = ['2', '+', '3', 'a^b', '2'];
     // Tutorial používá jen karty, které jsou užitečné pro cílový výraz (2 + 3^2).
-    const tutorialExtraSymbols = ['2', '2', '3', '+'];
+    const tutorialExtraSymbols = ['2', '3', '+'];
 
-    const requiredCards = requiredSymbolsBeforeStep3.map(sym => makeCard(sym, 't1-need'));
+    const requiredCards = requiredSymbolsForBoardStep.map(sym => makeCard(sym, 't1-need'));
     const extraCards = tutorialExtraSymbols.map(sym => makeCard(sym, 't1-extra'));
     const p1Hand = [...requiredCards, ...extraCards];
     const referencePowExp = makeCard('2', 'ref-exp');
@@ -2738,9 +2682,9 @@ export function useGameEngine() {
     if (!current) return;
 
     let timeoutId: number | null = null;
-    if (tutorialStep === 3 && isTutorialExpressionReady(current.board)) {
+    if (tutorialStep === 2 && isTutorialExpressionReady(current.board)) {
       timeoutId = window.setTimeout(() => {
-        setTutorialStep(4);
+        setTutorialStep(3);
       }, 0);
     }
     if (tutorialStep === 4 && winner) {
