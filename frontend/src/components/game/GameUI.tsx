@@ -43,12 +43,12 @@ export function TutorialOverlay({
       text: 'Některé karty mají efekt. Při položení můžeš jejich efekt aktivovat.'
     },
     {
-      title: 'Konec tahu a odhazování',
-      text: 'Klikni na Konec tahu. Máš více než 5 karet, proto odhoď přebytečné karty na odhazovací pole (ať ti zůstane 5 nebo méně).'
+      title: 'Závorky a mocnina',
+      text: 'Postav výraz (2 + 3^2): nejdřív vlož na tabuli 2, +, 3 a a^b, pak přetáhni druhou 2 do okénka mocniny.'
     },
     {
-      title: 'Závorky a mocnina',
-      text: 'Do ruky dostáváš karty po kolech. V jednom kole můžeš vyložit maximálně 1 hodnotu/proměnnou a 1 operaci. Postav výraz (2 + 3^2): polož 3, pak a^b a přetáhni 2 do okénka. Pokud překročíš limit 5 karet, nejdřív odhoď přebytek.'
+      title: 'Konec tahu a odhazování',
+      text: 'Teď klikni na Konec tahu. Pokud máš více než 5 karet, odhoď přebytečné karty na odhazovací pole (ať ti zůstane 5 nebo méně).'
     },
     {
       title: 'Ověření Q.E.D.',
@@ -62,7 +62,8 @@ export function TutorialOverlay({
 
   const content = steps[step] || steps[steps.length - 1];
   const showNext = step === 0 || step === 1;
-  const showTurnLimitCallout = step === 3;
+  const showTurnLimitCallout = step === 2;
+  const showSharedTurnsCallout = gameMode === 'SHARED_GOAL' && step === 0;
 
   return (
     <div className="fixed left-1/2 top-16 sm:top-6 z-120 w-[82vw] sm:w-[92vw] max-w-xl -translate-x-1/2 rounded-2xl border border-white/10 bg-slate-950/85 p-3 sm:p-5 text-slate-100 shadow-2xl backdrop-blur-md">
@@ -80,7 +81,7 @@ export function TutorialOverlay({
           <p className="mt-1">V jednom kole můžeš vyložit maximálně 1 kartu operace a 1 kartu hodnoty/proměnné. Dvě karty stejného typu v jednom kole vyložit nejdou.</p>
         </div>
       )}
-      {gameMode === 'SHARED_GOAL' && sharedGoalTurnsRemaining !== null && sharedGoalTurnsRemaining !== undefined && (
+      {showSharedTurnsCallout && sharedGoalTurnsRemaining !== null && sharedGoalTurnsRemaining !== undefined && (
         <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-500/10 px-3 py-1 text-[11px] sm:text-xs text-emerald-200">
           <span className="uppercase tracking-[0.18em]">Zbývající počet kol</span>
           <span className="font-black text-white">{sharedGoalTurnsRemaining} / {sharedGoalTotalTurns}</span>
