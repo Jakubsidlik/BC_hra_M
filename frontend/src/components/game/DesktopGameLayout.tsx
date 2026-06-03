@@ -100,7 +100,7 @@ function DesktopHandCard({ card, index, total, isDiscarding, onDiscard, onSelect
     transform: transform
       ? CSS.Translate.toString(transform)
       : `rotate(${rotation}deg) translateX(${translateXVal}px) translateY(${translateYVal}px) scale(${isSelected ? 1.85 : 1})`,
-    zIndex:  isDragging ? 199 : isSelected ? 199 : 60 + index,
+    zIndex: isDragging ? 199 : isSelected ? 199 : 60 + index,
     position: 'absolute',
     width: CARD_W,
     height: CARD_H,
@@ -477,10 +477,10 @@ function DesktopBoardDropZone({ id, palette, bottomInset = 0 }: { id: string; pa
       className="absolute inset-0 rounded-lg transition-all duration-300 z-10"
       style={isOver
         ? {
-            bottom: `${bottomInset}px`,
-            background: `${palette.primary}18`,
-            boxShadow: `inset 0 0 0 3px ${palette.primary}80`,
-          }
+          bottom: `${bottomInset}px`,
+          background: `${palette.primary}18`,
+          boxShadow: `inset 0 0 0 3px ${palette.primary}80`,
+        }
         : { bottom: `${bottomInset}px` }}
     />
   );
@@ -696,21 +696,21 @@ export function DesktopGameLayout({ currentPlayer, state, actions, tutorialRefer
   const sharedGoalBarColorClass = sharedGoalTrackerForceGreen
     ? 'bg-emerald-500'
     : sharedGoalTurnsLeft <= 5
-    ? 'bg-red-500'
-    : sharedGoalTurnsLeft <= 10
-      ? 'bg-orange-500'
-      : sharedGoalTurnsLeft <= 15
-        ? 'bg-yellow-400'
-        : 'bg-emerald-500';
+      ? 'bg-red-500'
+      : sharedGoalTurnsLeft <= 10
+        ? 'bg-orange-500'
+        : sharedGoalTurnsLeft <= 15
+          ? 'bg-yellow-400'
+          : 'bg-emerald-500';
   const sharedGoalMetaTextColorClass = sharedGoalTrackerForceGreen
     ? 'text-emerald-200'
     : sharedGoalTurnsLeft <= 5
-    ? 'text-red-200'
-    : sharedGoalTurnsLeft <= 10
-      ? 'text-orange-200'
-      : sharedGoalTurnsLeft <= 15
-        ? 'text-yellow-200'
-        : 'text-emerald-200';
+      ? 'text-red-200'
+      : sharedGoalTurnsLeft <= 10
+        ? 'text-orange-200'
+        : sharedGoalTurnsLeft <= 15
+          ? 'text-yellow-200'
+          : 'text-emerald-200';
   const sharedGoalCounterText = sharedGoalTurnsLeft === 0 ? 'Poslední kolo' : `${sharedGoalTurnsLeft}/${totalSharedTurns}`;
   const sharedGoalProgress = showSharedGoalTracker
     ? Math.max(0, Math.min(100, (sharedGoalProgressBase / Math.max(totalSharedTurns, 1)) * 100))
@@ -843,131 +843,131 @@ export function DesktopGameLayout({ currentPlayer, state, actions, tutorialRefer
                 backgroundSize: '30px 30px',
               }}
             >
-            {currentPlayer.board.length === 0 && !tutorialActive && (
-              <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none">
-                <span
-                  className="uppercase tracking-[0.25em] text-2xl pointer-events-none select-none italic"
-                  style={{ color: 'rgba(255,255,255,0.10)' }}
-                >
-                  Tabule
-                </span>
-              </div>
-            )}
-            {/* Board cards */}
-            <div className="z-10 flex flex-col items-center gap-3 w-full" style={{ minHeight: '6rem' }}>
-              {tutorialReferenceBoard && tutorialReferenceBoard.length > 0 && (
-                <div className="-mt-2.5">
-                  <TutorialReferenceRow cards={tutorialReferenceBoard} palette={palette} />
+              {currentPlayer.board.length === 0 && !tutorialActive && (
+                <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none">
+                  <span
+                    className="uppercase tracking-[0.25em] text-2xl pointer-events-none select-none italic"
+                    style={{ color: 'rgba(255,255,255,0.10)' }}
+                  >
+                    Tabule
+                  </span>
                 </div>
               )}
-              <div className={`flex items-stretch gap-0 flex-wrap w-full ${(hasVsLockedCard || showDxDy) ? 'justify-start' : 'justify-center'}`}>
-                {currentPlayer.board.length > 0 ? (
-                  <>
-                    <div className="flex items-stretch gap-0 flex-wrap">
-                      {hasVsLockedCard && (
-                        <div className="shrink-0" style={{ width: `calc(${BOARD_CARD_W} - 0.9rem)`, height: BOARD_CARD_H }} />
-                      )}
-                      <BoardDropZone id="main-board-before-0" isVisible={isDraggingCard || !!tutorialActive} />
-                      {beforeCards.map((card, index) => (
-                        <React.Fragment key={card.id}>
-                          <div className="flex flex-col items-center">
-                            <DraggableBoardCard
-                              card={card}
-                              palette={palette}
-                              hasModifiedBoardThisTurn={hasModifiedBoardThisTurn}
-                              onDerivativeVariableChange={actions.setDerivativeVariable}
-                              onSeriesVariableChange={actions.setSeriesVariable}
-                              onLimitVariableChange={actions.setLimitVariable}
-                            />
-                          </div>
-                          <BoardDropZone
-                            id={`main-board-between-${index}-${index + 1}`}
-                            isVisible={isDraggingCard || !!tutorialActive}
-                          />
-                        </React.Fragment>
-                      ))}
-                    </div>
-                    {showDxDy && (
-                      <div className="flex items-stretch gap-0 ml-auto">
-                        <div
-                          className="rounded-md border-2 shadow-md bg-slate-900/90 relative"
-                          style={{
-                            width: BOARD_CARD_W,
-                            height: BOARD_CARD_H,
-                            borderColor: 'rgba(255,255,255,0.4)',
-                            zIndex: 20,
-                          }}
-                        >
-                          <img src={`${BASE}svg/dxdy.svg`} alt="dxdy" className="w-full h-full object-cover pointer-events-none" />
-                          <button
-                            type="button"
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              const nextVar = integralCard!.integralVariable === 'y' ? 'x' : 'y';
-                              actions.setIntegralVariable(integralCard!.id, nextVar);
-                            }}
-                            className="absolute z-20 left-1 top-1/2 -translate-y-1/2 origin-left scale-[2] rounded-full border border-white/30 bg-slate-900/90 px-1.5 py-0.5 text-[9px] font-black text-white hover:bg-white/20 transition-colors cursor-pointer"
-                          >
-                            {integralCard!.integralVariable === 'y' ? 'y' : 'x'}
-                          </button>
-                        </div>
-                        <BoardDropZone id={`main-board-after-dxdy-${beforeCards.length}`} isVisible={isDraggingCard || !!tutorialActive} />
-                        {afterCards.map((card, index) => {
-                          const globalIndex = beforeCards.length + index;
-                          return (
-                            <React.Fragment key={card.id}>
-                              <div className="flex flex-col items-center">
-                                <DraggableBoardCard
-                                  card={card}
-                                  palette={palette}
-                                  hasModifiedBoardThisTurn={hasModifiedBoardThisTurn}
-                                  onDerivativeVariableChange={actions.setDerivativeVariable}
-                                  onSeriesVariableChange={actions.setSeriesVariable}
-                                  onLimitVariableChange={actions.setLimitVariable}
-                                />
-                              </div>
-                              <BoardDropZone
-                                id={globalIndex < totalBoardCards - 1
-                                  ? `main-board-between-${globalIndex}-${globalIndex + 1}`
-                                  : `main-board-after-${totalBoardCards - 1}`}
-                                isVisible={isDraggingCard || !!tutorialActive}
+              {/* Board cards */}
+              <div className="z-10 flex flex-col items-center gap-3 w-full" style={{ minHeight: '6rem' }}>
+                {tutorialReferenceBoard && tutorialReferenceBoard.length > 0 && (
+                  <div className="-mt-2.5">
+                    <TutorialReferenceRow cards={tutorialReferenceBoard} palette={palette} />
+                  </div>
+                )}
+                <div className={`flex items-stretch gap-0 flex-wrap w-full ${(hasVsLockedCard || showDxDy) ? 'justify-start' : 'justify-center'}`}>
+                  {currentPlayer.board.length > 0 ? (
+                    <>
+                      <div className="flex items-stretch gap-0 flex-wrap">
+                        {hasVsLockedCard && (
+                          <div className="shrink-0" style={{ width: `calc(${BOARD_CARD_W} - 0.9rem)`, height: BOARD_CARD_H }} />
+                        )}
+                        <BoardDropZone id="main-board-before-0" isVisible={isDraggingCard || !!tutorialActive} />
+                        {beforeCards.map((card, index) => (
+                          <React.Fragment key={card.id}>
+                            <div className="flex flex-col items-center">
+                              <DraggableBoardCard
+                                card={card}
+                                palette={palette}
+                                hasModifiedBoardThisTurn={hasModifiedBoardThisTurn}
+                                onDerivativeVariableChange={actions.setDerivativeVariable}
+                                onSeriesVariableChange={actions.setSeriesVariable}
+                                onLimitVariableChange={actions.setLimitVariable}
                               />
-                            </React.Fragment>
-                          );
-                        })}
-                        <div className="shrink-0 pointer-events-none" style={{ width: BOARD_CARD_W, height: BOARD_CARD_H }} />
+                            </div>
+                            <BoardDropZone
+                              id={`main-board-between-${index}-${index + 1}`}
+                              isVisible={isDraggingCard || !!tutorialActive}
+                            />
+                          </React.Fragment>
+                        ))}
                       </div>
-                    )}
-                  </>
-                ) : null}
-              </div>
-            </div>
-
-            {/* Target R — scaled up as per mockup */}
-            <div className="absolute bottom-4 right-4 flex flex-col items-end gap-2">
-              {integralVar && !integralCard && (
-                <div
-                  className="flex items-center justify-center rounded-md border-2 border-white/30 bg-slate-900/85 px-4 py-2 text-white font-black shadow-lg"
-                  style={{ transform: 'scale(1.1)' }}
-                >
-                  d{integralVar}
+                      {showDxDy && (
+                        <div className="flex items-stretch gap-0 ml-auto">
+                          <div
+                            className="rounded-md border-2 shadow-md bg-slate-900/90 relative"
+                            style={{
+                              width: BOARD_CARD_W,
+                              height: BOARD_CARD_H,
+                              borderColor: 'rgba(255,255,255,0.4)',
+                              zIndex: 20,
+                            }}
+                          >
+                            <img src={`${BASE}svg/dxdy.svg`} alt="dxdy" className="w-full h-full object-cover pointer-events-none" />
+                            <button
+                              type="button"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                const nextVar = integralCard!.integralVariable === 'y' ? 'x' : 'y';
+                                actions.setIntegralVariable(integralCard!.id, nextVar);
+                              }}
+                              className="absolute z-20 left-1 top-1/2 -translate-y-1/2 origin-left scale-[2] rounded-full border border-white/30 bg-slate-900/90 px-1.5 py-0.5 text-[9px] font-black text-white hover:bg-white/20 transition-colors cursor-pointer"
+                            >
+                              {integralCard!.integralVariable === 'y' ? 'y' : 'x'}
+                            </button>
+                          </div>
+                          <BoardDropZone id={`main-board-after-dxdy-${beforeCards.length}`} isVisible={isDraggingCard || !!tutorialActive} />
+                          {afterCards.map((card, index) => {
+                            const globalIndex = beforeCards.length + index;
+                            return (
+                              <React.Fragment key={card.id}>
+                                <div className="flex flex-col items-center">
+                                  <DraggableBoardCard
+                                    card={card}
+                                    palette={palette}
+                                    hasModifiedBoardThisTurn={hasModifiedBoardThisTurn}
+                                    onDerivativeVariableChange={actions.setDerivativeVariable}
+                                    onSeriesVariableChange={actions.setSeriesVariable}
+                                    onLimitVariableChange={actions.setLimitVariable}
+                                  />
+                                </div>
+                                <BoardDropZone
+                                  id={globalIndex < totalBoardCards - 1
+                                    ? `main-board-between-${globalIndex}-${globalIndex + 1}`
+                                    : `main-board-after-${totalBoardCards - 1}`}
+                                  isVisible={isDraggingCard || !!tutorialActive}
+                                />
+                              </React.Fragment>
+                            );
+                          })}
+                          <div className="shrink-0 pointer-events-none" style={{ width: BOARD_CARD_W, height: BOARD_CARD_H }} />
+                        </div>
+                      )}
+                    </>
+                  ) : null}
                 </div>
-              )}
-              <div
-                className="flex items-center gap-2 backdrop-blur-sm p-2 rounded-lg border border-white/20 origin-bottom-right"
-                style={{
-                  background: 'rgba(0,0,0,0.20)',
-                  transform: 'scale(1.32)',
-                  transformOrigin: 'bottom right',
-                  padding: '1.2rem',
-                  borderRadius: '0.75rem',
-                }}
-              >
-                <span className="text-2xl font-bold text-white">=</span>
-                <span className="text-4xl font-black text-white px-2">{formatTargetForDisplay(currentPlayer.targetR)}</span>
+              </div>
+
+              {/* Target R — scaled up as per mockup */}
+              <div className="absolute bottom-4 right-4 flex flex-col items-end gap-2">
+                {integralVar && !integralCard && (
+                  <div
+                    className="flex items-center justify-center rounded-md border-2 border-white/30 bg-slate-900/85 px-4 py-2 text-white font-black shadow-lg"
+                    style={{ transform: 'scale(1.1)' }}
+                  >
+                    d{integralVar}
+                  </div>
+                )}
+                <div
+                  className="flex items-center gap-2 backdrop-blur-sm p-2 rounded-lg border border-white/20 origin-bottom-right"
+                  style={{
+                    background: 'rgba(0,0,0,0.20)',
+                    transform: 'scale(1.32)',
+                    transformOrigin: 'bottom right',
+                    padding: '1.2rem',
+                    borderRadius: '0.75rem',
+                  }}
+                >
+                  <span className="text-2xl font-bold text-white">=</span>
+                  <span className="text-4xl font-black text-white px-2">{formatTargetForDisplay(currentPlayer.targetR)}</span>
+                </div>
               </div>
             </div>
-          </div>
           </div>
         </section>
 

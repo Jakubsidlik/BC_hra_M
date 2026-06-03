@@ -11,11 +11,11 @@ import { useDeviceType } from '@/hooks/useDeviceType';
 import { getTouchActivationConstraint } from '@/lib/dragActivation';
 
 // Importy Komponent
-import { 
-  EffectDialog, 
-  TargetingOverlay, 
-  HandoffScreen, 
-  MinigameDialog, 
+import {
+  EffectDialog,
+  TargetingOverlay,
+  HandoffScreen,
+  MinigameDialog,
   VictoryScreen,
   GameSummaryDialog,
   DeckPreviewDialog,
@@ -209,12 +209,12 @@ export default function App() {
             border: '1px solid rgba(255,255,255,0.2)',
           },
           classNames: {
-            toast:    'text-white',
-            error:    '!bg-red-600',
-            success:  '!bg-emerald-600',
-            info:     '!bg-blue-600',
-            warning:  '!bg-red-600',
-            icon:     'text-white',
+            toast: 'text-white',
+            error: '!bg-red-600',
+            success: '!bg-emerald-600',
+            info: '!bg-blue-600',
+            warning: '!bg-red-600',
+            icon: 'text-white',
           },
         }}
       />
@@ -255,25 +255,25 @@ export default function App() {
         onConfirm={actions.confirmLeaveGame}
         onCancel={actions.closeLeaveGameConfirm}
       />
-      <HandoffScreen 
-        isHandoff={state.isHandoff} 
-        players={state.players} 
-        nextIndex={(state.currentPlayerIndex + state.playDirection + state.players.length) % state.players.length} 
-        onReveal={actions.nextTurn} 
+      <HandoffScreen
+        isHandoff={state.isHandoff}
+        players={state.players}
+        nextIndex={(state.currentPlayerIndex + state.playDirection + state.players.length) % state.players.length}
+        onReveal={actions.nextTurn}
       />
 
       {state.integralSetup && (
-        <IntegralSetupDialog 
-          open={!!state.integralSetup} 
+        <IntegralSetupDialog
+          open={!!state.integralSetup}
           handCards={currentPlayer.hand}
           onSubmit={actions.handleIntegralSubmit}
           onCancel={() => actions.setIntegralSetup(null)}
         />
       )}
 
-      <MinigameDialog 
-        minigameMode={state.minigameMode} 
-        onPick={(id: string) => actions.handleMinigamePick(id)} 
+      <MinigameDialog
+        minigameMode={state.minigameMode}
+        onPick={(id: string) => actions.handleMinigamePick(id)}
       />
 
 
@@ -290,26 +290,26 @@ export default function App() {
         onSelect={actions.handleModuloSelect}
         onCancel={() => actions.setModuloMode(null)}
       />
-      
-      <TargetingOverlay 
-  targetingMode={state.targetingMode} 
-  pendingEffect={state.pendingEffect} 
-  currentPlayerId={currentPlayer.id}
-  players={state.players} 
-  handleBoardCardClick={(id: string) => {
-    if (!state.targetingMode || !state.pendingEffect) return;
 
-    if (state.targetingMode.effectId === 'EFF_002' && !state.targetingMode.sourceCardId) {
-      actions.setTargetingMode({ ...state.targetingMode, sourceCardId: id });
-      return;
-    }
+      <TargetingOverlay
+        targetingMode={state.targetingMode}
+        pendingEffect={state.pendingEffect}
+        currentPlayerId={currentPlayer.id}
+        players={state.players}
+        handleBoardCardClick={(id: string) => {
+          if (!state.targetingMode || !state.pendingEffect) return;
 
-    actions.handleEffectChoice('ACTIVATE', state.targetingMode.targetPlayerId, id);
-    
-    actions.setTargetingMode(null);
-  }} 
-  onCancel={() => { actions.setTargetingMode(null); actions.setPendingEffect(null); }} 
-/>
+          if (state.targetingMode.effectId === 'EFF_002' && !state.targetingMode.sourceCardId) {
+            actions.setTargetingMode({ ...state.targetingMode, sourceCardId: id });
+            return;
+          }
+
+          actions.handleEffectChoice('ACTIVATE', state.targetingMode.targetPlayerId, id);
+
+          actions.setTargetingMode(null);
+        }}
+        onCancel={() => { actions.setTargetingMode(null); actions.setPendingEffect(null); }}
+      />
 
       {/* --- HLAVNÍ UI HRY --- */}
       <div data-game-boundary="true" className="relative">
@@ -384,31 +384,31 @@ export default function App() {
       </div>
 
       {/* DIALOG PRO VÝBĚR EFEKTU */}
-      <EffectDialog 
-        open={!!state.pendingEffect && !state.targetingMode && !state.minigameMode} 
-        effectStep={state.effectStep} 
-        pendingEffect={state.pendingEffect} 
-        players={state.players} 
-        currentPlayerId={currentPlayer.id} 
+      <EffectDialog
+        open={!!state.pendingEffect && !state.targetingMode && !state.minigameMode}
+        effectStep={state.effectStep}
+        pendingEffect={state.pendingEffect}
+        players={state.players}
+        currentPlayerId={currentPlayer.id}
         handleEffectClick={() => {
           if (!state.pendingEffect) return;
           const effect = cardsDatabase[state.pendingEffect.card.symbol]?.effects?.optionA;
           const autoTargetEffects = ['EFF_004', 'EFF_005', 'EFF_006', 'EFF_010', 'EFF_011'];
 
-          if ((effect?.target === 'OPPONENT' || effect?.target === 'ANY') && !autoTargetEffects.includes(effect?.id || '')) { 
-            actions.setChosenEffectChoice('ACTIVATE'); 
-            actions.setEffectStep('CHOOSE_TARGET'); 
+          if ((effect?.target === 'OPPONENT' || effect?.target === 'ANY') && !autoTargetEffects.includes(effect?.id || '')) {
+            actions.setChosenEffectChoice('ACTIVATE');
+            actions.setEffectStep('CHOOSE_TARGET');
           } else {
             actions.handleEffectChoice('ACTIVATE');
           }
-        }} 
-        handleEffectChoice={actions.handleEffectChoice} 
-        setEffectStep={actions.setEffectStep} 
-        onClose={() => { 
-          actions.setPendingEffect(null); 
-          actions.setEffectStep('CHOOSE_EFFECT'); 
+        }}
+        handleEffectChoice={actions.handleEffectChoice}
+        setEffectStep={actions.setEffectStep}
+        onClose={() => {
+          actions.setPendingEffect(null);
+          actions.setEffectStep('CHOOSE_EFFECT');
           actions.setChosenEffectChoice(null);
-        }} 
+        }}
       />
 
     </DndContext>
