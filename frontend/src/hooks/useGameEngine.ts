@@ -309,8 +309,11 @@ export function useGameEngine() {
   const [tutorialReferenceBoard, setTutorialReferenceBoard] = useState<GameCard[]>([]);
   const [tutorialBracketInfoShown, setTutorialBracketInfoShown] = useState(false);
   const [, setTutorialTwosAdded] = useState(false);
-  const [tutorialCardQueue, setTutorialCardQueue] = useState<GameCard[]>([]);
+  const [, setTutorialCardQueue] = useState<GameCard[]>([]);
   const [leaveGameConfirmOpen, setLeaveGameConfirmOpen] = useState(false);
+
+  // Offset pro tutoriál: v režimu Společný cíl je navíc informační krok o sdíleném R a kolech
+  const sgOffset = gameMode === 'SHARED_GOAL' ? 1 : 0;
 
   // --- STAVY PRO UI A EFEKTY ---
   const [pendingEffect, setPendingEffect] = useState<PendingEffectState | null>(null);
@@ -797,28 +800,21 @@ export function useGameEngine() {
       toast.info("Nedokončená závorka byla vrácena do sady závorek.");
     }
 
-    if (tutorialActive && tutorialStep !== 2 && tutorialStep !== 3) {
+    if (tutorialActive && tutorialStep < 2 + sgOffset) {
       return toast.error("V tutoriálu teď není čas ukončit tah.");
     }
 
-    if (tutorialActive && tutorialStep === 2) {
-      toast.error("V tutoriálu teď nejdřív dokonči stavbu výrazu na tabuli.");
-      return;
-    }
-
-    if (tutorialActive && tutorialStep === 3) {
+    if (tutorialActive && tutorialStep === 4 + sgOffset) {
       const p = players[currentPlayerIndex];
       const handLimit = 5;
-      const completedDualPlay = turnPlayCounts.value >= 1 && turnPlayCounts.operator >= 1;
-      if (!hasModifiedBoardThisTurn) {
-        toast.error("V tomto kole nejdřív vylož 1 kartu na tabuli.");
-        return;
-      }
 
       if (!isDiscarding) {
         setIsDiscarding(true);
         if (p.hand.length > handLimit) {
           toast.warning(`Limit ruky překročen! Musíš zahodit ${p.hand.length - handLimit} karet.`);
+        } else {
+          toast.info("Máš už dost malou ruku. Teď můžeš ověřit Q.E.D.");
+          setTutorialStep(5 + sgOffset);
         }
         return;
       }
@@ -829,69 +825,7 @@ export function useGameEngine() {
         return;
       }
 
-      if (gameMode === 'SHARED_GOAL' && sharedGoalTurnsRemainingByPlayer && p) {
-        const updatedSharedTurns = decrementSharedGoalTurn(sharedGoalTurnsRemainingByPlayer, p.id, sharedGoalTotalTurns);
-        setSharedGoalTurnsRemainingByPlayer(updatedSharedTurns);
-      }
-
-      setHasModifiedBoardThisTurn(false);
-      setPlaysThisTurn(0);
-      setTurnPlayCounts({ value: 0, operator: 0 });
-      setBracketPairsPlacedThisTurn(0);
-      setIsDiscarding(false);
-
-      // Tutorial respects the same next-turn bonus for dual play (1 operator + 1 value).
-      let drawsRemaining = completedDualPlay ? 2 : 1;
-      let queuedCardsDealt = 0;
-      const describeCardCount = (count: number, one: string, few: string, many: string): string => {
-        const mod100 = count % 100;
-        const mod10 = count % 10;
-        const cardWord = (mod100 >= 11 && mod100 <= 14)
-          ? 'karet'
-          : mod10 === 1
-            ? 'karta'
-            : mod10 >= 2 && mod10 <= 4
-              ? 'karty'
-              : 'karet';
-        const adjective = (mod100 >= 11 && mod100 <= 14)
-          ? many
-          : mod10 === 1
-            ? one
-            : mod10 >= 2 && mod10 <= 4
-              ? few
-              : many;
-        return `${count} ${adjective} ${cardWord}`;
-      };
-
-      if (tutorialCardQueue.length > 0 && drawsRemaining > 0) {
-        const cardsFromQueue = tutorialCardQueue.slice(0, drawsRemaining);
-        const rest = tutorialCardQueue.slice(cardsFromQueue.length);
-        setPlayers(prev => {
-          const next = JSON.parse(JSON.stringify(prev));
-          next[currentPlayerIndex].hand.push(...cardsFromQueue);
-          return next;
-        });
-        setTutorialCardQueue(rest);
-        queuedCardsDealt = cardsFromQueue.length;
-        drawsRemaining -= cardsFromQueue.length;
-      }
-
-      if (drawsRemaining > 0) {
-        performDraw(drawsRemaining, currentPlayerIndex);
-      }
-
-      if (queuedCardsDealt > 0 && drawsRemaining > 0) {
-        const queuedText = describeCardCount(queuedCardsDealt, 'připravená', 'připravené', 'připravených');
-        const randomText = describeCardCount(drawsRemaining, 'náhodná', 'náhodné', 'náhodných');
-        toast.info(`Kolo ukončeno. Dobrání: ${queuedText} a ${randomText}.`);
-      } else if (queuedCardsDealt > 0) {
-        const queuedText = describeCardCount(queuedCardsDealt, 'připravená', 'připravené', 'připravených');
-        toast.info(`Kolo ukončeno. Dobrání: ${queuedText}.`);
-      } else {
-        const randomText = describeCardCount(completedDualPlay ? 2 : 1, 'náhodná', 'náhodné', 'náhodných');
-        toast.info(`Kolo ukončeno. Dobrání: ${randomText}.`);
-      }
-      setTutorialStep(4);
+      toast.info("Nejprve odhoď přebytečné karty.");
       return;
     }
 
@@ -931,14 +865,7 @@ export function useGameEngine() {
       return;
     }
 
-    if (tutorialActive && tutorialStep !== 3) {
-      toast.error("V tutoriálu teď není dovoleno odhazovat.");
-      return;
-    }
-    if (tutorialActive && tutorialAllowedDiscardIds.length > 0 && !tutorialAllowedDiscardIds.includes(cardId)) {
-      toast.error("V tutoriálu teď odhazuj jen přebytečné karty.");
-      return;
-    }
+    // V tutoriálu systémově povolujeme odhazování kdykoliv (za použití běžných pravidel hry)
     setPlayers(prev => {
       const next = JSON.parse(JSON.stringify(prev));
 
@@ -960,9 +887,17 @@ export function useGameEngine() {
         setDiscardPile(old => [...old, discardedCard]);
       }
 
+      if (tutorialActive && activePlayerIdx > -1) {
+        const handLimit = 5;
+        if (next[activePlayerIdx].hand.length <= handLimit) {
+          setIsDiscarding(false);
+          setTutorialStep(5 + sgOffset);
+        }
+      }
+
       return next;
     });
-  }, [tutorialActive, tutorialAllowedDiscardIds, tutorialStep, isDiscarding]);
+  }, [tutorialActive, tutorialAllowedDiscardIds, tutorialStep, isDiscarding, sgOffset]);
 
   const nextTurn = () => {
     setBracketMode(null);
@@ -1042,6 +977,9 @@ export function useGameEngine() {
   // ==========================================
 
   const checkMathEngine = async () => {
+    if (tutorialActive && tutorialStep !== 5 + sgOffset) {
+      return toast.error("V tutoriálu teď ještě neověřuj Q.E.D.");
+    }
     const curr = players[currentPlayerIndex];
     const missingSlots = curr.board.flatMap((card: GameCard) => {
       const slots = getSpecialSlots(card.symbol);
@@ -1097,6 +1035,9 @@ export function useGameEngine() {
         toast.success("Q.E.D.!", { id: toastId });
         setWinner([curr]);
         setVictoryReason({ type: 'QED' });
+        if (tutorialActive) {
+          window.setTimeout(() => setTutorialStep(4 + sgOffset), 0);
+        }
       } else {
         toast.error("Chyba v důkazu!", { id: toastId });
         const boardCount = curr.board.flatMap((card: GameCard) => flattenCardTree(card)).length;
@@ -1203,22 +1144,22 @@ export function useGameEngine() {
           const existing = slotCards[slotKey] || null;
           const mergeResult = mergeCardIntoSlotValue(existing, card);
           if (!mergeResult.merged) {
-             mergeError = mergeResult.error ?? 'Do tohoto okénka kartu vložit nejde.';
+            mergeError = mergeResult.error ?? 'Do tohoto okénka kartu vložit nejde.';
           } else {
-             canPlace = true;
-             mergedValue = mergeResult.merged;
+            canPlace = true;
+            mergedValue = mergeResult.merged;
           }
           return;
         }
         if (c.exponent) findAndMergeSlot([c.exponent]);
         if (c.slotCards) {
           for (const sc of Object.values(c.slotCards)) {
-             if (sc) findAndMergeSlot([sc]);
+            if (sc) findAndMergeSlot([sc]);
           }
         }
       }
     };
-    
+
     findAndMergeSlot(players[currentPlayerIndex].board);
 
     if (mergeError) {
@@ -1333,32 +1274,7 @@ export function useGameEngine() {
     const { active, over } = event;
     if (!over) return;
 
-    const activeHandCard = players[currentPlayerIndex].hand.find(c => c.id === active.id);
 
-    if (tutorialActive) {
-      if (tutorialStep === 3) {
-        if (String(over.id) !== 'drop-discard') {
-          toast.error("V tutoriálu teď odhazuj karty.");
-          return;
-        }
-      } else if (tutorialStep !== 2) {
-        toast.error("V tutoriálu teď nemůžeš s kartami hýbat.");
-        return;
-      } else if (String(over.id) === 'drop-discard' && !isDiscarding) {
-        toast.error("V tutoriálu teď neodhazuj karty.");
-        return;
-      }
-
-      if (tutorialStep === 2 && activeHandCard && String(over.id) !== 'drop-discard') {
-        const allowedSymbols = new Set(['2', '+', '3', 'a^b']);
-        if (!allowedSymbols.has(activeHandCard.symbol)) {
-          toast.error("V tutoriálu teď používej jen karty 2, +, 3 a a^b.");
-          return;
-        }
-      }
-    }
-
-    // Pomocná funkce pro výpočet insertPosition ze zone ID
     const getInsertPosition = (overId: string): number | undefined => {
       if (overId.includes('-before-')) return 0;
       if (overId.includes('-between-')) {
@@ -1440,7 +1356,7 @@ export function useGameEngine() {
         setBracketMode(null);
         setBracketPairsPlacedThisTurn(prev => prev + 1);
         toast.success("Závorky umístěny!", { icon: '✓' });
-        if (tutorialActive && tutorialStep === 2 && !tutorialBracketInfoShown) {
+        if (tutorialActive && tutorialStep === 3 + sgOffset && !tutorialBracketInfoShown) {
           setTutorialBracketInfoShown(true);
           toast.info("Ve hře máš 3 páry závorek: (), [], {}. Můžeš použít libovolný typ.");
         }
@@ -1858,6 +1774,7 @@ export function useGameEngine() {
     tutorialBracketInfoShown,
     handleDiscard,
     flattenCardTree,
+    sgOffset,
   ]);
 
   // ==========================================
@@ -2168,12 +2085,12 @@ export function useGameEngine() {
       : undefined;
     const initialDeck = isCustomGame
       ? Object.entries(customDifficultyConfig!.deckCounts).flatMap(([symbol, count]) => {
-          const total = Math.max(0, Math.floor(count));
-          return Array.from({ length: total }, (_, index) => ({
-            id: `custom-${symbol}-${index}-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-            symbol,
-          }));
-        }).sort(() => Math.random() - 0.5)
+        const total = Math.max(0, Math.floor(count));
+        return Array.from({ length: total }, (_, index) => ({
+          id: `custom-${symbol}-${index}-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+          symbol,
+        }));
+      }).sort(() => Math.random() - 0.5)
       : generateFilteredDeck(difficulty);
 
     const hasAtLeastThreePrimeFactors = (value: number): boolean => {
@@ -2350,11 +2267,11 @@ export function useGameEngine() {
       newPlayers.forEach((player, idx) => {
         const picked = isCustomGame
           ? (customVsSymbols.length === 1
-              ? customVsSymbols[0]
-              : customVsSymbols[Math.floor(Math.random() * customVsSymbols.length)])
+            ? customVsSymbols[0]
+            : customVsSymbols[Math.floor(Math.random() * customVsSymbols.length)])
           : (isSharedGoalMode
-              ? sharedLockedVsSymbol
-              : vsCards[Math.floor(Math.random() * vsCards.length)]);
+            ? sharedLockedVsSymbol
+            : vsCards[Math.floor(Math.random() * vsCards.length)]);
         if (!picked) return;
 
         player.board.push({
@@ -2498,21 +2415,6 @@ export function useGameEngine() {
           { id: `t1-eq`, symbol: '=' }
         ],
         status: { mathModifiers: [], extraTurn: false, frozen: false, extraDraw: 0, drawReduction: 0, notifications: [] }
-      },
-      {
-        id: 1,
-        name: 'Matematik 2',
-        theme: 'bg-emerald-600/60',
-        hand: [],
-        board: [],
-        targetR: tutorialGameMode === 'SHARED_GOAL' ? tutorialTarget : 0,
-        syntax: [
-          { id: `t2-l1`, symbol: '(' }, { id: `t2-r1`, symbol: ')' },
-          { id: `t2-l2`, symbol: '[' }, { id: `t2-r2`, symbol: ']' },
-          { id: `t2-l3`, symbol: '{' }, { id: `t2-r3`, symbol: '}' },
-          { id: `t2-eq`, symbol: '=' }
-        ],
-        status: { mathModifiers: [], extraTurn: false, frozen: false, extraDraw: 0, drawReduction: 0, notifications: [] }
       }
     ];
 
@@ -2548,7 +2450,6 @@ export function useGameEngine() {
       setSharedGoalTarget(`${tutorialTarget}`);
       setSharedGoalTurnsRemainingByPlayer({
         [newPlayers[0].id]: tutorialSharedTurns,
-        [newPlayers[1].id]: tutorialSharedTurns,
       });
     } else {
       setSharedGoalTarget(null);
@@ -2655,11 +2556,26 @@ export function useGameEngine() {
     returnToModeSelect();
   };
 
+  const isTutorialBaseExpressionReady = useCallback((board: GameCard[]) => {
+    return board.length === 3 && board[0]?.symbol === '2' && board[1]?.symbol === '+' && board[2]?.symbol === '3';
+  }, []);
+
   const isTutorialExpressionReady = useCallback((board: GameCard[]) => {
     const openSet = new Set(['(', '[', '{']);
     const closeSet = new Set([')', ']', '}']);
     const isOpen = (card?: GameCard) => !!card && openSet.has(card.symbol);
     const isClose = (card?: GameCard) => !!card && closeSet.has(card.symbol);
+
+    const directExponentPattern =
+      board.length === 5 &&
+      isOpen(board[0]) &&
+      board[1]?.symbol === '2' &&
+      board[2]?.symbol === '+' &&
+      board[3]?.symbol === '3' &&
+      board[3]?.exponent?.symbol === '2' &&
+      isClose(board[4]);
+
+    if (directExponentPattern) return true;
 
     const powerCard = board[4];
     const powerExponent = powerCard?.slotCards?.single;
@@ -2682,13 +2598,18 @@ export function useGameEngine() {
     if (!current) return;
 
     let timeoutId: number | null = null;
-    if (tutorialStep === 2 && isTutorialExpressionReady(current.board)) {
+    if (tutorialStep === 2 + sgOffset && isTutorialBaseExpressionReady(current.board)) {
       timeoutId = window.setTimeout(() => {
-        setTutorialStep(3);
+        setTutorialStep(3 + sgOffset);
       }, 0);
     }
-    if (tutorialStep === 4 && winner) {
-      timeoutId = window.setTimeout(() => setTutorialStep(5), 0);
+    if (tutorialStep === 3 + sgOffset && isTutorialExpressionReady(current.board)) {
+      timeoutId = window.setTimeout(() => {
+        setTutorialStep(4 + sgOffset);
+      }, 0);
+    }
+    if (tutorialStep === 5 + sgOffset && winner) {
+      timeoutId = window.setTimeout(() => setTutorialStep(6 + sgOffset), 0);
     }
 
     return () => {
@@ -2696,7 +2617,7 @@ export function useGameEngine() {
         window.clearTimeout(timeoutId);
       }
     };
-  }, [tutorialActive, tutorialStep, players, currentPlayerIndex, winner, isTutorialExpressionReady]);
+  }, [tutorialActive, tutorialStep, players, currentPlayerIndex, winner, isTutorialBaseExpressionReady, isTutorialExpressionReady, sgOffset]);
 
   const activePlayerId = players[currentPlayerIndex]?.id;
   const sharedGoalTurnsRemaining =
