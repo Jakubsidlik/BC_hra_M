@@ -5,7 +5,7 @@ import { snapCenterToCursor } from '@dnd-kit/modifiers';
 import { Toaster } from "sonner";
 
 // Importy Hooku a dat
-import { useGameEngine } from '@/hooks/useGameEngine';
+import { useGameEngine } from '@/hooks/useGameEngine.ts';
 import { cardsDatabase } from '@/data/cardsDB';
 import { useDeviceType } from '@/hooks/useDeviceType';
 import { getTouchActivationConstraint } from '@/lib/dragActivation';

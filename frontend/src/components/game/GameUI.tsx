@@ -29,8 +29,8 @@ export function TutorialOverlay({
 }) {
   if (!active) return null;
 
-  const classicIntroText = 'Projdeš si jednu krátkou ukázkovou hru. Cíl je sestavit výraz L = R a ověřit Q.E.D.';
-  const sharedGoalIntroText = 'Projdeš si ukázkovou hru režimu Společný cíl. Všichni hráči mají stejné R a omezený počet tahů. Po vyčerpání tahů vyhrává hráč s nejmenší vzdáleností |L - R| bez ohledu na znaménko. Pokud někdo kdykoli dosáhne přesně L = R, může kliknout na Q.E.D. a vyhraje okamžitě, i když ještě zbývají tahy.';
+  const classicIntroText = 'Projdeš si krátký průchod hrou. Naučíš se, jak se skládá výraz na tabuli, jak fungují závorky a sloty, kdy končí tah, jak se odhazuje a kdy použít Q.E.D.';
+  const sharedGoalIntroText = 'Projdeš si stejný průchod v režimu Společný cíl. Všichni hráči mají stejné R a vlastní odpočet tahů. Po vyčerpání tahů rozhoduje nejmenší vzdálenost |L - R|; pokud někdo dosáhne přesně L = R, může použít Q.E.D. a vyhrát hned.';
 
   const steps = [
     {
@@ -39,31 +39,36 @@ export function TutorialOverlay({
     },
     {
       title: 'Efekty karet',
-      // text: 'Některé karty mají efekt. Při položení se nabízí volba: aktivovat efekt, nebo kartu jen přidat do výrazu L.'
-      text: 'Některé karty mají efekt. Při položení můžeš jejich efekt aktivovat.'
+      text: 'Některé karty mají efekt. Při položení si můžeš vybrat, jestli kartu aktivuješ, nebo jen položíš do výrazu.'
     },
     {
-      title: 'Závorky a mocnina',
-      text: 'Postav výraz (2 + 3^2): nejdřív vlož na tabuli 2, +, 3 a a^b, pak přetáhni druhou 2 do okénka mocniny.'
+      title: 'Slož základ výrazu',
+      text: 'Nejprve zkus vyložit základní trojici 2, +, 3. V jednom tahu smíš přidat jen jednu kartu operace a jednu kartu hodnoty/proměnné.'
+    },
+    {
+      title: 'Závorky a sloty',
+      text: 'Teď doplň závorky a kartu a^b. Do slotu mocniny vlož číslo 2 a dokonči tím výraz. Závorky se berou jako samostatný dvoukrokový prvek.'
     },
     {
       title: 'Konec tahu a odhazování',
-      text: 'Teď klikni na Konec tahu. Pokud máš více než 5 karet, odhoď přebytečné karty na odhazovací pole (ať ti zůstane 5 nebo méně).'
+      text: 'Když máš na tabuli hotový výraz nebo potřebuješ zkrátit ruku, klikni na Konec tahu. Pak odhoď přebytečné karty, dokud nemáš v ruce nejvýše 5.'
     },
     {
       title: 'Ověření Q.E.D.',
-      text: 'Klikni na tlačítko Ověřit Q.E.D.. Pokud je L = R, hra skončí a ty vyhraješ.'
+      text: 'Až bude výraz správně sestavený, klikni na Q.E.D. a nech engine zkontrolovat, že L opravdu odpovídá R.'
     },
     {
       title: 'Hotovo',
-      text: 'Skvělé! Zvládl jsi základní mechaniky. Můžeš začít běžnou hru.'
+      text: 'Skvělé! Prošel jsi hlavní mechaniky: vykládání karet, závorky, sloty, konec tahu, odhazování i Q.E.D.'
     }
   ];
 
   const content = steps[step] || steps[steps.length - 1];
   const showNext = step === 0 || step === 1;
   const showTurnLimitCallout = step === 2;
-  const showSharedTurnsCallout = gameMode === 'SHARED_GOAL' && step === 0;
+  const showBracketSlotCallout = step === 3;
+  const showDiscardCallout = step === 4;
+  const showSharedTurnsCallout = gameMode === 'SHARED_GOAL';
 
   return (
     <div className="fixed left-1/2 top-16 sm:top-6 z-120 w-[82vw] sm:w-[92vw] max-w-xl -translate-x-1/2 rounded-2xl border border-white/10 bg-slate-950/85 p-3 sm:p-5 text-slate-100 shadow-2xl backdrop-blur-md">
@@ -78,7 +83,19 @@ export function TutorialOverlay({
       {showTurnLimitCallout && (
         <div className="mt-3 rounded-lg border border-emerald-400/40 bg-emerald-500/10 px-3 py-2 text-xs sm:text-sm text-emerald-100">
           <p className="font-bold uppercase tracking-[0.15em] text-emerald-300">Pravidlo tahu</p>
-          <p className="mt-1">V jednom kole můžeš vyložit maximálně 1 kartu operace a 1 kartu hodnoty/proměnné. Dvě karty stejného typu v jednom kole vyložit nejdou.</p>
+          <p className="mt-1">V jednom kole můžeš vyložit maximálně 1 kartu operace a 1 kartu hodnoty/proměnné. Závorky a práce ve slotu jsou samostatná mechanika, ale pořád se řídí limitem tahu.</p>
+        </div>
+      )}
+      {showBracketSlotCallout && (
+        <div className="mt-3 rounded-lg border border-cyan-400/40 bg-cyan-500/10 px-3 py-2 text-xs sm:text-sm text-cyan-100">
+          <p className="font-bold uppercase tracking-[0.15em] text-cyan-300">Závorky a sloty</p>
+          <p className="mt-1">Závorky vkládej ve dvou krocích: nejdřív levou, potom pravou. Kartu a^b doplň o exponent 2 do jejího okénka.</p>
+        </div>
+      )}
+      {showDiscardCallout && (
+        <div className="mt-3 rounded-lg border border-amber-400/40 bg-amber-500/10 px-3 py-2 text-xs sm:text-sm text-amber-100">
+          <p className="font-bold uppercase tracking-[0.15em] text-amber-300">Konec tahu</p>
+          <p className="mt-1">Po kliknutí na Konec tahu se přepne režim odhazování. Drž v ruce nejvýše 5 karet a odhoď jen přebytek.</p>
         </div>
       )}
       {showSharedTurnsCallout && sharedGoalTurnsRemaining !== null && sharedGoalTurnsRemaining !== undefined && (
